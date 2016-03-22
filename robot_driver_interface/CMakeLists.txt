@@ -21,8 +21,9 @@ include_directories( src/gui )
 
 #qt4_wrap_ui(UISrcs src/gui/krc4_control_async_gui.ui)
 #qt4_wrap_cpp(UIMOCSrcs src/gui/krc4_control_async_gui.h)
-qt4_wrap_ui(UISrcs src/gui/RobotInterface.ui)
-qt4_wrap_ui(UIMOCSrcs src/gui/ui_RobotInterface.h)
+
+qt4_wrap_ui(UISrcs src/gui/robotInterface.ui)
+qt4_wrap_cpp(UIMOCSrcs src/gui/ui_robotInterface.h)
 qt4_wrap_ui(UIPLOTSrcs src/plot/plot.ui)
 qt4_wrap_cpp(UIPLOTMOCSrcs src/plot/plot.h)
 qt4_wrap_cpp(THREADMOCSrcs src/common/tcpthread.h)

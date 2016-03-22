@@ -13,14 +13,14 @@
 using namespace visualization_msgs;
 using namespace interactive_markers;
 
-class Interface: public QObject {
+class Interface: public QWidget{
 	Q_OBJECT
 public:
 
 	typedef control_msgs::FollowJointTrajectoryActionGoalConstPtr TrajectoryGoal;
 	typedef moveit::planning_interface::MoveGroup::Plan MotionPlan;
 
-	Interface();
+	Interface(QWidget *parent = 0);
 	virtual ~Interface();
 
 // interactive marker related function
@@ -44,6 +44,7 @@ public slots:
 	void shutdown();
 	void visualizeMotionPlan(
 			MotionPlan motion_plan);
+
 
 signals:
 	// Send trajectory to controller object

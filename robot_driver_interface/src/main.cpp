@@ -34,7 +34,7 @@ int main(int argc, char *argv[]) {
 	QApplication a(argc, argv);
 	ros::init(argc, argv, "Kuka_robot_node");
 	//Interface kuka_interface(argc, argv, "manipulator");
-	kuka_interface = boost::make_shared<Interface>(argc, argv, "manipulator");
+	kuka_interface = boost::make_shared<Interface>();
 
 	return a.exec();
 }

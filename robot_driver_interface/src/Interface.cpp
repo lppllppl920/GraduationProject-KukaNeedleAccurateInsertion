@@ -8,7 +8,7 @@
 #include "Interface.h"
 
 
-Interface::Interface():
+Interface::Interface(QWidget *parent):
 		controller_() {
 
 	ROS_INFO("Interface Constructing...");

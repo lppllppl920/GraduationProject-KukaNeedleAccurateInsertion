@@ -23,7 +23,7 @@ public:
 	typedef control_msgs::FollowJointTrajectoryActionGoalConstPtr TrajectoryGoal;
 	typedef moveit::planning_interface::MoveGroup::Plan MotionPlan;
 
-	Controller(std::string group_name);
+	Controller(std::string group_name = "manipulator");
 	~Controller();
 	// ROS node "KRC4_joint_state_publisher" initialization
 	void addPublisher();
