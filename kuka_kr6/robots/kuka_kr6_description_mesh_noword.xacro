@@ -1,0 +1,191 @@
+<?xml version="1.0"?>
+
+<robot name="kuka_kr6" xmlns:xacro="http://ros.org/wiki/xacro">
+  <xacro:macro name="kuka_kr6" params="prefix">
+    <!-- link list -->
+    <link name="${prefix}base_link">
+     <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <mesh filename="package://kuka_kr6/robots/base_link.STL" />
+      </geometry>
+      <material name="orange">
+        <color rgba="1 0.43 0 1" />
+      </material>
+     </visual>
+     <collision>
+      <geometry>
+        <mesh filename="package://kuka_kr6/robots/base_link.STL" />
+       </geometry>
+       <material name="yellow">
+         <color rgba="0 1 1 1"/>
+       </material>
+     </collision>
+    </link>
+
+    <link name="${prefix}link1">
+      <visual>
+        <origin xyz="0.025 0 0" rpy="0 0 0" />
+        <geometry>
+          <mesh filename="package://kuka_kr6/robots/link1.STL" />
+        </geometry>
+        <material name="orange"/>
+      </visual>
+      <collision>
+        <geometry>
+          <mesh filename="package://kuka_kr6/robots/link1.STL" />
+        </geometry>
+        <material name="yellow"/>
+      </collision>
+    </link>
+
+
+    <link name="${prefix}link2">
+      <visual>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry>
+          <mesh filename="package://kuka_kr6/robots/link2.STL" />
+        </geometry>
+        <material name="orange"/>
+      </visual>
+      <collision>
+        <geometry>
+          <mesh filename="package://kuka_kr6/robots/link2.STL" />
+        </geometry>
+        <material name="yellow"/>
+      </collision>
+    </link>
+
+    <link name="${prefix}link3">
+      <visual>
+        <origin xyz="0 -0.035 0" rpy="0 0 0" />
+        <geometry>
+          <mesh filename="package://kuka_kr6/robots/link3.STL" />
+        </geometry>
+        <material name="orange"/>
+      </visual>
+      <collision>
+        <geometry>
+          <mesh filename="package://kuka_kr6/robots/link3.STL" />
+        </geometry>
+        <material name="yellow"/>
+      </collision>
+    </link>
+
+    <link name="${prefix}link4">
+      <visual>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry>
+          <mesh filename="package://kuka_kr6/robots/link4.STL" />
+        </geometry>
+        <material name="orange"/>
+      </visual>
+      <collision>
+        <geometry>
+          <mesh filename="package://kuka_kr6/robots/link4.STL" />
+        </geometry>
+        <material name="yellow"/>
+      </collision>
+    </link>
+
+    <link name="${prefix}link5">
+      <visual>
+        <origin xyz="0 0 0" rpy="0 -1.57079633 0" />
+        <geometry>
+          <mesh filename="package://kuka_kr6/robots/link5.STL" />
+        </geometry>
+        <material name="orange"/>
+      </visual>
+      <collision>
+        <geometry>
+          <mesh filename="package://kuka_kr6/robots/link5.STL" />
+        </geometry>
+        <material name="yellow"/>
+      </collision>
+    </link>
+
+    <link name="${prefix}link6">
+      <visual>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry>
+          <mesh filename="package://kuka_kr6/robots/link6.STL" />
+        </geometry>
+        <material name="orange"/>
+      </visual>
+      <collision>
+        <geometry>
+          <mesh filename="package://kuka_kr6/robots/link6.STL" />
+        </geometry>
+        <material name="yellow"/>
+      </collision>
+    </link>
+
+    <link name="${prefix}tip" />
+    <!-- end of link list -->
+
+    <!-- joint list -->
+    <joint name="${prefix}joint1" type="revolute">
+      <origin xyz="0 0 0.4" rpy="3.14159265 0 0" />
+      <parent link="${prefix}base_link" />
+      <child link="${prefix}link1" />
+      <axis xyz="0 0 1" />
+      <limit lower="-2.967059728" upper="2.967059728" effort="1" velocity="1"/>
+      </joint>
+
+    <joint name="${prefix}joint2" type="revolute">
+      <origin xyz="0.025 0 0" rpy="1.57079633 0 0" />
+      <parent link="${prefix}link1" />
+      <child link="${prefix}link2" />
+      <axis xyz="0 0 1" />
+      <limit lower="-3.316125579" upper="0.785398163" effort="1" velocity="1"/>
+    </joint>
+
+    <joint name="${prefix}joint3" type="revolute">
+      <origin xyz="0.315 0 0" rpy="0 0 0" />
+      <parent link="${prefix}link2" />
+      <child link="${prefix}link3" />
+      <axis xyz="0 0 1" />
+      <limit lower="-2.094395102" upper="2.722713633" effort="1" velocity="1"/>
+    </joint>
+
+    <joint name="${prefix}joint4" type="revolute">
+      <origin xyz="0.365 -0.035 0" rpy="0 -1.57079633 0" />
+      <parent link="${prefix}link3" />
+      <child link="${prefix}link4" />
+      <axis xyz="0 0 1" />
+      <limit lower="-3.228859116" upper="3.228859116" effort="1" velocity="1"/>
+    </joint>
+
+    <joint name="${prefix}joint5" type="revolute">
+      <origin xyz="0 0 0" rpy="0 1.57079633 0" />
+      <parent link="${prefix}link4" />
+      <child link="${prefix}link5" />
+      <axis xyz="0 0 1" />
+      <limit lower="-2.094395102" upper="2.094395102" effort="1" velocity="1"/>
+    </joint>
+
+    <joint name="${prefix}joint6" type="revolute">
+      <origin xyz="0 0 0" rpy="0 -1.57079633 0" />
+      <parent link="${prefix}link5" />
+      <child link="${prefix}link6" />
+      <axis xyz="0 0 1" />
+      <limit lower="-6.108652382" upper="6.108652382" effort="1" velocity="1"/>
+    </joint> 
+
+    <joint name="${prefix}tip_joint" type="fixed">
+      <origin xyz="0 0 -0.08" rpy="3.14159265 0 1.57079633" />
+      <parent link="${prefix}link6" />
+      <child link="${prefix}tip" />
+    </joint>
+    <!-- end of joint list -->
+    
+    <!-- ROS base_link to World Coordinates transform -->
+    <link name="${prefix}base"/>
+    <joint name="${prefix}base_link-base" type="fixed">
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <parent link="${prefix}base_link"/>
+      <child link="${prefix}base"/>
+    </joint>
+  </xacro:macro>
+  
+</robot>

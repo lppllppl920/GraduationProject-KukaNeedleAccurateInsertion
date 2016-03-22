@@ -1,0 +1,22 @@
+<launch>
+ <param name="robot_description" textfile="$(find kuka_kr6)/robot/kuka_kr6_description_mesh.urdf"/>
+ <param name="use_gui" value="true"/>
+
+ <node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher" >
+  <rosparam param="zeros">
+   'joint1': 0.0
+   'joint2': -1.57079633
+   'joint3': 1.57079633
+   'joint4': 0.0
+   'joint5': 0.0
+   'joint6': 0.0
+  </rosparam>  	
+ </node>
+
+ <node name="robot_state_publisher" pkg="robot_state_publisher" type="state_publisher" />
+
+ <node name="rviz" pkg="rviz" type="rviz" args="-d $(find kuka_kr6)/launch/kuka_kr6_urdf_view.rviz" />
+
+</launch>
+
+

@@ -1,0 +1,166 @@
+<robot name="kuka_kr5">
+  <link name="world"/>
+  <joint name="base_joint" type="fixed">
+    <parent link="world"/>
+    <child link="base_link"/>
+  </joint>
+  <link name="base_link">
+   <visual>
+    <geometry>
+      <mesh filename="package://kuka_kr6/robots/base_link.STL" />
+    </geometry>
+    <material name="orange">
+      <color rgba="1 0.43 0 1" />
+    </material>
+   </visual>
+  </link>
+
+  <link name="link1">
+    <visual>
+      <origin xyz="0.025 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://kuka_kr6/robots/link1.STL" />
+      </geometry>
+      <material name="orange">
+        <color rgba="1 0.43 0 1" />
+      </material>
+    </visual>
+  </link>
+  <joint name="joint1" type="revolute">
+    <origin xyz="0 0 0.4" rpy="3.14159265 0 0" />
+    <parent link="base_link" />
+    <child link="link1" />
+    <axis xyz="0 0 1" />
+    <limit lower="-2.967059728" upper="2.967059728" effort="1" velocity="1"/>
+  </joint>
+
+  <link name="link2">
+   <visual>
+    <geometry>
+      <mesh filename="package://kuka_kr6/robots/link2.STL" />
+    </geometry>
+    <material name="orange">
+      <color rgba="1 0.43 0 1" />
+    </material>
+   </visual>
+  </link>
+  <joint name="joint2" type="revolute">
+    <origin xyz="0.025 0 0" rpy="1.57079633 0 0" />
+    <parent link="link1" />
+    <child link="link2" />
+    <axis xyz="0 0 1" />
+    <limit lower="-3.316125579" upper="0.785398163" effort="1" velocity="1"/>
+  </joint>
+  <joint name="joint2_word" type="fixed">
+    <parent link="link2" />
+    <child link="link2_word" />
+  </joint>
+
+  <link name="link2_word">
+    <visual>
+    <geometry>
+      <mesh filename="package://kuka_kr6/robots/link2_word.STL" />
+    </geometry>
+    <material name="black">
+      <color rgba="0 0 0 1" />
+    </material>
+   </visual>
+  </link>
+
+
+  <link name="link3">
+   <visual>
+    <origin xyz="0 -0.035 0" rpy="0 0 0" />
+    <geometry>
+      <mesh filename="package://kuka_kr6/robots/link3.STL" />
+    </geometry>
+    <material name="orange">
+      <color rgba="1 0.43 0 1" />
+    </material>
+   </visual>
+  </link>
+  <joint name="joint3" type="revolute">
+    <origin xyz="0.315 0 0" rpy="0 0 0" />
+    <parent link="link2" />
+    <child link="link3" />
+    <axis xyz="0 0 1" />
+    <limit lower="-2.094395102" upper="2.722713633" effort="1" velocity="1"/>
+  </joint>
+
+  <link name="link4">
+   <visual>
+    <geometry>
+      <mesh filename="package://kuka_kr6/robots/link4.STL" />
+    </geometry>
+    <material name="orange">
+      <color rgba="1 0.43 0 1" />
+    </material>
+   </visual>
+  </link>
+  <joint name="joint4" type="revolute">
+    <origin xyz="0.365 -0.035 0" rpy="0 -1.57079633 0" />
+    <parent link="link3" />
+    <child link="link4" />
+    <axis xyz="0 0 1" />
+    <limit lower="-3.228859116" upper="3.228859116" effort="1" velocity="1"/>
+  </joint>
+
+  <joint name="joint4_word" type="fixed">
+    <parent link="link4" />
+    <child link="link4_word" />
+  </joint>
+  <link name="link4_word">
+   <visual>
+    <geometry>
+      <mesh filename="package://kuka_kr6/robots/link4_word.STL" />
+    </geometry>
+    <material name="black">
+      <color rgba="0 0 0 1" />
+    </material>
+   </visual>
+  </link>
+
+  <link name="link5">
+   <visual>
+    <origin xyz="0 0 0" rpy="0 -1.57079633 0" />
+    <geometry>
+      <mesh filename="package://kuka_kr6/robots/link5.STL" />
+    </geometry>
+    <material name="orange">
+      <color rgba="1 0.43 0 1" />
+    </material>
+   </visual>
+  </link>
+  <joint name="joint5" type="revolute">
+    <origin xyz="0 0 0" rpy="0 1.57079633 0" />
+    <parent link="link4" />
+    <child link="link5" />
+    <axis xyz="0 0 1" />
+    <limit lower="-2.094395102" upper="2.094395102" effort="1" velocity="1"/>
+  </joint>
+
+  <link name="link6">
+   <visual>
+    <geometry>
+      <mesh filename="package://kuka_kr6/robots/link6.STL" />
+    </geometry>
+    <material name="orange">
+      <color rgba="1 0.43 0 1" />
+    </material>
+   </visual>
+  </link>
+  <joint name="joint6" type="revolute">
+    <origin xyz="0 0 0" rpy="0 -1.57079633 0" />
+    <parent link="link5" />
+    <child link="link6" />
+    <axis xyz="0 0 1" />
+    <limit lower="-6.108652382" upper="6.108652382" effort="1" velocity="1"/>
+  </joint>
+
+  <link name="tip" />
+  <joint name="tip_joint" type="fixed">
+    <origin xyz="0 0 -0.08" rpy="3.14159265 0 1.57079633" />
+    <parent link="link6" />
+    <child link="tip" />
+  </joint>
+</robot>

@@ -1,0 +1,34 @@
+<launch>
+
+  <rosparam command="load" file="$(find kuka_kr6_moveit_config)/config/joint_names.yaml"/>
+  
+  <!-- the "sim" argument controls whether we connect to a Simulated or Real robot -->
+  <arg name="sim" default="true" />
+  
+  <!-- load the robot_description parameter before launching ROS-I nodes -->
+  <include file="$(find kuka_kr6_moveit_config)/launch/planning_context.launch" >
+    <arg name="load_robot_description" value="true" />
+  </include>
+  
+  <!-- run the robot simulator and action interface nodes -->
+  <group if="$(arg sim)">
+    <node pkg="industrial_robot_simulator" type="industrial_robot_simulator" name="industrial_robot_simulator"/>
+  </group>
+  
+  <!-- joint_trajectory_action: provides actionlib interface for high-level robot control -->
+  <node pkg="industrial_robot_client" type="joint_trajectory_action" name="joint_trajectory_action"/>
+  
+  <!-- publish the robot state (tf transforms) -->
+  <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" />
+ 
+  <include file="$(find kuka_kr6_moveit_config)/launch/move_group.launch">
+    <arg name="publish_monitored_planning_scene" value="true" />
+  </include>
+
+  <include file="$(find kuka_kr6_moveit_config)/launch/moveit_rviz.launch">
+    <arg name="config" value="true"/>
+  </include>
+  
+  <include file="$(find kuka_kr6_moveit_config)/launch/default_warehouse_db.launch" />
+
+</launch>

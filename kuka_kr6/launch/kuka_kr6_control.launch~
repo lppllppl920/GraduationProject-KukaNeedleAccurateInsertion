@@ -1,0 +1,13 @@
+<launch>
+ <param name="robot_description" textfile="$(find kuka_kr6)/robot/kuka_kr6_description_mesh.urdf"/>
+ <param name="use_gui" value="false"/>
+
+ <node name="robot_state_publisher" pkg="robot_state_publisher" type="state_publisher" >
+ 	<remap from="/joint_states" to="/kuka_kr6/joint_states" />
+ </node>
+
+ <node name="rviz" pkg="rviz" type="rviz" args="-d $(find kuka_kr6)/launch/kuka_kr6_urdf_view.rviz" />
+
+</launch>
+
+

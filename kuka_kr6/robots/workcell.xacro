@@ -1,0 +1,26 @@
+<?xml version="1.0"?>
+
+<robot name="workcell" xmlns:xacro="http://ros.org/wiki/xacro">
+	
+	<xacro:include filename="$(find kuka_kr6)/robots/table.xacro"/>
+  <xacro:include filename="$(find kuka_kr6)/robots/kuka_kr6_description_mesh_noword.xacro"/>
+
+  <link name="world_frame"/>
+
+  <xacro:kuka_kr6 prefix=""/>
+  <xacro:table length="0.5" width="0.5" height="0.2"/>
+
+	<joint name="world_to_robot" type="fixed">
+    <parent link="world_frame"/>
+    <child link="base_link"/>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+  </joint>
+
+  <joint name="world_to_table" type="fixed">
+    <parent link="world_frame"/>
+    <child link="table_base"/>
+    <origin xyz="0.5 0 0" rpy="0 0 0"/>
+  </joint>
+
+</robot>
+

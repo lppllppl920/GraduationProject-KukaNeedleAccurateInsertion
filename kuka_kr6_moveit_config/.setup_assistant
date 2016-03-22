@@ -1,0 +1,8 @@
+moveit_setup_assistant_config:
+  URDF:
+    package: kuka_kr6
+    relative_path: robots/kuka_kr6_description_mesh_noword.urdf
+  SRDF:
+    relative_path: config/kuka_kr6.srdf
+  CONFIG:
+    generated_timestamp: 1457353472
