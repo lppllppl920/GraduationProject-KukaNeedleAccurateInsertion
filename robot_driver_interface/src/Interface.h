@@ -9,11 +9,12 @@
 #define ROBOT_DRIVER_INTERFACE_SRC_INTERFACE_H_
 
 #include "controller.h"
+#include "gui/ui_robotInterface.h"
 
 using namespace visualization_msgs;
 using namespace interactive_markers;
 
-class Interface: public QWidget{
+class Interface: public QWidget, private Ui::robotInterface{
 	Q_OBJECT
 public:
 
@@ -29,14 +30,14 @@ public:
 	InteractiveMarker makeEmptyMarker(bool dummyBox);
 	void initMenu();
 	void makeMenuMarker(std::string name);
-	void trajectoryActionCallback(
+	void trajectoryActionCb(
 			const control_msgs::FollowJointTrajectoryActionGoalConstPtr& feedback);
 	void addWaypointsCb(const InteractiveMarkerFeedbackConstPtr &feedback);
 	void visualizeExecutePlanCb(
 			const InteractiveMarkerFeedbackConstPtr &feedback);
 	void endEffectorPosCb(
 			const InteractiveMarkerFeedbackConstPtr &feedback);
-	void spin();
+
 
 public slots:
 
@@ -44,6 +45,10 @@ public slots:
 	void shutdown();
 	void visualizeMotionPlan(
 			MotionPlan motion_plan);
+
+	void visualizeJointPlan();
+	void visualizePosePlan();
+	void executeMotionPlan();
 
 
 signals:
@@ -80,8 +85,6 @@ private:
 	std::vector<interactive_markers::MenuHandler::EntryHandle> menu_entry_;
 	boost::shared_ptr<interactive_markers::InteractiveMarkerServer> interactive_marker_server_;
 	float marker_pos_;
-
-	ros::CallbackQueue callback_queue_;
 };
 
 void addWaypointsCb_global(const InteractiveMarkerFeedbackConstPtr &feedback);

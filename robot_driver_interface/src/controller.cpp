@@ -82,42 +82,6 @@ void Controller::sendTrajectory(
 void Controller::newFeedbackReceived(Feedback* feedback) {
 	emit newFeedback(*feedback);
 }
-boost::shared_ptr<moveit::planning_interface::MoveGroup> Controller::getMoveGroup() {
-	return group_;
-}
-
-moveit::planning_interface::MoveGroup::Plan& Controller::getMotionPlan() {
-	return motion_plan_;
-}
-
-geometry_msgs::Pose& Controller::getTargetPose() {
-	return target_pose_;
-}
-
-std::map<std::string, double>& Controller::getTargetJoints() {
-	return target_joints_;
-}
-
-Eigen::Affine3d& Controller::getTargetAffine() {
-	return target_affine_;
-}
-
-void Controller::setMotionPlan(
-		moveit::planning_interface::MoveGroup::Plan motion_plan) {
-	motion_plan_ = motion_plan;
-}
-
-void Controller::setTargetPose(geometry_msgs::Pose target_pose) {
-	target_pose_ = target_pose;
-}
-
-void Controller::setTargetJoints(std::map<std::string, double> target_joints) {
-	target_joints_ = target_joints;
-}
-
-void Controller::setTargetAffine(Eigen::Affine3d target_affine) {
-	target_affine_ = target_affine;
-}
 
 // Obtain motion plan based on target pose
 bool Controller::planTargetMotion(geometry_msgs::Pose target_pose) {
@@ -335,4 +299,41 @@ void Controller::endEffectorPosCb(
 
 	end_effector_pos_ = feedback->pose;
 
+}
+
+boost::shared_ptr<moveit::planning_interface::MoveGroup> Controller::getMoveGroup() {
+	return group_;
+}
+
+moveit::planning_interface::MoveGroup::Plan& Controller::getMotionPlan() {
+	return motion_plan_;
+}
+
+geometry_msgs::Pose& Controller::getTargetPose() {
+	return target_pose_;
+}
+
+std::map<std::string, double>& Controller::getTargetJoints() {
+	return target_joints_;
+}
+
+Eigen::Affine3d& Controller::getTargetAffine() {
+	return target_affine_;
+}
+
+void Controller::setMotionPlan(
+		moveit::planning_interface::MoveGroup::Plan motion_plan) {
+	motion_plan_ = motion_plan;
+}
+
+void Controller::setTargetPose(geometry_msgs::Pose target_pose) {
+	target_pose_ = target_pose;
+}
+
+void Controller::setTargetJoints(std::map<std::string, double> target_joints) {
+	target_joints_ = target_joints;
+}
+
+void Controller::setTargetAffine(Eigen::Affine3d target_affine) {
+	target_affine_ = target_affine;
 }

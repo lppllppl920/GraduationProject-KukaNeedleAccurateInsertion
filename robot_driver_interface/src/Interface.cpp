@@ -12,11 +12,21 @@ Interface::Interface(QWidget *parent):
 		controller_() {
 
 	ROS_INFO("Interface Constructing...");
+
+	setupUi(this);
+
 	node_handle_ = boost::make_shared<ros::NodeHandle>("");
 
 //-------------------------------Settings----------------------------------------------
 
 
+	// GUI related
+	connect(pushButton_VisualizeJointPlan, SIGNAL(clicked()), this, SLOT(visualizeJointPlan()));
+	connect(pushButton_VisualizePosePlan, SIGNAL(clicked()), this, SLOT(visualizePosePlan()));
+	connect(pushButton_ExecutePlan, SIGNAL(clicked()), this, SLOT(executeMotionPlan()));
+
+
+	// Others related
 	connect(this,
 			SIGNAL(
 					sendTrajectory(const TrajectoryGoal&)),
@@ -78,7 +88,7 @@ Interface::Interface(QWidget *parent):
 	motion_trajectory_subsriber_ = node_handle_->subscribe<
 			control_msgs::FollowJointTrajectoryActionGoal, Interface>(
 			"/joint_trajectory_action/goal", 10,
-			&Interface::trajectoryActionCallback, this);
+			&Interface::trajectoryActionCb, this);
 
 //--------------------------Initialization----------------------------------------------------
 	// Set up menu marker
@@ -91,21 +101,53 @@ Interface::Interface(QWidget *parent):
 
 	// initialize joint state publish count
 	joint_state_publish_count_ = 0;
-	ROS_INFO("Callback queue set up");
 }
 
 Interface::~Interface() {
 	ROS_INFO("Interface Deconstructing...");
 }
 
-void Interface::spin() {
-	callback_queue_.callAvailable(ros::WallDuration());
-}
+// Slots function
+	//call back function for GUI pushbutton
+void Interface::visualizeJointPlan() {
+	std::map<std::string, double> target_joints;
+	target_joints["joint1"] = lineEdit_Joint1->text().toDouble() / 180.0 * M_PI;
+	target_joints["joint2"] = lineEdit_Joint2->text().toDouble() / 180.0 * M_PI;
+	target_joints["joint3"] = lineEdit_Joint3->text().toDouble() / 180.0 * M_PI;
+	target_joints["joint4"] = lineEdit_Joint4->text().toDouble() / 180.0 * M_PI;
+	target_joints["joint5"] = lineEdit_Joint5->text().toDouble() / 180.0 * M_PI;
+	target_joints["joint6"] = lineEdit_Joint6->text().toDouble() / 180.0 * M_PI;
 
-void Interface::shutdown() {
-	QApplication::exit();
-	//spinner_->stop();
-	ros::shutdown();
+	controller_.planTargetMotion(target_joints);
+
+}
+	//call back function for GUI push button
+void Interface::visualizePosePlan() {
+	geometry_msgs::Pose target_pose;
+	target_pose.position.x = lineEdit_TransX->text().toDouble();
+	target_pose.position.y = lineEdit_TransY->text().toDouble();
+	target_pose.position.z = lineEdit_TransZ->text().toDouble();
+
+	target_pose.orientation.x = lineEdit_RotateX->text().toDouble();
+	target_pose.orientation.y = lineEdit_RotateY->text().toDouble();
+	target_pose.orientation.z = lineEdit_RotateZ->text().toDouble();
+	target_pose.orientation.w = lineEdit_RotateW->text().toDouble();
+
+	double scale = sqrt(target_pose.orientation.w * target_pose.orientation.w +
+			target_pose.orientation.x * target_pose.orientation.x +
+			target_pose.orientation.y * target_pose.orientation.y +
+			target_pose.orientation.z * target_pose.orientation.z);
+	// Normalize orientation vector
+	target_pose.orientation.w /= scale;
+	target_pose.orientation.x /= scale;
+	target_pose.orientation.y /= scale;
+	target_pose.orientation.z /= scale;
+
+	controller_.planTargetMotion(target_pose);
+}
+void Interface::executeMotionPlan(){
+
+	controller_.executeMotionPlan();
 }
 
 void Interface::newFeedbackReceived(Feedback& feedback) {
@@ -120,15 +162,15 @@ void Interface::newFeedbackReceived(Feedback& feedback) {
 	joint_state_.position[5] = feedback.getAxis().A6 / 180.0 * M_PI;
 	joint_state_.header.stamp = ros::Time::now();
 	joint_state_publisher_.publish(joint_state_);
-}
 
-void Interface::trajectoryActionCallback(
-		const control_msgs::FollowJointTrajectoryActionGoalConstPtr& feedback) {
-	ROS_INFO("Trajectory received.");
-	emit sendTrajectory(feedback);
+	// Display feedback of joint state
+	lineEdit_Joint1_S->setText(QString::number(feedback.getAxis().A1));
+	lineEdit_Joint2_S->setText(QString::number(feedback.getAxis().A2));
+	lineEdit_Joint3_S->setText(QString::number(feedback.getAxis().A3));
+	lineEdit_Joint4_S->setText(QString::number(feedback.getAxis().A4));
+	lineEdit_Joint5_S->setText(QString::number(feedback.getAxis().A5));
+	lineEdit_Joint6_S->setText(QString::number(feedback.getAxis().A6));
 }
-
-// Visualize motion plan
 void Interface::visualizeMotionPlan(
 		moveit::planning_interface::MoveGroup::Plan motion_plan) {
 
@@ -139,71 +181,18 @@ void Interface::visualizeMotionPlan(
 
 	display_publisher_.publish(display_trajectory_);
 }
-
-Marker Interface::makeBox(InteractiveMarker &msg) {
-	Marker marker;
-
-	marker.type = Marker::CUBE;
-	marker.scale.x = msg.scale * 0.45;
-	marker.scale.y = msg.scale * 0.45;
-	marker.scale.z = msg.scale * 0.45;
-	marker.color.r = 0.5;
-	marker.color.g = 0.5;
-	marker.color.b = 0.5;
-	marker.color.a = 0;
-
-	return marker;
+void Interface::shutdown() {
+	QApplication::exit();
+	//spinner_->stop();
+	ros::shutdown();
 }
 
-InteractiveMarkerControl& Interface::makeBoxControl(InteractiveMarker &msg) {
-	InteractiveMarkerControl control;
-	control.always_visible = false;
-	control.markers.push_back(makeBox(msg));
-	msg.controls.push_back(control);
-
-	return msg.controls.back();
+// Callback function
+void Interface::trajectoryActionCb(
+		const control_msgs::FollowJointTrajectoryActionGoalConstPtr& feedback) {
+	ROS_INFO("Trajectory received.");
+	emit sendTrajectory(feedback);
 }
-
-InteractiveMarker Interface::makeEmptyMarker(bool dummyBox = true) {
-	InteractiveMarker int_marker;
-	int_marker.header.frame_id = "base_link";
-	int_marker.pose.position.y = -3.0 * marker_pos_++;
-	int_marker.scale = 1;
-
-	return int_marker;
-}
-
-void Interface::makeMenuMarker(std::string name) {
-	InteractiveMarker int_marker = makeEmptyMarker();
-	int_marker.name = name;
-
-	InteractiveMarkerControl control;
-
-	control.interaction_mode = InteractiveMarkerControl::BUTTON;
-	control.always_visible = false;
-
-	control.markers.push_back(makeBox(int_marker));
-	int_marker.controls.push_back(control);
-
-	interactive_marker_server_->insert(int_marker);
-}
-
-void Interface::initMenu() {
-
-	// Nice try!
-	/*boost::function<
-	void(const interactive_markers::MenuHandler::FeedbackConstPtr&)> f1 = boost::function<
-			void(const interactive_markers::MenuHandler::FeedbackConstPtr&)>(this->addWaypointsCb); */
-
-	menu_entry_.push_back(menu_handler_.insert("Add into way points", addWaypointsCb_global));
-
-	/* boost::function<
-	void(const interactive_markers::MenuHandler::FeedbackConstPtr&)> f2 = boost::function<
-			void(const interactive_markers::MenuHandler::FeedbackConstPtr&)>(this->addWaypointsCb); */
-
-	menu_entry_.push_back(menu_handler_.insert("Visualize and Execute motion plan", visualizeExecutePlanCb_global));
-}
-
 void Interface::addWaypointsCb(
 		const InteractiveMarkerFeedbackConstPtr &feedback) {
 	ROS_INFO("Interface: add way points callback");
@@ -224,10 +213,63 @@ void addWaypointsCb_global(const InteractiveMarkerFeedbackConstPtr &feedback) {
 	ROS_INFO("Global: add way points");
 	kuka_interface->addWaypointsCb(feedback);
 }
-
 void visualizeExecutePlanCb_global(const InteractiveMarkerFeedbackConstPtr &feedback) {
 	// The Workaround of the MenuHandler insert function problem
 	ROS_INFO("Global: visualize and execute plan");
 	kuka_interface->visualizeExecutePlanCb(feedback);
 }
+
+
+// Menu Interaction related
+Marker Interface::makeBox(InteractiveMarker &msg) {
+	Marker marker;
+
+	marker.type = Marker::CUBE;
+	marker.scale.x = msg.scale * 0.45;
+	marker.scale.y = msg.scale * 0.45;
+	marker.scale.z = msg.scale * 0.45;
+	marker.color.r = 0.5;
+	marker.color.g = 0.5;
+	marker.color.b = 0.5;
+	marker.color.a = 0;
+
+	return marker;
+}
+InteractiveMarkerControl& Interface::makeBoxControl(InteractiveMarker &msg) {
+	InteractiveMarkerControl control;
+	control.always_visible = false;
+	control.markers.push_back(makeBox(msg));
+	msg.controls.push_back(control);
+
+	return msg.controls.back();
+}
+InteractiveMarker Interface::makeEmptyMarker(bool dummyBox = true) {
+	InteractiveMarker int_marker;
+	int_marker.header.frame_id = "base_link";
+	int_marker.pose.position.y = -3.0 * marker_pos_++;
+	int_marker.scale = 1;
+
+	return int_marker;
+}
+void Interface::makeMenuMarker(std::string name) {
+	InteractiveMarker int_marker = makeEmptyMarker();
+	int_marker.name = name;
+
+	InteractiveMarkerControl control;
+
+	control.interaction_mode = InteractiveMarkerControl::BUTTON;
+	control.always_visible = false;
+
+	control.markers.push_back(makeBox(int_marker));
+	int_marker.controls.push_back(control);
+
+	interactive_marker_server_->insert(int_marker);
+}
+void Interface::initMenu() {
+
+	menu_entry_.push_back(menu_handler_.insert("Add into way points", addWaypointsCb_global));
+	menu_entry_.push_back(menu_handler_.insert("Visualize and Execute motion plan", visualizeExecutePlanCb_global));
+}
+
+
 

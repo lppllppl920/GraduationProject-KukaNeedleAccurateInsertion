@@ -35,6 +35,7 @@ int main(int argc, char *argv[]) {
 	ros::init(argc, argv, "Kuka_robot_node");
 	//Interface kuka_interface(argc, argv, "manipulator");
 	kuka_interface = boost::make_shared<Interface>();
+	kuka_interface->show();
 
 	return a.exec();
 }
