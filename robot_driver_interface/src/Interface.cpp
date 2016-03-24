@@ -25,7 +25,8 @@ Interface::Interface(QWidget *parent):
 	connect(pushButton_VisualizePosePlan, SIGNAL(clicked()), this, SLOT(visualizePosePlan()));
 	connect(pushButton_ExecutePlan, SIGNAL(clicked()), this, SLOT(executeMotionPlan()));
 	connect(pushButton_CopyJointState, SIGNAL(clicked()), this, SLOT(copyJointState()));
-
+	connect(pushButton_AddWaypoint, SIGNAL(clicked()), &controller_, SLOT(addWaypointsCb()));
+	connect(pushButton_ExecuteWaypointsPlan, SIGNAL(clicked()), &controller_, SLOT(visualizeExecutePlanCb()));
 
 	// Others related
 	connect(this,
@@ -55,15 +56,15 @@ Interface::Interface(QWidget *parent):
 			SLOT(
 					visualizeMotionPlan(MotionPlan)));
 	connect(this,
-			SIGNAL(addWaypoints(const InteractiveMarkerFeedbackConstPtr&)),
+			SIGNAL(addWaypoints()),
 			&controller_,
-			SLOT(addWaypointsCb(const InteractiveMarkerFeedbackConstPtr&)));
+			SLOT(addWaypointsCb()));
 	connect(this,
 			SIGNAL(
-					visualizeExecutePlan(const InteractiveMarkerFeedbackConstPtr&)),
+					visualizeExecutePlan()),
 			&controller_,
 			SLOT(
-					visualizeExecutePlanCb(const InteractiveMarkerFeedbackConstPtr&)));
+					visualizeExecutePlanCb()));
 	connect(this,
 			SIGNAL(endEffectorPos(const InteractiveMarkerFeedbackConstPtr&)),
 			&controller_,
@@ -201,20 +202,17 @@ void Interface::shutdown() {
 }
 
 // Callback function
-void Interface::trajectoryActionCb(
-		const control_msgs::FollowJointTrajectoryActionGoalConstPtr& feedback) {
+void Interface::trajectoryActionCb(const TrajectoryGoal& feedback) {
 	ROS_INFO("Trajectory received.");
 	emit sendTrajectory(feedback);
 }
-void Interface::addWaypointsCb(
-		const InteractiveMarkerFeedbackConstPtr &feedback) {
+void Interface::addWaypointsCb() {
 	ROS_INFO("Interface: add way points callback");
-	emit addWaypoints(feedback);
+	emit addWaypoints();
 }
-void Interface::visualizeExecutePlanCb(
-		const InteractiveMarkerFeedbackConstPtr &feedback) {
+void Interface::visualizeExecutePlanCb() {
 	ROS_INFO("Interface: visualize and execute plan callback");
-	emit visualizeExecutePlan(feedback);
+	emit visualizeExecutePlan();
 }
 void Interface::endEffectorPosCb(
 		const InteractiveMarkerFeedbackConstPtr &feedback) {
@@ -230,12 +228,12 @@ void Interface::endEffectorPosCb(
 void addWaypointsCb_global(const InteractiveMarkerFeedbackConstPtr &feedback) {
 	// The Workaround of the MenuHandler insert function problem
 	ROS_INFO("Global: add way points");
-	kuka_interface->addWaypointsCb(feedback);
+	kuka_interface->addWaypointsCb();
 }
 void visualizeExecutePlanCb_global(const InteractiveMarkerFeedbackConstPtr &feedback) {
 	// The Workaround of the MenuHandler insert function problem
 	ROS_INFO("Global: visualize and execute plan");
-	kuka_interface->visualizeExecutePlanCb(feedback);
+	kuka_interface->visualizeExecutePlanCb();
 }
 void Interface::jointStatesCb(const sensor_msgs::JointStateConstPtr &feedback) {
 

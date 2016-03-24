@@ -32,9 +32,8 @@ public:
 	void makeMenuMarker(std::string name);
 	void trajectoryActionCb(
 			const control_msgs::FollowJointTrajectoryActionGoalConstPtr& feedback);
-	void addWaypointsCb(const InteractiveMarkerFeedbackConstPtr &feedback);
-	void visualizeExecutePlanCb(
-			const InteractiveMarkerFeedbackConstPtr &feedback);
+	void addWaypointsCb();
+	void visualizeExecutePlanCb();
 	void endEffectorPosCb(
 			const InteractiveMarkerFeedbackConstPtr &feedback);
 // joint states subscribe function
@@ -57,9 +56,8 @@ signals:
 	// Send trajectory to controller object
 	void sendTrajectory(
 			const TrajectoryGoal& feedback);
-	void addWaypoints(const InteractiveMarkerFeedbackConstPtr &feedback);
-	void visualizeExecutePlan(
-			const InteractiveMarkerFeedbackConstPtr &feedback);
+	void addWaypoints();
+	void visualizeExecutePlan();
 	void endEffectorPos(
 			const InteractiveMarkerFeedbackConstPtr &feedback);
 

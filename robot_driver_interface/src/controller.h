@@ -22,14 +22,16 @@ public:
 
 	typedef control_msgs::FollowJointTrajectoryActionGoalConstPtr TrajectoryGoal;
 	typedef moveit::planning_interface::MoveGroup::Plan MotionPlan;
+	typedef std::vector<descartes_core::TrajectoryPtPtr> TrajectoryVec;
+	typedef TrajectoryVec::const_iterator TrajectoryIter;
 
 	Controller(std::string group_name = "manipulator");
 	~Controller();
 	// ROS node "KRC4_joint_state_publisher" initialization
 	void addPublisher();
 	// Called when new trajectory is computed
-	void trajectoryActionCallback(
-			const control_msgs::FollowJointTrajectoryActionGoalConstPtr& feedback);
+	//void trajectoryActionCallback(
+		//	const control_msgs::FollowJointTrajectoryActionGoalConstPtr& feedback);
 
 // get function
 	boost::shared_ptr<moveit::planning_interface::MoveGroup> getMoveGroup();
@@ -68,10 +70,15 @@ public:
 	void removeCollisionObject(std::string collision_id);
 	void updateWorkcell();
 
+	trajectory_msgs::JointTrajectory
+	toROSJointTrajectory(const TrajectoryVec& trajectory,
+	                     const descartes_core::RobotModel& model,
+	                     const std::vector<std::string>& joint_names,
+	                     double time_delay);
+
 public slots:
-	void addWaypointsCb(const InteractiveMarkerFeedbackConstPtr &feedback);
-	void visualizeExecutePlanCb(
-			const InteractiveMarkerFeedbackConstPtr &feedback);
+	void addWaypointsCb();
+	void visualizeExecutePlanCb();
 	void endEffectorPosCb(
 			const InteractiveMarkerFeedbackConstPtr &feedback);
 	void newFeedbackReceived(Feedback* feedback);
@@ -114,6 +121,7 @@ private:
 	shape_msgs::SolidPrimitive collision_shape_;
 	moveit_msgs::CollisionObject collision_object_;
 	std::vector<moveit_msgs::CollisionObject> collision_objects_;
+
 
 
 };

@@ -379,6 +379,7 @@ private:
 
 	plotWindow plot_;
 
+
 };
 
 #endif
