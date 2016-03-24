@@ -33,6 +33,13 @@
 #include "message.h"
 #include "tcpthread.h"
 #include "plot.h"
+// Includes the descartes robot model we will be using
+#include <descartes_moveit/moveit_state_adapter.h>
+// Includes the descartes trajectory type we will be using
+#include <descartes_trajectory/axial_symmetric_pt.h>
+#include <descartes_trajectory/cart_trajectory_pt.h>
+// Includes the planner we will be using
+#include <descartes_planner/dense_planner.h>
 
 // --------------------------------------------------------------------------
 // Plannar class

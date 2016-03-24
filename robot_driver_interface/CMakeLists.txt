@@ -7,6 +7,9 @@ find_package(catkin REQUIRED COMPONENTS
   moveit_ros_planning_interface
   visualization_msgs
   interactive_markers
+  descartes_planner
+  descartes_moveit
+  descartes_trajectory
 )
 
 find_package(Qt4 REQUIRED)

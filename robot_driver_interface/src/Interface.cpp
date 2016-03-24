@@ -24,6 +24,7 @@ Interface::Interface(QWidget *parent):
 	connect(pushButton_VisualizeJointPlan, SIGNAL(clicked()), this, SLOT(visualizeJointPlan()));
 	connect(pushButton_VisualizePosePlan, SIGNAL(clicked()), this, SLOT(visualizePosePlan()));
 	connect(pushButton_ExecutePlan, SIGNAL(clicked()), this, SLOT(executeMotionPlan()));
+	connect(pushButton_CopyJointState, SIGNAL(clicked()), this, SLOT(copyJointState()));
 
 
 	// Others related
@@ -76,6 +77,8 @@ Interface::Interface(QWidget *parent):
 	// Set publisher for joint state visualization
 	joint_state_publisher_ = node_handle_->advertise<sensor_msgs::JointState>(
 			"/joint_states", 1000, true);
+	joint_state_subscriber_ = node_handle_->subscribe<sensor_msgs::JointState, Interface>(
+			"/joint_states", 10, &Interface::jointStatesCb, this);
 
 	// Set subscriber for obtaining interactive marker position
 	interactive_marker_subsriber_ =
@@ -108,7 +111,7 @@ Interface::~Interface() {
 }
 
 // Slots function
-	//call back function for GUI pushbutton
+	//call back function for GUI push button
 void Interface::visualizeJointPlan() {
 	std::map<std::string, double> target_joints;
 	target_joints["joint1"] = lineEdit_Joint1->text().toDouble() / 180.0 * M_PI;
@@ -145,6 +148,16 @@ void Interface::visualizePosePlan() {
 
 	controller_.planTargetMotion(target_pose);
 }
+void Interface::copyJointState() {
+
+	lineEdit_Joint1->setText(lineEdit_Joint1_S->text());
+	lineEdit_Joint2->setText(lineEdit_Joint2_S->text());
+	lineEdit_Joint3->setText(lineEdit_Joint3_S->text());
+	lineEdit_Joint4->setText(lineEdit_Joint4_S->text());
+	lineEdit_Joint5->setText(lineEdit_Joint5_S->text());
+	lineEdit_Joint6->setText(lineEdit_Joint6_S->text());
+}
+
 void Interface::executeMotionPlan(){
 
 	controller_.executeMotionPlan();
@@ -205,7 +218,13 @@ void Interface::visualizeExecutePlanCb(
 }
 void Interface::endEffectorPosCb(
 		const InteractiveMarkerFeedbackConstPtr &feedback) {
-	ROS_INFO("Interface: Interactive Marker position received");
+	lineEdit_TransX->setText(QString::number(feedback->pose.position.x));
+	lineEdit_TransY->setText(QString::number(feedback->pose.position.y));
+	lineEdit_TransZ->setText(QString::number(feedback->pose.position.z));
+	lineEdit_RotateX->setText(QString::number(feedback->pose.orientation.x));
+	lineEdit_RotateY->setText(QString::number(feedback->pose.orientation.y));
+	lineEdit_RotateZ->setText(QString::number(feedback->pose.orientation.z));
+	lineEdit_RotateW->setText(QString::number(feedback->pose.orientation.w));
 	emit endEffectorPos(feedback);
 }
 void addWaypointsCb_global(const InteractiveMarkerFeedbackConstPtr &feedback) {
@@ -217,6 +236,16 @@ void visualizeExecutePlanCb_global(const InteractiveMarkerFeedbackConstPtr &feed
 	// The Workaround of the MenuHandler insert function problem
 	ROS_INFO("Global: visualize and execute plan");
 	kuka_interface->visualizeExecutePlanCb(feedback);
+}
+void Interface::jointStatesCb(const sensor_msgs::JointStateConstPtr &feedback) {
+
+	lineEdit_Joint1_S->setText(QString::number(feedback->position[0] / M_PI * 180.0));
+	lineEdit_Joint2_S->setText(QString::number(feedback->position[1] / M_PI * 180.0));
+	lineEdit_Joint3_S->setText(QString::number(feedback->position[2] / M_PI * 180.0));
+	lineEdit_Joint4_S->setText(QString::number(feedback->position[3] / M_PI * 180.0));
+	lineEdit_Joint5_S->setText(QString::number(feedback->position[4] / M_PI * 180.0));
+	lineEdit_Joint6_S->setText(QString::number(feedback->position[5] / M_PI * 180.0));
+
 }
 
 

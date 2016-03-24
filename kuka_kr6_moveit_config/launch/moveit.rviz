@@ -4,6 +4,7 @@ Panels:
     Name: Displays
     Property Tree Widget:
       Expanded:
+        - /MotionPlanning1
         - /MotionPlanning1/Scene Robot1
         - /MotionPlanning1/Planning Request1
         - /MotionPlanning1/Planning Metrics1
@@ -223,7 +224,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/XYOrbit
-      Distance: 4.20987
+      Distance: 2.19024
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.06
         Stereo Focal Distance: 1
@@ -235,10 +236,10 @@ Visualization Manager:
         Z: 2.23518e-07
       Name: Current View
       Near Clip Distance: 0.01
-      Pitch: 0.559797
+      Pitch: 0.549797
       Target Frame: world
       Value: XYOrbit (rviz)
-      Yaw: 2.57676
+      Yaw: 0.762208
     Saved: ~
 Window Geometry:
   Displays:
@@ -254,5 +255,5 @@ Window Geometry:
   Views:
     collapsed: false
   Width: 1615
-  X: 559
-  Y: 112
+  X: 640
+  Y: 26

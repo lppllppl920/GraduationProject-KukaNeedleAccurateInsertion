@@ -93,10 +93,29 @@ bool Controller::planTargetMotion(geometry_msgs::Pose target_pose) {
 
 	return plan_success_;
 }
+bool Controller::planTargetPoseMotion() {
+
+	group_->setPoseTarget(target_pose_);
+
+	plan_success_ = group_->plan(motion_plan_);
+	ROS_INFO("Motion plan %s", plan_success_ ? "SUCCEEDED" : "FAILED");
+
+	return plan_success_;
+}
+
 // Obtain motion plan based on target joint values
 bool Controller::planTargetMotion(std::map<std::string, double> target_joints) {
 
 	group_->setJointValueTarget(target_joints);
+
+	plan_success_ = group_->plan(motion_plan_);
+	ROS_INFO("Motion plan %s", plan_success_ ? "SUCCEEDED" : "FAILED");
+
+	return plan_success_;
+}
+bool Controller::planTargetJointsMotion() {
+
+	group_->setJointValueTarget(target_joints_);
 
 	plan_success_ = group_->plan(motion_plan_);
 	ROS_INFO("Motion plan %s", plan_success_ ? "SUCCEEDED" : "FAILED");
@@ -113,12 +132,33 @@ bool Controller::planTargetMotion(Eigen::Affine3d target_affine) {
 
 	return plan_success_;
 }
+bool Controller::planTargetAffineMotion() {
+
+	group_->setPoseTarget(target_affine_);
+
+	plan_success_ = group_->plan(motion_plan_);
+	ROS_INFO("Motion plan %s", plan_success_ ? "SUCCEEDED" : "FAILED");
+
+	return plan_success_;
+}
 
 // Execute motion plan
 bool Controller::executeMotionPlan(
 		moveit::planning_interface::MoveGroup::Plan motion_plan) {
 
 	motion_status_ = group_->execute(motion_plan);
+	if (motion_status_.val != moveit_msgs::MoveItErrorCodes::SUCCESS) {
+		ROS_INFO("Motion execution failed");
+		return false;
+	} else {
+		ROS_INFO("Motion execution succeeded");
+		return true;
+	}
+
+}
+bool Controller::executeMotionPlan() {
+
+	motion_status_ = group_->execute(motion_plan_);
 	if (motion_status_.val != moveit_msgs::MoveItErrorCodes::SUCCESS) {
 		ROS_INFO("Motion execution failed");
 		return false;
@@ -142,7 +182,18 @@ bool Controller::asyncExecuteMotionPlan(
 	}
 
 }
+bool Controller::asyncExecuteMotionPlan() {
 
+	motion_status_ = group_->asyncExecute(motion_plan_);
+	if (motion_status_.val != moveit_msgs::MoveItErrorCodes::SUCCESS) {
+		ROS_INFO("Async motion execution failed");
+		return false;
+	} else {
+		ROS_INFO("Async motion execution succeeded");
+		return true;
+	}
+
+}
 void Controller::visualizeMotionPlan() {
 	emit visualizeMotionPlan(motion_plan_);
 }
@@ -167,6 +218,20 @@ void Controller::addCollisionObject(std::string collision_id,
 	collision_objects_.push_back(collision_object_);
 
 }
+void Controller::addCollisionObject(std::string collision_id) {
+
+	collision_object_.header.frame_id = group_->getPlanningFrame();
+
+	/* The id of the object is used to identify it. */
+	collision_object_.id = collision_id;
+
+	collision_object_.primitives.push_back(collision_shape_);
+	collision_object_.primitive_poses.push_back(collision_pose_);
+	collision_object_.operation = moveit_msgs::CollisionObject::ADD;
+
+	collision_objects_.push_back(collision_object_);
+
+}
 // Add collision object to be removed to wait list
 void Controller::removeCollisionObject(std::string collision_id) {
 
@@ -184,88 +249,18 @@ void Controller::updateWorkcell() {
 	remove_collision_ids_.clear();
 }
 
-// Reload function
-// Obtain motion plan based on target pose
-bool Controller::planTargetPoseMotion() {
-
-	group_->setPoseTarget(target_pose_);
-
-	plan_success_ = group_->plan(motion_plan_);
-	ROS_INFO("Motion plan %s", plan_success_ ? "SUCCEEDED" : "FAILED");
-
-	return plan_success_;
-}
-// Obtain motion plan based on target joint values
-bool Controller::planTargetJointsMotion() {
-
-	group_->setJointValueTarget(target_joints_);
-
-	plan_success_ = group_->plan(motion_plan_);
-	ROS_INFO("Motion plan %s", plan_success_ ? "SUCCEEDED" : "FAILED");
-
-	return plan_success_;
-}
-// Obtain motion plan based on target Affine matrix
-bool Controller::planTargetAffineMotion() {
-
-	group_->setPoseTarget(target_affine_);
-
-	plan_success_ = group_->plan(motion_plan_);
-	ROS_INFO("Motion plan %s", plan_success_ ? "SUCCEEDED" : "FAILED");
-
-	return plan_success_;
-}
-
-// Execute motion plan
-bool Controller::executeMotionPlan() {
-
-	motion_status_ = group_->execute(motion_plan_);
-	if (motion_status_.val != moveit_msgs::MoveItErrorCodes::SUCCESS) {
-		ROS_INFO("Motion execution failed");
-		return false;
-	} else {
-		ROS_INFO("Motion execution succeeded");
-		return true;
-	}
-
-}
-// Async execute motion plan
-bool Controller::asyncExecuteMotionPlan() {
-
-	motion_status_ = group_->asyncExecute(motion_plan_);
-	if (motion_status_.val != moveit_msgs::MoveItErrorCodes::SUCCESS) {
-		ROS_INFO("Async motion execution failed");
-		return false;
-	} else {
-		ROS_INFO("Async motion execution succeeded");
-		return true;
-	}
-
-}
-
-// Add collision object to be added to wait list
-void Controller::addCollisionObject(std::string collision_id) {
-
-	collision_object_.header.frame_id = group_->getPlanningFrame();
-
-	/* The id of the object is used to identify it. */
-	collision_object_.id = collision_id;
-
-	collision_object_.primitives.push_back(collision_shape_);
-	collision_object_.primitive_poses.push_back(collision_pose_);
-	collision_object_.operation = moveit_msgs::CollisionObject::ADD;
-
-	collision_objects_.push_back(collision_object_);
-
-}
-
 void Controller::addWaypointsCb(
 		const InteractiveMarkerFeedbackConstPtr &feedback) {
 	ROS_INFO("Controller: add %d th way point", ++waypoint_count_);
 	geometry_msgs::Pose temp_pos = end_effector_pos_;
 	waypoints_.push_back(temp_pos);
 }
+void Controller::endEffectorPosCb(
+		const visualization_msgs::InteractiveMarkerFeedbackConstPtr &feedback) {
 
+	end_effector_pos_ = feedback->pose;
+
+}
 void Controller::visualizeExecutePlanCb(
 		const InteractiveMarkerFeedbackConstPtr &feedback) {
 
@@ -294,13 +289,7 @@ void Controller::visualizeExecutePlanCb(
 	waypoint_count_ = 0;
 }
 
-void Controller::endEffectorPosCb(
-		const visualization_msgs::InteractiveMarkerFeedbackConstPtr &feedback) {
-
-	end_effector_pos_ = feedback->pose;
-
-}
-
+// Get and set functions
 boost::shared_ptr<moveit::planning_interface::MoveGroup> Controller::getMoveGroup() {
 	return group_;
 }

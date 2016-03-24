@@ -37,6 +37,8 @@ public:
 			const InteractiveMarkerFeedbackConstPtr &feedback);
 	void endEffectorPosCb(
 			const InteractiveMarkerFeedbackConstPtr &feedback);
+// joint states subscribe function
+	void jointStatesCb(const sensor_msgs::JointStateConstPtr &feedback);
 
 
 public slots:
@@ -49,7 +51,7 @@ public slots:
 	void visualizeJointPlan();
 	void visualizePosePlan();
 	void executeMotionPlan();
-
+	void copyJointState();
 
 signals:
 	// Send trajectory to controller object
@@ -74,8 +76,9 @@ private:
 	ros::Publisher display_publisher_;
 	moveit_msgs::DisplayTrajectory display_trajectory_;
 
-// Joints state publisher
+// Joints state publisher and subscriber
 	ros::Publisher joint_state_publisher_;
+	ros::Subscriber joint_state_subscriber_;
 	int joint_state_publish_count_;
 	sensor_msgs::JointState joint_state_;
 
