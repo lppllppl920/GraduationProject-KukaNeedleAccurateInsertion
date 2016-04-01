@@ -116,11 +116,6 @@ Interface::~Interface() {
 	ROS_INFO("Interface Deconstructing...");
 	QApplication::exit();
 	ros::shutdown();
-
-	plannar_ptr_ = NULL;
-
-	delete node_handle_;
-	node_handle_ = NULL;
 }
 
 // Slots function

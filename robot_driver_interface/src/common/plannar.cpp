@@ -11,7 +11,8 @@
 #include "plannar.h"
 
 Plannar::Plannar() :
-		tcpThread_(), robot_(), lastAxis_() {
+		tcpThread_(), lastAxis_(),
+		robot_("/home/lxt12/Kuka_interface/src/kuka_kr6/robots/kuka_kr6_needle.urdf"){
 	ROS_INFO("Plannar Constructing...");
 
 	stamp_ = 0;

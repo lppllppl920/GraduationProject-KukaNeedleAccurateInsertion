@@ -208,7 +208,7 @@ public:
 	// Default constructor for Model
 	// Default URDF file path = ../robot/kuka_kr6_description.urdf
 	// KDL::Tree and KDL::Chain are constructed here
-	Model(std::string fn = "../robot/kuka_kr6_description.urdf");
+	Model(std::string fn = "/home/lxt12/Kuka_interface/src/kuka_kr6/robots/kuka_kr6_needle.urdf");
 
 	// Deconstructor for Model
 	// Delete pointer contents: forward and inverse solver

@@ -72,9 +72,6 @@ Controller::Controller(std::string group_name) :
 
 Controller::~Controller() {
 	ROS_INFO("Controller Deconstructing...");
-
-	delete group_;
-	group_ = NULL;
 }
 
 void Controller::sendTrajectory(const TrajectoryGoal& feedback) {
