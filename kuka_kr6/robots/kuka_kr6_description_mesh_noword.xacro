@@ -15,7 +15,7 @@
      </visual>
      <collision>
       <geometry>
-        <mesh filename="package://kuka_kr6/robots/base_link.STL" />
+        <mesh filename="package://kuka_kr6/robots/base_link_collision_reduced.STL" />
        </geometry>
        <material name="yellow">
          <color rgba="0 1 1 1"/>
@@ -33,7 +33,7 @@
       </visual>
       <collision>
         <geometry>
-          <mesh filename="package://kuka_kr6/robots/link1.STL" />
+          <mesh filename="package://kuka_kr6/robots/link1_collision_reduced.STL" />
         </geometry>
         <material name="yellow"/>
       </collision>
@@ -50,7 +50,7 @@
       </visual>
       <collision>
         <geometry>
-          <mesh filename="package://kuka_kr6/robots/link2.STL" />
+          <mesh filename="package://kuka_kr6/robots/link2_collision_reduced.STL" />
         </geometry>
         <material name="yellow"/>
       </collision>
@@ -66,7 +66,7 @@
       </visual>
       <collision>
         <geometry>
-          <mesh filename="package://kuka_kr6/robots/link3.STL" />
+          <mesh filename="package://kuka_kr6/robots/link3_collision_reduced.STL" />
         </geometry>
         <material name="yellow"/>
       </collision>
@@ -82,7 +82,7 @@
       </visual>
       <collision>
         <geometry>
-          <mesh filename="package://kuka_kr6/robots/link4.STL" />
+          <mesh filename="package://kuka_kr6/robots/link4_collision_reduced.STL" />
         </geometry>
         <material name="yellow"/>
       </collision>
@@ -98,7 +98,7 @@
       </visual>
       <collision>
         <geometry>
-          <mesh filename="package://kuka_kr6/robots/link5.STL" />
+          <mesh filename="package://kuka_kr6/robots/link5_collision_reduced.STL" />
         </geometry>
         <material name="yellow"/>
       </collision>
@@ -114,13 +114,33 @@
       </visual>
       <collision>
         <geometry>
-          <mesh filename="package://kuka_kr6/robots/link6.STL" />
+          <mesh filename="package://kuka_kr6/robots/link6_collision_reduced.STL" />
         </geometry>
         <material name="yellow"/>
       </collision>
     </link>
 
-    <link name="${prefix}tip" />
+    <link name="${prefix}flange">
+      <visual>
+        <origin rpy="0 0 0" xyz="0.05 0 0.165"/>
+        <geometry>
+          <box size="0.15 0.1 0.33"/>
+        </geometry>
+        <material name="silver">
+          <color rgba="0.75 0.75 0.75 1"/>
+        </material>
+      </visual>
+      <collision>
+        <origin rpy="0 0 0" xyz="0.05 0 0.165"/>
+        <geometry>
+          <box size="0.15 0.1 0.33"/>
+        </geometry>
+        <material name="silver"/>
+      </collision>
+    </link>
+    
+    <link name="${prefix}tip"/>
+       
     <!-- end of link list -->
 
     <!-- joint list -->
@@ -172,20 +192,29 @@
       <limit lower="-6.108652382" upper="6.108652382" effort="1" velocity="1"/>
     </joint> 
 
-    <joint name="${prefix}tip_joint" type="fixed">
+    <joint name="${prefix}flange_joint" type="fixed">
       <origin xyz="0 0 -0.08" rpy="3.14159265 0 1.57079633" />
       <parent link="${prefix}link6" />
+      <child link="${prefix}flange" />
+    </joint>
+    
+    <joint name="${prefix}tip_joint" type="fixed">
+      <origin rpy="0 -1.57079633 -1.57079633" xyz="0 0 0.33"/>
+      <parent link="${prefix}flange" />
       <child link="${prefix}tip" />
     </joint>
     <!-- end of joint list -->
     
     <!-- ROS base_link to World Coordinates transform -->
-    <link name="${prefix}base"/>
-    <joint name="${prefix}base_link-base" type="fixed">
+    <link name="${prefix}world"/>
+    <joint name="${prefix}base_link-world" type="fixed">
       <origin xyz="0 0 0" rpy="0 0 0"/>
       <parent link="${prefix}base_link"/>
-      <child link="${prefix}base"/>
+      <child link="${prefix}world"/>
     </joint>
   </xacro:macro>
   
+  <xacro:kuka_kr6 prefix=""/>
+  
 </robot>
+

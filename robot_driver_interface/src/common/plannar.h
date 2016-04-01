@@ -41,6 +41,7 @@
 // Includes the planner we will be using
 #include <descartes_planner/dense_planner.h>
 
+
 // --------------------------------------------------------------------------
 // Plannar class
 //  - publicly inherited from QObect, for signal-slot connection between main

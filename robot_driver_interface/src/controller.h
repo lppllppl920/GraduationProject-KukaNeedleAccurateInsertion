@@ -39,6 +39,7 @@ public:
 	geometry_msgs::Pose& getTargetPose();
 	Eigen::Affine3d& getTargetAffine();
 	std::map<std::string, double>& getTargetJoints();
+	Plannar* getPlannar();
 
 // set function
 	void setMotionPlan(moveit::planning_interface::MoveGroup::Plan motion_plan);
@@ -70,12 +71,6 @@ public:
 	void removeCollisionObject(std::string collision_id);
 	void updateWorkcell();
 
-	trajectory_msgs::JointTrajectory
-	toROSJointTrajectory(const TrajectoryVec& trajectory,
-	                     const descartes_core::RobotModel& model,
-	                     const std::vector<std::string>& joint_names,
-	                     double time_delay);
-
 public slots:
 	void addWaypointsCb();
 	void visualizeExecutePlanCb();
@@ -100,6 +95,7 @@ private:
 	boost::shared_ptr<moveit::planning_interface::MoveGroup> group_;
 	moveit::planning_interface::PlanningSceneInterface planning_scene_interface_;
 	moveit::planning_interface::MoveGroup::Plan motion_plan_;
+	ros::Publisher planning_scene_diff_publisher_;
 	// Target pose for motion
 	geometry_msgs::Pose target_pose_;
 	std::map<std::string, double> target_joints_;

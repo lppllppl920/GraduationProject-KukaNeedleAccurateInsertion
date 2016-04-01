@@ -17,7 +17,6 @@ using namespace interactive_markers;
 class Interface: public QWidget, private Ui::robotInterface{
 	Q_OBJECT
 public:
-
 	typedef control_msgs::FollowJointTrajectoryActionGoalConstPtr TrajectoryGoal;
 	typedef moveit::planning_interface::MoveGroup::Plan MotionPlan;
 
@@ -39,18 +38,20 @@ public:
 // joint states subscribe function
 	void jointStatesCb(const sensor_msgs::JointStateConstPtr &feedback);
 
+	void setAlignment();
+
 
 public slots:
-
 	void newFeedbackReceived(Feedback& feedback);
 	void shutdown();
 	void visualizeMotionPlan(
 			MotionPlan motion_plan);
-
 	void visualizeJointPlan();
 	void visualizePosePlan();
 	void executeMotionPlan();
 	void copyJointState();
+	void displayFeedback(Feedback& fb);
+	void manipulateCollisionObject();
 
 signals:
 	// Send trajectory to controller object
@@ -60,6 +61,20 @@ signals:
 	void visualizeExecutePlan();
 	void endEffectorPos(
 			const InteractiveMarkerFeedbackConstPtr &feedback);
+
+private slots:
+	void on_send_frame_button_clicked();
+	void on_send_axis_button_clicked();
+	void on_copy_button_clicked();
+	void on_default_button_clicked();
+	void on_debug_button_clicked();
+	void on_send_config_button_clicked();
+	void on_pause_buf_buton_clicked();
+	void on_terminate_imm_button_clicked();
+	void on_send_pos_button_clicked();
+	void on_pause_button_clicked();
+	void on_stop_button_clicked();
+	void on_terminate_buf_button_clicked();
 
 private:
 	boost::shared_ptr<ros::NodeHandle> node_handle_;
@@ -86,6 +101,13 @@ private:
 	std::vector<interactive_markers::MenuHandler::EntryHandle> menu_entry_;
 	boost::shared_ptr<interactive_markers::InteractiveMarkerServer> interactive_marker_server_;
 	float marker_pos_;
+
+// reference of Plannar object
+	boost::shared_ptr<Plannar> plannar_ptr_;
+
+// Publisher for planning scene
+	ros::Publisher planning_scene_diff_publisher_;
+	int collision_operation_counter_;
 };
 
 void addWaypointsCb_global(const InteractiveMarkerFeedbackConstPtr &feedback);

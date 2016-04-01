@@ -40,6 +40,7 @@ Controller::Controller(std::string group_name): plannar_() {
 	group_->setNumPlanningAttempts(5);
 	group_->setStartState(*group_->getCurrentState());
 
+
 	// Initialize target pose
 	target_pose_.orientation.w = target_pose_.orientation.z = 1.0;
 	target_pose_.position.x = target_pose_.position.y =
@@ -66,6 +67,9 @@ Controller::Controller(std::string group_name): plannar_() {
 	plan_success_ = false;
 	// Initialize number of way points
 	waypoint_count_ = 0;
+
+	// Publisher for planning scene
+	//planning_scene_diff_publisher_ = node_handle.advertise<moveit_msgs::PlanningScene>("planning_scene", 1);
 
 
 }
@@ -213,6 +217,50 @@ void Controller::visualizeMotionPlan() {
 void Controller::stopMotion() {
 	group_->stop();
 }
+
+void Controller::addWaypointsCb() {
+	ROS_INFO("Controller: add %d th way point", ++waypoint_count_);
+	geometry_msgs::Pose temp_pos = end_effector_pos_;
+	waypoints_.push_back(temp_pos);
+}
+void Controller::endEffectorPosCb(
+		const visualization_msgs::InteractiveMarkerFeedbackConstPtr &feedback) {
+
+	if(feedback->mouse_point_valid) {
+		end_effector_pos_ = feedback->pose;
+	} else {
+		ROS_INFO("end effector invalid");
+	}
+
+}
+void Controller::visualizeExecutePlanCb() {
+
+	moveit::planning_interface::MoveGroup::Plan temp_plan;
+
+	for (int i = 0; i < waypoints_.size(); i++) {
+
+		group_->setPoseTarget(waypoints_[i], "tip");
+		group_->setStartState(*group_->getCurrentState());
+
+		bool success = group_->plan(temp_plan);
+		ROS_INFO("Controller: visualizing plan (pose goal) %s", success ? "" : "FAILED");
+		// this sleep function could be commented to speed up
+		//sleep(5.0);
+		if (success) {
+			group_->execute(temp_plan);
+		} else {
+			// This one ensures that no unreachable motion command will be sent to Kuka,
+			// so no need to do reachable check in plannar_ object
+			ROS_ERROR(
+					"Controller: error while planning position of arm, no move command was sent!\n");;
+		}
+	}
+
+	waypoints_.clear();
+	waypoint_count_ = 0;
+
+}
+
 // Add collision object to be added to wait list
 void Controller::addCollisionObject(std::string collision_id,
 		shape_msgs::SolidPrimitive collision_shape,
@@ -261,161 +309,10 @@ void Controller::updateWorkcell() {
 	remove_collision_ids_.clear();
 }
 
-void Controller::addWaypointsCb() {
-	ROS_INFO("Controller: add %d th way point", ++waypoint_count_);
-	geometry_msgs::Pose temp_pos = end_effector_pos_;
-	waypoints_.push_back(temp_pos);
-}
-void Controller::endEffectorPosCb(
-		const visualization_msgs::InteractiveMarkerFeedbackConstPtr &feedback) {
-
-	if(feedback->mouse_point_valid) {
-		end_effector_pos_ = feedback->pose;
-	} else {
-		ROS_INFO("end effector invalid");
-	}
-
-}
-void Controller::visualizeExecutePlanCb() {
-
-	moveit::planning_interface::MoveGroup::Plan temp_plan;
-
-	for (int i = 0; i < waypoints_.size(); i++) {
-
-		group_->setPoseTarget(waypoints_[i], "tip");
-		group_->setStartState(*group_->getCurrentState());
-
-		bool success = group_->plan(temp_plan);
-		ROS_INFO("Controller: visualizing plan (pose goal) %s", success ? "" : "FAILED");
-		// this sleep function could be commented to speed up
-		//sleep(5.0);
-		if (success) {
-			group_->execute(temp_plan);
-		} else {
-			// This one ensures that no unreachable motion command will be sent to Kuka,
-			// so no need to do reachable check in plannar_ object
-			ROS_ERROR(
-					"Controller: error while planning position of arm, no move command was sent!\n");;
-		}
-	}
-
-	waypoints_.clear();
-	waypoint_count_ = 0;
-
-	// 1. Define sequence of points
-	/* TrajectoryVec points;
- 	  for (unsigned int i = 0; i < waypoints_.size(); ++i)
-	  {
-		Eigen::Affine3d pose;
-		pose = Eigen::Translation3d(waypoints_[i].position.x, waypoints_[i].position.y, waypoints_[i].position.z);
-		descartes_core::TrajectoryPtPtr pt = new descartes_core::TrajectoryPt(new descartes_trajectory::AxialSymmetricPt(pose, // Nominal pose
-                M_PI/2.0, // Search discretization
-				descartes_trajectory::AxialSymmetricPt::Z_AXIS) ); // Free axis
-		points.push_back(pt);
-	  }
-
-	  /* for (unsigned int i = 0; i < 5; ++i)
-	  {
-		Eigen::Affine3d pose;
-		pose = Eigen::Translation3d(0.0, 0.04 * i, 0.9);
-		descartes_core::TrajectoryPtPtr pt = makeTolerancedCartesianPoint(pose);
-		points.push_back(pt);
-	  } */
-
-	  // 2. Create a robot model and initialize it
-	/*  descartes_core::RobotModelPtr model (new descartes_moveit::MoveitStateAdapter);
-
-	  // Name of description on parameter server. Typically just "robot_description".
-	  const std::string robot_description = "robot_description";
-
-	  // name of the kinematic group you defined when running MoveitSetupAssistant
-	  const std::string group_name = "manipulator";
-
-	  // Name of frame in which you are expressing poses.
-	  // Typically "world_frame" or "base_link".
-	  const std::string world_frame = "base_link";
-
-	  // tool center point frame (name of link associated with tool)
-	  const std::string tcp_frame = "tip";
-
-	  if (!model->initialize(robot_description, group_name, world_frame, tcp_frame))
-	  {
-		ROS_INFO("Could not initialize robot model");
-		return;
-	  }
-
-	  // 3. Create a planner and initialize it with our robot model
-	  descartes_planner::DensePlanner planner;
-	  planner.initialize(model);
-
-	  // 4. Feed the trajectory to the planner
-	  if (!planner.planPath(points))
-	  {
-		ROS_ERROR("Could not solve for a valid path");
-		return;
-	  }
-
-	  TrajectoryVec result;
-	  if (!planner.getPath(result))
-	  {
-		ROS_ERROR("Could not retrieve path");
-		return;
-	  }
-
-	  // 5. Translate the result into a type that ROS understands
-	  // Get Joint Names
-	  std::vector<std::string> names;
-	  nh.getParam("controller_joint_names", names);
-	  // Generate a ROS joint trajectory with the result path, robot model,
-	  // joint names, and a certain time delta between each trajectory point
-	  trajectory_msgs::JointTrajectory joint_solution =
-	      toROSJointTrajectory(result, *model, names, 1.0);
-
-	  ROS_INFO("Controller: Joint solution found: %d points", joint_solution.points.size()); */
-
-}
-
-/* trajectory_msgs::JointTrajectory
-Controller::toROSJointTrajectory(const TrajectoryVec& trajectory,
-                     const descartes_core::RobotModel& model,
-                     const std::vector<std::string>& joint_names,
-                     double time_delay)
-{
-  // Fill out information about our trajectory
-  trajectory_msgs::JointTrajectory result;
-  result.header.stamp = ros::Time::now();
-  result.header.frame_id = "world_frame";
-  result.joint_names = joint_names;
-
-  // For keeping track of time-so-far in the trajectory
-  double time_offset = 0.0;
-  // Loop through the trajectory
-  for (TrajectoryIter it = trajectory.begin(); it != trajectory.end(); ++it)
-  {
-    // Find nominal joint solution at this point
-    std::vector<double> joints;
-    it->get()->getNominalJointPose(std::vector<double>(), model, joints);
-
-    // Fill out a ROS trajectory point
-    trajectory_msgs::JointTrajectoryPoint pt;
-    pt.positions = joints;
-    // velocity, acceleration, and effort are given dummy values
-    // we'll let the controller figure them out
-    pt.velocities.resize(joints.size(), 0.0);
-    pt.accelerations.resize(joints.size(), 0.0);
-    pt.effort.resize(joints.size(), 0.0);
-    // set the time into the trajectory
-    pt.time_from_start = ros::Duration(time_offset);
-    // increment time
-    time_offset += time_delay;
-
-    result.points.push_back(pt);
-  }
-
-  return result;
-} */
-
 // Get and set functions
+Plannar* Controller::getPlannar() {
+	return &plannar_;
+}
 boost::shared_ptr<moveit::planning_interface::MoveGroup> Controller::getMoveGroup() {
 	return group_;
 }
