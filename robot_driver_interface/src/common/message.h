@@ -1,11 +1,11 @@
 /**
- *   Copyright (C) Tsinghua University 2015
+ *   Copyright (C) Tsinghua University 2016
  *
  *   Version   : 2.0
- *   Date      : 20 May 2015
- *   Author    : Long Qian
+ *   Date      : 2016
+ *   Author    : Xingtong Liu
  *   Company   : Tsinghua University
- *   Email     : joewalker.ql@gmail.com
+ *   Email     : 327586708@qq.com
  *
  *   Header file for message, defines the data prototype transferring between
  *   PC and KUKA Control Cabinet (KRC).

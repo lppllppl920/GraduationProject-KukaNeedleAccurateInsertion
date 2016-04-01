@@ -1,93 +1,66 @@
-/*
- * Interface.cpp
+/**
+ *   Copyright (C) Tsinghua University 2016
  *
- *  Created on: Mar 19, 2016
- *      Author: lxt12
+ *   Version   : 2.0
+ *   Date      : 2016
+ *   Author    : Xingtong Liu
+ *   Company   : Tsinghua University
+ *   Email     : 327586708@qq.com
  */
 
 #include "Interface.h"
 
-
-Interface::Interface(QWidget *parent):
+Interface::Interface(QWidget *parent) :
 		controller_() {
 
 	ROS_INFO("Interface Constructing...");
 
 	setupUi(this);
 
+	// Initialization for comboBox objects
+	QStringList operation_list;
+	operation_list << "ADD" << "REMOVE";
+	comboBox_Operation->addItems(operation_list);
+	QStringList shape_list;
+	shape_list << "BOX" << "SPHERE" << "CYLINDER" << "CONE";
+	comboBox_Shape->addItems(shape_list);
+
+	// pointer to node handle
 	node_handle_ = boost::make_shared<ros::NodeHandle>("");
 
-//-------------------------------Settings----------------------------------------------
-
-
 	// GUI related
-		// Interaction Tab
-	connect(pushButton_VisualizeJointPlan, SIGNAL(clicked()), this, SLOT(visualizeJointPlan()));
-	connect(pushButton_VisualizePosePlan, SIGNAL(clicked()), this, SLOT(visualizePosePlan()));
-	connect(pushButton_ExecutePlan, SIGNAL(clicked()), this, SLOT(executeMotionPlan()));
-	connect(pushButton_CopyJointState, SIGNAL(clicked()), this, SLOT(copyJointState()));
-	connect(pushButton_AddWaypoint, SIGNAL(clicked()), &controller_, SLOT(addWaypointsCb()));
-	connect(pushButton_ExecuteWaypointsPlan, SIGNAL(clicked()), &controller_, SLOT(visualizeExecutePlanCb()));
-	connect(pushButton_Do, SIGNAL(clicked()), this, SLOT(manipulateCollisionObject()));
-		// Single Command Tab
-/*	connect(send_config_button, SIGNAL(clicked()), this, SLOT(on_send_config_button_clicked()));
-	connect(send_axis_button, SIGNAL(clicked()), this, SLOT(on_send_axis_button_clicked()));
-	connect(send_pos_button, SIGNAL(clicked()), this, SLOT(on_send_pos_button_clicked()));
-	connect(send_frame_button, SIGNAL(clicked()), this, SLOT(on_send_frame_button_clicked()));
-	connect(copy_button, SIGNAL(clicked()), this, SLOT(on_copy_button_clicked()));
-	connect(default_button, SIGNAL(clicked()), this, SLOT(on_default_button_clicked()));
-	connect(debug_button, SIGNAL(clicked()), this, SLOT(on_debug_button_clicked()));
-	connect(pause_buf_buton, SIGNAL(clicked()), this, SLOT(on_pause_buf_buton_clicked()));
-	connect(pause_button, SIGNAL(clicked()), this, SLOT(on_pause_button_clicked()));
-	connect(terminate_buf_button, SIGNAL(clicked()), this, SLOT(on_terminate_buf_button_clicked()));
-	connect(terminate_imm_button, SIGNAL(clicked()), this, SLOT(on_terminate_imm_button_clicked()));
-	connect(stop_button, SIGNAL(clicked()), this, SLOT(on_stop_button_clicked())); */
+	connect(pushButton_VisualizeJointPlan, SIGNAL(clicked()), this,
+			SLOT(visualizeJointPlan()));
+	connect(pushButton_VisualizePosePlan, SIGNAL(clicked()), this,
+			SLOT(visualizePosePlan()));
+	connect(pushButton_ExecutePlan, SIGNAL(clicked()), this,
+			SLOT(executeMotionPlan()));
+	connect(pushButton_CopyJointState, SIGNAL(clicked()), this,
+			SLOT(copyJointState()));
+	connect(pushButton_AddWaypoint, SIGNAL(clicked()), &controller_,
+			SLOT(addWaypointsCb()));
+	connect(pushButton_ExecuteWaypointsPlan, SIGNAL(clicked()), &controller_,
+			SLOT(visualizeExecutePlanCb()));
+	connect(pushButton_Do, SIGNAL(clicked()), this,
+			SLOT(manipulateCollisionObject()));
 
 	// Others related
-	connect(this,
-			SIGNAL(
-					sendTrajectory(const TrajectoryGoal&)),
-			&controller_,
-			SLOT(
-					sendTrajectory(const TrajectoryGoal&)));
+	connect(this, SIGNAL(sendTrajectory(const TrajectoryGoal&)), &controller_,
+			SLOT(sendTrajectory(const TrajectoryGoal&)));
 
-	connect(&controller_,
-			SIGNAL(
-					newFeedback(Feedback& )),
-			this,
-			SLOT(
-					newFeedbackReceived(Feedback& )), Qt::DirectConnection);
+	connect(&controller_, SIGNAL(newFeedback(Feedback& )), this,
+			SLOT(newFeedbackReceived(Feedback& )), Qt::DirectConnection);
 
-	connect(&controller_,
-			SIGNAL(
-					newFeedback(Feedback& )),
-			this,
-			SLOT(
-					displayFeedback(Feedback& )), Qt::DirectConnection);
+	connect(&controller_, SIGNAL(newFeedback(Feedback& )), this,
+			SLOT(displayFeedback(Feedback& )), Qt::DirectConnection);
 
-	connect(&controller_,
-			SIGNAL(
-					shutdown()),
-			this,
-			SLOT(
-					shutdown()));
+	connect(&controller_, SIGNAL(shutdown()), this, SLOT(shutdown()));
 	// When motion plan is obtain in controller_, transfer plan to interface object for visualization
-	connect(&controller_,
-			SIGNAL(
-					visualizeMotionPlan(MotionPlan)),
-			this,
-			SLOT(
-					visualizeMotionPlan(MotionPlan)));
-	connect(this,
-			SIGNAL(addWaypoints()),
-			&controller_,
-			SLOT(addWaypointsCb()));
-	connect(this,
-			SIGNAL(
-					visualizeExecutePlan()),
-			&controller_,
-			SLOT(
-					visualizeExecutePlanCb()));
+	connect(&controller_, SIGNAL(visualizeMotionPlan(MotionPlan)), this,
+			SLOT(visualizeMotionPlan(MotionPlan)));
+	connect(this, SIGNAL(addWaypoints()), &controller_, SLOT(addWaypointsCb()));
+	connect(this, SIGNAL(visualizeExecutePlan()), &controller_,
+			SLOT(visualizeExecutePlanCb()));
 	connect(this,
 			SIGNAL(endEffectorPos(const InteractiveMarkerFeedbackConstPtr&)),
 			&controller_,
@@ -101,8 +74,8 @@ Interface::Interface(QWidget *parent):
 	// Set publisher for joint state visualization
 	joint_state_publisher_ = node_handle_->advertise<sensor_msgs::JointState>(
 			"/joint_states", 1000, true);
-	joint_state_subscriber_ = node_handle_->subscribe<sensor_msgs::JointState, Interface>(
-			"/joint_states", 10, &Interface::jointStatesCb, this);
+	joint_state_subscriber_ = node_handle_->subscribe<sensor_msgs::JointState,
+			Interface>("/joint_states", 10, &Interface::jointStatesCb, this);
 
 	// Set subscriber for obtaining interactive marker position
 	interactive_marker_subsriber_ =
@@ -114,16 +87,17 @@ Interface::Interface(QWidget *parent):
 	// Set subscriber for Motion trajectory execution
 	motion_trajectory_subsriber_ = node_handle_->subscribe<
 			control_msgs::FollowJointTrajectoryActionGoal, Interface>(
-			"/joint_trajectory_action/goal", 10,
-			&Interface::trajectoryActionCb, this);
+			"/joint_trajectory_action/goal", 10, &Interface::trajectoryActionCb,
+			this);
 
-	planning_scene_diff_publisher_ = node_handle_->advertise<moveit_msgs::PlanningScene>("/planning_scene", 1);
+	planning_scene_diff_publisher_ = node_handle_->advertise<
+			moveit_msgs::PlanningScene>("/planning_scene", 1);
 
-
-//--------------------------Initialization----------------------------------------------------
 	// Set up menu marker
 	marker_pos_ = 0.0;
-	interactive_marker_server_.reset( new interactive_markers::InteractiveMarkerServer("moveit_test","",false) );
+	interactive_marker_server_.reset(
+			new interactive_markers::InteractiveMarkerServer("moveit_test", "",
+					false));
 	initMenu();
 	makeMenuMarker("marker1");
 	menu_handler_.apply(*interactive_marker_server_, "marker1");
@@ -140,69 +114,84 @@ Interface::Interface(QWidget *parent):
 
 Interface::~Interface() {
 	ROS_INFO("Interface Deconstructing...");
+	QApplication::exit();
+	ros::shutdown();
+
+	plannar_ptr_ = NULL;
+
+	delete node_handle_;
+	node_handle_ = NULL;
 }
 
 // Slots function
-	//call back function for GUI push button
+//call back function for GUI push button
 void Interface::manipulateCollisionObject() {
 
-    int shape_index = comboBox_Shape->currentIndex();
-    int operation_index = comboBox_Operation->currentIndex();
+	int shape_index = comboBox_Shape->currentIndex();
+	int operation_index = comboBox_Operation->currentIndex();
 
-    moveit_msgs::CollisionObject collision_object;
-    std::vector<double> collision_dimensions;
-    collision_dimensions.resize(3);
+	moveit_msgs::CollisionObject collision_object;
+	std::vector<double> collision_dimensions;
+	collision_dimensions.resize(3);
 
-    shape_msgs::SolidPrimitive collision_primitive;
-    // This line has to be done, or the segmentation fault error will appear
-    collision_primitive.dimensions.resize(3);
+	shape_msgs::SolidPrimitive collision_primitive;
+	// This line has to be done, or the segmentation fault error will appear
+	collision_primitive.dimensions.resize(3);
 
-    geometry_msgs::Pose collision_pose;
+	geometry_msgs::Pose collision_pose;
 
 	QListWidgetItem* collision_item = new QListWidgetItem;
 
 	moveit_msgs::PlanningScene planning_scene;
 
-    if(operation_index == 0) {
-    	ROS_INFO("Add collision object");
+	if (operation_index == 0) {
+		ROS_INFO("Add collision object");
 		collision_dimensions[0] = lineEdit_X_Radius->text().toDouble();
 		collision_dimensions[1] = lineEdit_Y_Height->text().toDouble();
 		collision_dimensions[2] = lineEdit_Z->text().toDouble();
 
 		ROS_INFO("Shape: %d", shape_index);
-		switch(shape_index) {
-			case 0:	{
-				// BOX
-				collision_primitive.dimensions[collision_primitive.BOX_X] = collision_dimensions[0];
-				collision_primitive.dimensions[collision_primitive.BOX_Y] = collision_dimensions[1];
-				collision_primitive.dimensions[collision_primitive.BOX_Z] = collision_dimensions[2];
-				collision_primitive.type = collision_primitive.BOX;
-				break;
-			}
-			case 1: {
-				// SPHERE
-				collision_primitive.dimensions[collision_primitive.SPHERE_RADIUS] = collision_dimensions[0];
-				collision_primitive.type = collision_primitive.SPHERE;
-				break;
-			}
-			case 2: {
-				// CYLINDER
-				collision_primitive.dimensions[collision_primitive.CYLINDER_RADIUS] = collision_dimensions[0];
-				collision_primitive.dimensions[collision_primitive.CYLINDER_HEIGHT] = collision_dimensions[1];
-				collision_primitive.type = collision_primitive.CYLINDER;
-				break;
-			}
-			case 3: {
-				// CONE
-				collision_primitive.dimensions[collision_primitive.CONE_RADIUS] = collision_dimensions[0];
-				collision_primitive.dimensions[collision_primitive.CONE_HEIGHT] = collision_dimensions[1];
-				collision_primitive.type = collision_primitive.CONE;
-				break;
-			}
-			default: {
-				ROS_ERROR("shape index not found");
-				return;
-			}
+		switch (shape_index) {
+		case 0: {
+			// BOX
+			collision_primitive.dimensions[collision_primitive.BOX_X] =
+					collision_dimensions[0];
+			collision_primitive.dimensions[collision_primitive.BOX_Y] =
+					collision_dimensions[1];
+			collision_primitive.dimensions[collision_primitive.BOX_Z] =
+					collision_dimensions[2];
+			collision_primitive.type = collision_primitive.BOX;
+			break;
+		}
+		case 1: {
+			// SPHERE
+			collision_primitive.dimensions[collision_primitive.SPHERE_RADIUS] =
+					collision_dimensions[0];
+			collision_primitive.type = collision_primitive.SPHERE;
+			break;
+		}
+		case 2: {
+			// CYLINDER
+			collision_primitive.dimensions[collision_primitive.CYLINDER_RADIUS] =
+					collision_dimensions[0];
+			collision_primitive.dimensions[collision_primitive.CYLINDER_HEIGHT] =
+					collision_dimensions[1];
+			collision_primitive.type = collision_primitive.CYLINDER;
+			break;
+		}
+		case 3: {
+			// CONE
+			collision_primitive.dimensions[collision_primitive.CONE_RADIUS] =
+					collision_dimensions[0];
+			collision_primitive.dimensions[collision_primitive.CONE_HEIGHT] =
+					collision_dimensions[1];
+			collision_primitive.type = collision_primitive.CONE;
+			break;
+		}
+		default: {
+			ROS_ERROR("shape index not found");
+			return;
+		}
 		}
 
 		collision_pose.position.x = lineEdit_TransX->text().toDouble();
@@ -231,22 +220,23 @@ void Interface::manipulateCollisionObject() {
 		collision_item->setText(lineEdit_Z_2->text());
 		listWidget_CurrentCollisionObject->insertItem(1, collision_item);
 
+	} else if (operation_index == 1) {
+		ROS_INFO("Remove collision object");
 
-    } else if(operation_index == 1){
-    	ROS_INFO("Remove collision object");
+		collision_object.operation = collision_object.REMOVE;
+		collision_object.id =
+				listWidget_CurrentCollisionObject->currentItem()->text().toStdString();
 
-    	collision_object.operation = collision_object.REMOVE;
-    	collision_object.id = listWidget_CurrentCollisionObject->currentItem()->text().toStdString();
+		planning_scene.world.collision_objects.clear();
+		planning_scene.world.collision_objects.push_back(collision_object);
+		planning_scene.is_diff = true;
 
-    	planning_scene.world.collision_objects.clear();
-    	planning_scene.world.collision_objects.push_back(collision_object);
-    	planning_scene.is_diff = true;
+		planning_scene_diff_publisher_.publish(planning_scene);
 
-    	planning_scene_diff_publisher_.publish(planning_scene);
-
-    	listWidget_CurrentCollisionObject->removeItemWidget(listWidget_CurrentCollisionObject->currentItem());
-    	delete listWidget_CurrentCollisionObject->currentItem();
-    }
+		listWidget_CurrentCollisionObject->removeItemWidget(
+				listWidget_CurrentCollisionObject->currentItem());
+		delete listWidget_CurrentCollisionObject->currentItem();
+	}
 
 }
 void Interface::visualizeJointPlan() {
@@ -261,7 +251,7 @@ void Interface::visualizeJointPlan() {
 	controller_.planTargetMotion(target_joints);
 
 }
-	//call back function for GUI push button
+//call back function for GUI push button
 void Interface::visualizePosePlan() {
 	geometry_msgs::Pose target_pose;
 	target_pose.position.x = lineEdit_TransX->text().toDouble();
@@ -273,10 +263,11 @@ void Interface::visualizePosePlan() {
 	target_pose.orientation.z = lineEdit_RotateZ->text().toDouble();
 	target_pose.orientation.w = lineEdit_RotateW->text().toDouble();
 
-	double scale = sqrt(target_pose.orientation.w * target_pose.orientation.w +
-			target_pose.orientation.x * target_pose.orientation.x +
-			target_pose.orientation.y * target_pose.orientation.y +
-			target_pose.orientation.z * target_pose.orientation.z);
+	double scale = sqrt(
+			target_pose.orientation.w * target_pose.orientation.w
+					+ target_pose.orientation.x * target_pose.orientation.x
+					+ target_pose.orientation.y * target_pose.orientation.y
+					+ target_pose.orientation.z * target_pose.orientation.z);
 	// Normalize orientation vector
 	target_pose.orientation.w /= scale;
 	target_pose.orientation.x /= scale;
@@ -295,7 +286,7 @@ void Interface::copyJointState() {
 	lineEdit_Joint6->setText(lineEdit_Joint6_S->text());
 }
 
-void Interface::executeMotionPlan(){
+void Interface::executeMotionPlan() {
 
 	controller_.executeMotionPlan();
 }
@@ -333,7 +324,6 @@ void Interface::visualizeMotionPlan(
 }
 void Interface::shutdown() {
 	QApplication::exit();
-	//spinner_->stop();
 	ros::shutdown();
 }
 
@@ -366,22 +356,28 @@ void addWaypointsCb_global(const InteractiveMarkerFeedbackConstPtr &feedback) {
 	ROS_INFO("Global: add way points");
 	kuka_interface->addWaypointsCb();
 }
-void visualizeExecutePlanCb_global(const InteractiveMarkerFeedbackConstPtr &feedback) {
+void visualizeExecutePlanCb_global(
+		const InteractiveMarkerFeedbackConstPtr &feedback) {
 	// The Workaround of the MenuHandler insert function problem
 	ROS_INFO("Global: visualize and execute plan");
 	kuka_interface->visualizeExecutePlanCb();
 }
 void Interface::jointStatesCb(const sensor_msgs::JointStateConstPtr &feedback) {
 
-	lineEdit_Joint1_S->setText(QString::number(feedback->position[0] / M_PI * 180.0));
-	lineEdit_Joint2_S->setText(QString::number(feedback->position[1] / M_PI * 180.0));
-	lineEdit_Joint3_S->setText(QString::number(feedback->position[2] / M_PI * 180.0));
-	lineEdit_Joint4_S->setText(QString::number(feedback->position[3] / M_PI * 180.0));
-	lineEdit_Joint5_S->setText(QString::number(feedback->position[4] / M_PI * 180.0));
-	lineEdit_Joint6_S->setText(QString::number(feedback->position[5] / M_PI * 180.0));
+	lineEdit_Joint1_S->setText(
+			QString::number(feedback->position[0] / M_PI * 180.0));
+	lineEdit_Joint2_S->setText(
+			QString::number(feedback->position[1] / M_PI * 180.0));
+	lineEdit_Joint3_S->setText(
+			QString::number(feedback->position[2] / M_PI * 180.0));
+	lineEdit_Joint4_S->setText(
+			QString::number(feedback->position[3] / M_PI * 180.0));
+	lineEdit_Joint5_S->setText(
+			QString::number(feedback->position[4] / M_PI * 180.0));
+	lineEdit_Joint6_S->setText(
+			QString::number(feedback->position[5] / M_PI * 180.0));
 
 }
-
 
 // Menu Interaction related
 Marker Interface::makeBox(InteractiveMarker &msg) {
@@ -430,18 +426,18 @@ void Interface::makeMenuMarker(std::string name) {
 }
 void Interface::initMenu() {
 
-	menu_entry_.push_back(menu_handler_.insert("Add into way points", addWaypointsCb_global));
-	menu_entry_.push_back(menu_handler_.insert("Visualize and Execute motion plan", visualizeExecutePlanCb_global));
+	menu_entry_.push_back(
+			menu_handler_.insert("Add into way points", addWaypointsCb_global));
+	menu_entry_.push_back(
+			menu_handler_.insert("Visualize and Execute motion plan",
+					visualizeExecutePlanCb_global));
 }
 
 // Functions for Sing Command Tab
 void Interface::on_send_frame_button_clicked() {
-	Frame f(input_x->toPlainText().toFloat(),
-			input_y->toPlainText().toFloat(),
-			input_z->toPlainText().toFloat(),
-			input_a->toPlainText().toFloat(),
-			input_b->toPlainText().toFloat(),
-			input_c->toPlainText().toFloat());
+	Frame f(input_x->toPlainText().toFloat(), input_y->toPlainText().toFloat(),
+			input_z->toPlainText().toFloat(), input_a->toPlainText().toFloat(),
+			input_b->toPlainText().toFloat(), input_c->toPlainText().toFloat());
 	Command::Style style;
 	Command::Approx approx;
 	if (comboBox_approx->currentText() == "C_PTP")
@@ -478,8 +474,7 @@ void Interface::on_send_frame_button_clicked() {
 }
 
 void Interface::on_send_axis_button_clicked() {
-	Axis a(input_a1->toPlainText().toFloat(),
-			input_a2->toPlainText().toFloat(),
+	Axis a(input_a1->toPlainText().toFloat(), input_a2->toPlainText().toFloat(),
 			input_a3->toPlainText().toFloat(),
 			input_a4->toPlainText().toFloat(),
 			input_a5->toPlainText().toFloat(),
@@ -521,14 +516,10 @@ void Interface::on_send_axis_button_clicked() {
 }
 
 void Interface::on_send_pos_button_clicked() {
-	Frame f(input_x->toPlainText().toFloat(),
-			input_y->toPlainText().toFloat(),
-			input_z->toPlainText().toFloat(),
-			input_a->toPlainText().toFloat(),
-			input_b->toPlainText().toFloat(),
-			input_c->toPlainText().toFloat());
-	Pos p(f, input_s->toPlainText().toInt(),
-			input_t->toPlainText().toInt());
+	Frame f(input_x->toPlainText().toFloat(), input_y->toPlainText().toFloat(),
+			input_z->toPlainText().toFloat(), input_a->toPlainText().toFloat(),
+			input_b->toPlainText().toFloat(), input_c->toPlainText().toFloat());
+	Pos p(f, input_s->toPlainText().toInt(), input_t->toPlainText().toInt());
 
 	Command::Style style;
 	Command::Approx approx;
@@ -747,7 +738,6 @@ void Interface::on_terminate_buf_button_clicked() {
 	plannar_ptr_->terminateBuffered();
 	ROS_INFO("Terminate buffer button clicked");
 }
-
 
 void Interface::setAlignment() {
 	input_x->setAlignment(Qt::AlignRight);

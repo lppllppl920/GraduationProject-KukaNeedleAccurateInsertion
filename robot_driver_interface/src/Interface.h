@@ -1,8 +1,11 @@
-/*
- * Interface.h
+/**
+ *   Copyright (C) Tsinghua University 2016
  *
- *  Created on: Mar 19, 2016
- *      Author: lxt12
+ *   Version   : 2.0
+ *   Date      : 2016
+ *   Author    : Xingtong Liu
+ *   Company   : Tsinghua University
+ *   Email     : 327586708@qq.com
  */
 
 #ifndef ROBOT_DRIVER_INTERFACE_SRC_INTERFACE_H_
@@ -14,8 +17,8 @@
 using namespace visualization_msgs;
 using namespace interactive_markers;
 
-class Interface: public QWidget, private Ui::robotInterface{
-	Q_OBJECT
+class Interface: public QWidget, private Ui::robotInterface {
+Q_OBJECT
 public:
 	typedef control_msgs::FollowJointTrajectoryActionGoalConstPtr TrajectoryGoal;
 	typedef moveit::planning_interface::MoveGroup::Plan MotionPlan;
@@ -33,19 +36,16 @@ public:
 			const control_msgs::FollowJointTrajectoryActionGoalConstPtr& feedback);
 	void addWaypointsCb();
 	void visualizeExecutePlanCb();
-	void endEffectorPosCb(
-			const InteractiveMarkerFeedbackConstPtr &feedback);
+	void endEffectorPosCb(const InteractiveMarkerFeedbackConstPtr &feedback);
 // joint states subscribe function
 	void jointStatesCb(const sensor_msgs::JointStateConstPtr &feedback);
 
 	void setAlignment();
 
-
 public slots:
 	void newFeedbackReceived(Feedback& feedback);
 	void shutdown();
-	void visualizeMotionPlan(
-			MotionPlan motion_plan);
+	void visualizeMotionPlan(MotionPlan motion_plan);
 	void visualizeJointPlan();
 	void visualizePosePlan();
 	void executeMotionPlan();
@@ -55,12 +55,10 @@ public slots:
 
 signals:
 	// Send trajectory to controller object
-	void sendTrajectory(
-			const TrajectoryGoal& feedback);
+	void sendTrajectory(const TrajectoryGoal& feedback);
 	void addWaypoints();
 	void visualizeExecutePlan();
-	void endEffectorPos(
-			const InteractiveMarkerFeedbackConstPtr &feedback);
+	void endEffectorPos(const InteractiveMarkerFeedbackConstPtr &feedback);
 
 private slots:
 	void on_send_frame_button_clicked();
@@ -78,7 +76,6 @@ private slots:
 
 private:
 	boost::shared_ptr<ros::NodeHandle> node_handle_;
-	boost::shared_ptr<ros::AsyncSpinner> spinner_;
 
 	Controller controller_;
 
@@ -92,8 +89,8 @@ private:
 // Joints state publisher and subscriber
 	ros::Publisher joint_state_publisher_;
 	ros::Subscriber joint_state_subscriber_;
-	int joint_state_publish_count_;
 	sensor_msgs::JointState joint_state_;
+	int joint_state_publish_count_;
 
 // Interactive Marker related
 	ros::Subscriber interactive_marker_subsriber_;
@@ -102,7 +99,7 @@ private:
 	boost::shared_ptr<interactive_markers::InteractiveMarkerServer> interactive_marker_server_;
 	float marker_pos_;
 
-// reference of Plannar object
+// Pointer to Plannar object
 	boost::shared_ptr<Plannar> plannar_ptr_;
 
 // Publisher for planning scene
@@ -111,7 +108,8 @@ private:
 };
 
 void addWaypointsCb_global(const InteractiveMarkerFeedbackConstPtr &feedback);
-void visualizeExecutePlanCb_global(const InteractiveMarkerFeedbackConstPtr &feedback);
-extern  boost::shared_ptr<Interface> kuka_interface;
+void visualizeExecutePlanCb_global(
+		const InteractiveMarkerFeedbackConstPtr &feedback);
+extern boost::shared_ptr<Interface> kuka_interface;
 
 #endif /* ROBOT_DRIVER_INTERFACE_SRC_INTERFACE_H_ */

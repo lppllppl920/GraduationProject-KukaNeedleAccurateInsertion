@@ -1963,14 +1963,6 @@ public:
 
         tabWidget->setCurrentIndex(0);
 
-        QStringList operation_list;
-        operation_list << "ADD" << "REMOVE";
-        comboBox_Operation->addItems(operation_list);
-
-        QStringList shape_list;
-        shape_list << "BOX" << "SPHERE" << "CYLINDER" << "CONE";
-        comboBox_Shape->addItems(shape_list);
-
         QMetaObject::connectSlotsByName(robotInterface);
     } // setupUi
 

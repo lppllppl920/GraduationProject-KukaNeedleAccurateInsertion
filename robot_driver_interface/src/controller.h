@@ -1,11 +1,11 @@
 /**
- *   Copyright (C) Tsinghua University 2015
+ *   Copyright (C) Tsinghua University 2016
  *
  *   Version   : 2.0
- *   Date      : 25 May 2015
- *   Author    : Long Qian
+ *   Date      : 2016
+ *   Author    : Xingtong Liu
  *   Company   : Tsinghua University
- *   Email     : joewalker.ql@gmail.com
+ *   Email     : 327586708@qq.com
  */
 
 #ifndef KRC_CONTROLLER
@@ -17,7 +17,7 @@ using namespace visualization_msgs;
 using namespace interactive_markers;
 
 class Controller: public QObject {
-	Q_OBJECT
+Q_OBJECT
 public:
 
 	typedef control_msgs::FollowJointTrajectoryActionGoalConstPtr TrajectoryGoal;
@@ -27,18 +27,13 @@ public:
 
 	Controller(std::string group_name = "manipulator");
 	~Controller();
-	// ROS node "KRC4_joint_state_publisher" initialization
-	void addPublisher();
-	// Called when new trajectory is computed
-	//void trajectoryActionCallback(
-		//	const control_msgs::FollowJointTrajectoryActionGoalConstPtr& feedback);
 
 // get function
 	boost::shared_ptr<moveit::planning_interface::MoveGroup> getMoveGroup();
 	moveit::planning_interface::MoveGroup::Plan& getMotionPlan();
+	std::map<std::string, double>& getTargetJoints();
 	geometry_msgs::Pose& getTargetPose();
 	Eigen::Affine3d& getTargetAffine();
-	std::map<std::string, double>& getTargetJoints();
 	Plannar* getPlannar();
 
 // set function
@@ -74,21 +69,16 @@ public:
 public slots:
 	void addWaypointsCb();
 	void visualizeExecutePlanCb();
-	void endEffectorPosCb(
-			const InteractiveMarkerFeedbackConstPtr &feedback);
+	void endEffectorPosCb(const InteractiveMarkerFeedbackConstPtr &feedback);
 	void newFeedbackReceived(Feedback* feedback);
 	// Send trajectory to plannar object
-	void sendTrajectory(
-			const TrajectoryGoal& feedback);
-signals:
+	void sendTrajectory(const TrajectoryGoal& feedback);signals:
 	// Shut down
 	void shutdown();
 	// joint state feedback
 	void newFeedback(Feedback& fb);
-	void visualizeMotionPlan(
-			MotionPlan motion_plan);
-	void sendTrajectorySignal(
-			const TrajectoryGoal& feedback);
+	void visualizeMotionPlan(MotionPlan motion_plan);
+	void sendTrajectorySignal(const TrajectoryGoal& feedback);
 
 private:
 // Motion
@@ -112,13 +102,11 @@ private:
 	int waypoint_count_;
 
 // Add or remove collision object
-	std::vector<std::string> remove_collision_ids_;
 	geometry_msgs::Pose collision_pose_;
 	shape_msgs::SolidPrimitive collision_shape_;
 	moveit_msgs::CollisionObject collision_object_;
+	std::vector<std::string> remove_collision_ids_;
 	std::vector<moveit_msgs::CollisionObject> collision_objects_;
-
-
 
 };
 

@@ -1,21 +1,21 @@
 /**
- *   Copyright (C) Tsinghua University 2015
+ *   Copyright (C) Tsinghua University 2016
  *
  *   Version   : 2.0
- *   Date      : 20 May 2015
- *   Author    : Long Qian
+ *   Date      : 2016
+ *   Author    : Xingtong Liu
  *   Company   : Tsinghua University
- *   Email     : joewalker.ql@gmail.com
+ *   Email     : 327586708@qq.com
  */
 
 #include "tcpthread.h"
-#include <iostream>
 
 TCPThread::TCPThread(quint16 port) {
 	std::cout << "TCPThread Constructing..." << std::endl;
 	this->port_ = port;
 	tcpServer_ = new QTcpServer();
 	tcpServer_->listen(QHostAddress::Any, port_);
+	tcpSocket_ = NULL;
 	connect(tcpServer_, SIGNAL(newConnection()), this, SLOT(newConnect()));
 	sendLock_ = false;
 	stdPrint_ = false;

@@ -1,16 +1,14 @@
 /**
- *   Copyright (C) Tsinghua University 2015
+ *   Copyright (C) Tsinghua University 2016
  *
  *   Version   : 2.0
- *   Date      : 20 May 2015
- *   Author    : Long Qian
+ *   Date      : 2016
+ *   Author    : Xingtong Liu
  *   Company   : Tsinghua University
- *   Email     : joewalker.ql@gmail.com
+ *   Email     : 327586708@qq.com
  */
 
 #include "geometry.h"
-#include <iomanip>
-#include <cmath>
 
 Frame& Frame::operator+(const Frame& right) {
 	X = this->X + right.X;
@@ -82,7 +80,7 @@ Axis::Axis(Axis& a) {
 	A6 = a.A6;
 }
 
-Axis& Axis::operator+(const Axis& right) {
+void Axis::operator+(const Axis& right) {
 	A1 = this->A1 + right.A1;
 	A2 = this->A2 + right.A2;
 	A3 = this->A3 + right.A3;

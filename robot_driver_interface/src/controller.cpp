@@ -1,20 +1,22 @@
 /**
- *   Copyright (C) Tsinghua University 2015
+ *   Copyright (C) Tsinghua University 2016
  *
  *   Version   : 2.0
- *   Date      : 25 May 2015
- *   Author    : Long Qian
+ *   Date      : 2016
+ *   Author    : Xingtong Liu
  *   Company   : Tsinghua University
- *   Email     : joewalker.ql@gmail.com
+ *   Email     : 327586708@qq.com
  */
 
 #include "controller.h"
 
-Controller::Controller(std::string group_name): plannar_() {
+Controller::Controller(std::string group_name) :
+		plannar_() {
 
 	ROS_INFO("Controller Constructing...");
 
-	qRegisterMetaType<InteractiveMarkerFeedbackConstPtr>("InteractiveMarkerFeedbackConstPtr");
+	qRegisterMetaType<InteractiveMarkerFeedbackConstPtr>(
+			"InteractiveMarkerFeedbackConstPtr");
 	qRegisterMetaType<TrajectoryGoal>("TrajectoryGoal");
 	qRegisterMetaType<MotionPlan>("MotionPlan");
 	//qRegisterMetaType<Feedback>("Feedback");
@@ -26,12 +28,8 @@ Controller::Controller(std::string group_name): plannar_() {
 	// The same with shutdownController() and shutdown().
 	connect(&plannar_, SIGNAL(shutdownController()), this, SIGNAL(shutdown()));
 	// Send Trajectory to plannar_ object
-	connect(this,
-			SIGNAL(
-					sendTrajectorySignal(const TrajectoryGoal&) ),
-			&plannar_,
-			SLOT(
-					executeTrajectory(const TrajectoryGoal&)) );
+	connect(this, SIGNAL(sendTrajectorySignal(const TrajectoryGoal&)),
+			&plannar_, SLOT(executeTrajectory(const TrajectoryGoal&)));
 
 	// Settings for MoveGroup
 	group_ = boost::make_shared<moveit::planning_interface::MoveGroup>(
@@ -39,7 +37,6 @@ Controller::Controller(std::string group_name): plannar_() {
 	group_->setPlannerId("LBKPIECEkConfigDefault");
 	group_->setNumPlanningAttempts(5);
 	group_->setStartState(*group_->getCurrentState());
-
 
 	// Initialize target pose
 	target_pose_.orientation.w = target_pose_.orientation.z = 1.0;
@@ -71,15 +68,16 @@ Controller::Controller(std::string group_name): plannar_() {
 	// Publisher for planning scene
 	//planning_scene_diff_publisher_ = node_handle.advertise<moveit_msgs::PlanningScene>("planning_scene", 1);
 
-
 }
 
 Controller::~Controller() {
 	ROS_INFO("Controller Deconstructing...");
+
+	delete group_;
+	group_ = NULL;
 }
 
-void Controller::sendTrajectory(
-		const TrajectoryGoal& feedback) {
+void Controller::sendTrajectory(const TrajectoryGoal& feedback) {
 	ROS_INFO("Controller: motion plan received.");
 	emit sendTrajectorySignal(feedback);
 }
@@ -226,7 +224,7 @@ void Controller::addWaypointsCb() {
 void Controller::endEffectorPosCb(
 		const visualization_msgs::InteractiveMarkerFeedbackConstPtr &feedback) {
 
-	if(feedback->mouse_point_valid) {
+	if (feedback->mouse_point_valid) {
 		end_effector_pos_ = feedback->pose;
 	} else {
 		ROS_INFO("end effector invalid");
@@ -243,7 +241,8 @@ void Controller::visualizeExecutePlanCb() {
 		group_->setStartState(*group_->getCurrentState());
 
 		bool success = group_->plan(temp_plan);
-		ROS_INFO("Controller: visualizing plan (pose goal) %s", success ? "" : "FAILED");
+		ROS_INFO("Controller: visualizing plan (pose goal) %s",
+				success ? "" : "FAILED");
 		// this sleep function could be commented to speed up
 		//sleep(5.0);
 		if (success) {
@@ -309,7 +308,6 @@ void Controller::updateWorkcell() {
 	remove_collision_ids_.clear();
 }
 
-// Get and set functions
 Plannar* Controller::getPlannar() {
 	return &plannar_;
 }

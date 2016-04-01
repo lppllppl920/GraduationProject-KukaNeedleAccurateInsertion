@@ -1,11 +1,11 @@
 /**
- *   Copyright (C) Tsinghua University 2015
+ *   Copyright (C) Tsinghua University 2016
  *
  *   Version   : 2.0
- *   Date      : 21 May 2015
- *   Author    : Long Qian
+ *   Date      : 2016
+ *   Author    : Xingtong Liu
  *   Company   : Tsinghua University
- *   Email     : joewalker.ql@gmail.com
+ *   Email     : 327586708@qq.com
  *
  *   Header file for Plannar, normally employed by the main thread.
  *   TCPThread is created here. Plannar provides direct API for higher
@@ -32,7 +32,6 @@
 
 #include "message.h"
 #include "tcpthread.h"
-#include "plot.h"
 // Includes the descartes robot model we will be using
 #include <descartes_moveit/moveit_state_adapter.h>
 // Includes the descartes trajectory type we will be using
@@ -40,7 +39,12 @@
 #include <descartes_trajectory/cart_trajectory_pt.h>
 // Includes the planner we will be using
 #include <descartes_planner/dense_planner.h>
-
+#include <cmath>
+#include <qmath.h>
+#include <iomanip>
+#include <cstdlib>
+#include <ctime>
+#include <QVector>
 
 // --------------------------------------------------------------------------
 // Plannar class
@@ -48,7 +52,7 @@
 //      program (higher level controller) and plannar
 // --------------------------------------------------------------------------
 class Plannar: public QObject {
-	Q_OBJECT
+Q_OBJECT
 public:
 
 	typedef control_msgs::FollowJointTrajectoryActionGoalConstPtr TrajectoryGoal;
@@ -169,31 +173,9 @@ public:
 	//  - linked with "debug" button on GUI
 	void test();
 
-	void plot(Axis::Param val, int count = DEF_PLOT_ALL,
-			plotWindow::PlotMethod pm = plotWindow::NewPlot);
-
-	void plot(Pos::Param val, int count = DEF_PLOT_ALL,
-			plotWindow::PlotMethod pm = plotWindow::NewPlot);
-
-	void plot(Frame::Param val, int count = DEF_PLOT_ALL,
-			plotWindow::PlotMethod pm = plotWindow::NewPlot);
-
-	void plot(Frame::Param val1, Frame::Param val2, int count = DEF_PLOT_ALL,
-			plotWindow::PlotMethod pm = plotWindow::NewPlot);
-
-	void plot(Axis::Param val1, Axis::Param val2, int count = DEF_PLOT_ALL,
-			plotWindow::PlotMethod pm = plotWindow::NewPlot);
-
-	void plot(Pos::Param val1, Pos::Param val2, int count = DEF_PLOT_ALL,
-			plotWindow::PlotMethod pm = plotWindow::NewPlot);
-
-	void clearPlots();
-
 	TCPThread& getTCPThread();
 
 	Model& getModel();
-
-	plotWindow& getPlotWindow();
 
 	std::list<Command*>& getCommandList();
 
@@ -218,9 +200,7 @@ public slots:
 	// Called when tcpSocket_ in tcpthread_ is disconencted
 	void disconnected();
 	// Called when Controller emit sendTrajectory() signal
-	void executeTrajectory(
-			const TrajectoryGoal& feedback);
-signals:
+	void executeTrajectory(const TrajectoryGoal& feedback);signals:
 	// Connected with tcpthread_.sendMessage()
 	// send a message to KRC4
 	void sendMessage(QString qs);
@@ -377,9 +357,6 @@ private:
 	int lastTime_;
 	int firstTime_;
 	double averageTime_;
-
-	plotWindow plot_;
-
 
 };
 

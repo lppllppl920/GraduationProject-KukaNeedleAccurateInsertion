@@ -1,12 +1,11 @@
 /**
- *   Copyright (C) Tsinghua University 2015
+ *   Copyright (C) Tsinghua University 2016
  *
  *   Version   : 2.0
- *   Date      : 20 May 2015
- *   Author    : Long Qian
+ *   Date      : 2016
+ *   Author    : Xingtong Liu
  *   Company   : Tsinghua University
- *   Email     : joewalker.ql@gmail.com
- *
+ *   Email     : 327586708@qq.com
  *   Header file for robot geometry, including basic data type associated
  *   with kuka robot description: Frame, Axis, Pos.
  *   Forward and inverse kinematics of robot is setup in Model class.
@@ -21,6 +20,8 @@
 
 #include <iostream>
 #include <string>
+#include <iomanip>
+#include <cmath>
 #include <kdl_parser/kdl_parser.hpp>
 #include <kdl/chainfksolverpos_recursive.hpp>
 #include <kdl/chainiksolverpos_lma.hpp>
@@ -147,7 +148,7 @@ struct Axis {
 	Axis(Axis& a);
 
 	// Operator + support for Axis, adds up two Axis
-	Axis& operator+(const Axis& right);
+	void operator+(const Axis& right);
 
 	// Set Axis with individual angle values of each joint
 	void set(float a1 = DEFAULT_A1, float a2 = DEFAULT_A2,

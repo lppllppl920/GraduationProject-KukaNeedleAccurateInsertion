@@ -1,11 +1,11 @@
 /**
- *   Copyright (C) Tsinghua University 2015
+ *   Copyright (C) Tsinghua University 2016
  *
  *   Version   : 2.0
- *   Date      : 20 May 2015
- *   Author    : Long Qian
+ *   Date      : 2016
+ *   Author    : Xingtong Liu
  *   Company   : Tsinghua University
- *   Email     : joewalker.ql@gmail.com
+ *   Email     : 327586708@qq.com
  *
  *   Header file for TCPThread. A new QThread is created apart from the main
  *   thread (plannar thread, used by krc4_control_async_GUI.cpp, test.cpp or
@@ -72,9 +72,6 @@
 #include <tf/tf.h>
 
 #include <QApplication>
-
-
-
 
 // Max length of feedbackQueue
 #define QUEUE_MAXLEN 2048
