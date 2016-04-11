@@ -24,7 +24,7 @@ Controller::Controller(std::string group_name) :
 	// When object plannar_'s "newFeedback" function is called, its parameter will be passed to Controller's "newFeedback" function 
 	// and Controller's "newFeedback" function will be called.
 	connect(&plannar_, SIGNAL(newFeedback(Feedback*)), this,
-			SLOT(newFeedbackReceived(Feedback*)), Qt::DirectConnection);
+			SLOT(newFeedbackReceived(Feedback*)));
 	// The same with shutdownController() and shutdown().
 	connect(&plannar_, SIGNAL(shutdownController()), this, SIGNAL(shutdown()));
 	// Send Trajectory to plannar_ object
@@ -80,7 +80,7 @@ void Controller::sendTrajectory(const TrajectoryGoal& feedback) {
 }
 
 void Controller::newFeedbackReceived(Feedback* feedback) {
-	emit newFeedback(*feedback);
+	emit newFeedback(feedback);
 }
 
 // Obtain motion plan based on target pose
@@ -95,6 +95,7 @@ bool Controller::planTargetMotion(geometry_msgs::Pose target_pose) {
 
 	return plan_success_;
 }
+
 bool Controller::planTargetPoseMotion() {
 
 	group_->clearPoseTarget();
@@ -212,7 +213,10 @@ void Controller::visualizeMotionPlan() {
 void Controller::stopMotion() {
 	group_->stop();
 }
-
+void Controller::addWaypoints(geometry_msgs::Pose waypoint_pose) {
+	ROS_INFO("Controller: add %d th way point", ++waypoint_count_);
+	waypoints_.push_back(waypoint_pose);
+}
 void Controller::addWaypointsCb() {
 	ROS_INFO("Controller: add %d th way point", ++waypoint_count_);
 	geometry_msgs::Pose temp_pos = end_effector_pos_;
@@ -220,13 +224,9 @@ void Controller::addWaypointsCb() {
 }
 void Controller::endEffectorPosCb(
 		const visualization_msgs::InteractiveMarkerFeedbackConstPtr &feedback) {
-
 	if (feedback->mouse_point_valid) {
 		end_effector_pos_ = feedback->pose;
-	} else {
-		ROS_INFO("end effector invalid");
 	}
-
 }
 void Controller::visualizeExecutePlanCb() {
 
@@ -326,6 +326,9 @@ std::map<std::string, double>& Controller::getTargetJoints() {
 
 Eigen::Affine3d& Controller::getTargetAffine() {
 	return target_affine_;
+}
+geometry_msgs::Pose& Controller::getEndEffectorPos() {
+	return end_effector_pos_;
 }
 
 void Controller::setMotionPlan(

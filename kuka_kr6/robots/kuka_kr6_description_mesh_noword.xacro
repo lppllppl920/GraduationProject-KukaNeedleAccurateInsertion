@@ -119,21 +119,21 @@
         <material name="yellow"/>
       </collision>
     </link>
-
+    
     <link name="${prefix}flange">
       <visual>
-        <origin rpy="0 0 0" xyz="0.05 0 0.165"/>
+        <origin rpy="0 0 0.3275285" xyz="0.05 0 0.1661755"/>
         <geometry>
-          <box size="0.15 0.1 0.33"/>
+          <box size="0.15 0.1 0.332351"/>
         </geometry>
         <material name="silver">
           <color rgba="0.75 0.75 0.75 1"/>
         </material>
       </visual>
       <collision>
-        <origin rpy="0 0 0" xyz="0.05 0 0.165"/>
+        <origin rpy="0 0 0.3275285" xyz="0.05 0 0.1661755"/>
         <geometry>
-          <box size="0.15 0.1 0.33"/>
+          <box size="0.15 0.1 0.332351"/>
         </geometry>
         <material name="silver"/>
       </collision>
@@ -199,9 +199,9 @@
     </joint>
     
     <joint name="${prefix}tip_joint" type="fixed">
-      <origin rpy="0 -1.57079633 -1.57079633" xyz="0 0 0.33"/>
-      <parent link="${prefix}flange" />
-      <child link="${prefix}tip" />
+      <origin rpy="1.0687349 -1.52199692 -2.44443834" xyz="0.0702 0.023006 0.332351"/>
+      <parent link="${prefix}flange"/>
+      <child link="${prefix}tip"/>
     </joint>
     <!-- end of joint list -->
     

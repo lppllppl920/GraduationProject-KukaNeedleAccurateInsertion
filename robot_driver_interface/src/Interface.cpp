@@ -11,19 +11,12 @@
 #include "Interface.h"
 
 Interface::Interface(QWidget *parent) :
-		controller_() {
+		controller_(), last_Axis_(0,0,0,0,0,0) {
 
 	ROS_INFO("Interface Constructing...");
 
 	setupUi(this);
-
-	// Initialization for comboBox objects
-	QStringList operation_list;
-	operation_list << "ADD" << "REMOVE";
-	comboBox_Operation->addItems(operation_list);
-	QStringList shape_list;
-	shape_list << "BOX" << "SPHERE" << "CYLINDER" << "CONE";
-	comboBox_Shape->addItems(shape_list);
+	setAlignment();
 
 	// pointer to node handle
 	node_handle_ = boost::make_shared<ros::NodeHandle>("");
@@ -35,30 +28,32 @@ Interface::Interface(QWidget *parent) :
 			SLOT(visualizePosePlan()));
 	connect(pushButton_ExecutePlan, SIGNAL(clicked()), this,
 			SLOT(executeMotionPlan()));
-	connect(pushButton_CopyJointState, SIGNAL(clicked()), this,
-			SLOT(copyJointState()));
-	connect(pushButton_AddWaypoint, SIGNAL(clicked()), &controller_,
-			SLOT(addWaypointsCb()));
+	connect(pushButton_AddWaypoint, SIGNAL(clicked()), this,
+			SLOT(addWaypoints()));
 	connect(pushButton_ExecuteWaypointsPlan, SIGNAL(clicked()), &controller_,
 			SLOT(visualizeExecutePlanCb()));
 	connect(pushButton_Do, SIGNAL(clicked()), this,
 			SLOT(manipulateCollisionObject()));
+	connect(pushButton_ConvertPosetoJoint, SIGNAL(clicked()), this,
+			SLOT(convertPoseTargettoJointTarget()));
+	connect(pushButton_VisualizeIncrPosePlan, SIGNAL(clicked()), this,
+			SLOT(visualizeIncrPosePlan()));
 
 	// Others related
 	connect(this, SIGNAL(sendTrajectory(const TrajectoryGoal&)), &controller_,
 			SLOT(sendTrajectory(const TrajectoryGoal&)));
 
-	connect(&controller_, SIGNAL(newFeedback(Feedback& )), this,
-			SLOT(newFeedbackReceived(Feedback& )), Qt::DirectConnection);
+	connect(&controller_, SIGNAL(newFeedback(Feedback* )), this,
+			SLOT(newFeedbackReceived(Feedback* )));
 
-	connect(&controller_, SIGNAL(newFeedback(Feedback& )), this,
-			SLOT(displayFeedback(Feedback& )), Qt::DirectConnection);
+	connect(&controller_, SIGNAL(newFeedback(Feedback* )), this,
+			SLOT(displayFeedback(Feedback* )));
 
 	connect(&controller_, SIGNAL(shutdown()), this, SLOT(shutdown()));
 	// When motion plan is obtain in controller_, transfer plan to interface object for visualization
 	connect(&controller_, SIGNAL(visualizeMotionPlan(MotionPlan)), this,
 			SLOT(visualizeMotionPlan(MotionPlan)));
-	connect(this, SIGNAL(addWaypoints()), &controller_, SLOT(addWaypointsCb()));
+	connect(this, SIGNAL(addWaypointsSignal()), &controller_, SLOT(addWaypointsCb()));
 	connect(this, SIGNAL(visualizeExecutePlan()), &controller_,
 			SLOT(visualizeExecutePlanCb()));
 	connect(this,
@@ -74,8 +69,6 @@ Interface::Interface(QWidget *parent) :
 	// Set publisher for joint state visualization
 	joint_state_publisher_ = node_handle_->advertise<sensor_msgs::JointState>(
 			"/joint_states", 1000, true);
-	joint_state_subscriber_ = node_handle_->subscribe<sensor_msgs::JointState,
-			Interface>("/joint_states", 10, &Interface::jointStatesCb, this);
 
 	// Set subscriber for obtaining interactive marker position
 	interactive_marker_subsriber_ =
@@ -105,6 +98,17 @@ Interface::Interface(QWidget *parent) :
 
 	// initialize joint state publish count
 	joint_state_publish_count_ = 0;
+	// allocate memory for position variable
+	joint_state_.position.resize(6);
+	joint_state_.name.resize(6);
+	joint_state_.name[0] = "joint1";
+	joint_state_.name[1] = "joint2";
+	joint_state_.name[2] = "joint3";
+	joint_state_.name[3] = "joint4";
+	joint_state_.name[4] = "joint5";
+	joint_state_.name[5] = "joint6";
+	joint_state_display_counter_ = 0;
+	joint_state_callback_counter_ = 0;
 
 	// pointer to plannar_
 	plannar_ptr_ = boost::shared_ptr<Plannar>(controller_.getPlannar());
@@ -138,6 +142,9 @@ void Interface::manipulateCollisionObject() {
 	QListWidgetItem* collision_item = new QListWidgetItem;
 
 	moveit_msgs::PlanningScene planning_scene;
+
+	geometry_msgs::Pose::_orientation_type collision_quaternion;
+	std::vector<double> collision_euler_angle;
 
 	if (operation_index == 0) {
 		ROS_INFO("Add collision object");
@@ -193,16 +200,19 @@ void Interface::manipulateCollisionObject() {
 		collision_pose.position.y = lineEdit_TransY->text().toDouble();
 		collision_pose.position.z = lineEdit_TransZ->text().toDouble();
 
-		collision_pose.orientation.w = lineEdit_RotateW->text().toDouble();
-		collision_pose.orientation.x = lineEdit_RotateX->text().toDouble();
-		collision_pose.orientation.y = lineEdit_RotateY->text().toDouble();
-		collision_pose.orientation.z = lineEdit_RotateZ->text().toDouble();
+		std::vector<double> euler_angle(3);
+		euler_angle[0] = lineEdit_RotateA->text().toDouble() / 180.0 * M_PI;
+		euler_angle[1] = lineEdit_RotateB->text().toDouble() / 180.0 * M_PI;
+		euler_angle[2] = lineEdit_RotateC->text().toDouble() / 180.0 * M_PI;
+
+		KDL::Rotation rotation = KDL::Rotation::RPY(euler_angle[0], euler_angle[1], euler_angle[2]);
+		rotation.GetQuaternion(collision_pose.orientation.x, collision_pose.orientation.y, collision_pose.orientation.z, collision_pose.orientation.w);
 
 		collision_object.operation = collision_object.ADD;
 		collision_object.primitive_poses.push_back(collision_pose);
 		collision_object.primitives.push_back(collision_primitive);
 		collision_object.header.frame_id = "world";
-		collision_object.id = lineEdit_Z_2->text().toStdString();
+		collision_object.id = lineEdit_CollisionID->text().toStdString();
 		collision_object.header.stamp = ros::Time::now();
 		collision_object.header.seq = collision_operation_counter_++;
 
@@ -212,7 +222,7 @@ void Interface::manipulateCollisionObject() {
 		planning_scene.is_diff = true;
 		planning_scene_diff_publisher_.publish(planning_scene);
 
-		collision_item->setText(lineEdit_Z_2->text());
+		collision_item->setText(lineEdit_CollisionID->text());
 		listWidget_CurrentCollisionObject->insertItem(1, collision_item);
 
 	} else if (operation_index == 1) {
@@ -244,68 +254,75 @@ void Interface::visualizeJointPlan() {
 	target_joints["joint6"] = lineEdit_Joint6->text().toDouble() / 180.0 * M_PI;
 
 	controller_.planTargetMotion(target_joints);
-
 }
-//call back function for GUI push button
 void Interface::visualizePosePlan() {
 	geometry_msgs::Pose target_pose;
 	target_pose.position.x = lineEdit_TransX->text().toDouble();
 	target_pose.position.y = lineEdit_TransY->text().toDouble();
 	target_pose.position.z = lineEdit_TransZ->text().toDouble();
 
-	target_pose.orientation.x = lineEdit_RotateX->text().toDouble();
-	target_pose.orientation.y = lineEdit_RotateY->text().toDouble();
-	target_pose.orientation.z = lineEdit_RotateZ->text().toDouble();
-	target_pose.orientation.w = lineEdit_RotateW->text().toDouble();
+	std::vector<double> euler_angle(3);
+	euler_angle[0] = lineEdit_RotateA->text().toDouble() / 180.0 * M_PI;
+	euler_angle[1] = lineEdit_RotateB->text().toDouble() / 180.0 * M_PI;
+	euler_angle[2] = lineEdit_RotateC->text().toDouble() / 180.0 * M_PI;
 
-	double scale = sqrt(
-			target_pose.orientation.w * target_pose.orientation.w
-					+ target_pose.orientation.x * target_pose.orientation.x
-					+ target_pose.orientation.y * target_pose.orientation.y
-					+ target_pose.orientation.z * target_pose.orientation.z);
-	// Normalize orientation vector
-	target_pose.orientation.w /= scale;
-	target_pose.orientation.x /= scale;
-	target_pose.orientation.y /= scale;
-	target_pose.orientation.z /= scale;
+	KDL::Rotation rotation = KDL::Rotation::RPY(euler_angle[0], euler_angle[1], euler_angle[2]);
+	rotation.GetQuaternion(target_pose.orientation.x, target_pose.orientation.y, target_pose.orientation.z, target_pose.orientation.w);
 
 	controller_.planTargetMotion(target_pose);
 }
-void Interface::copyJointState() {
+void Interface::visualizeIncrPosePlan() {
+	geometry_msgs::Pose target_pose;
+	target_pose.position.x = output_x->toPlainText().toDouble() + lineEdit_incrTransX->text().toDouble();
+	target_pose.position.y = output_y->toPlainText().toDouble() + lineEdit_incrTransY->text().toDouble();
+	target_pose.position.z = output_z->toPlainText().toDouble() + lineEdit_incrTransZ->text().toDouble();
 
-	lineEdit_Joint1->setText(lineEdit_Joint1_S->text());
-	lineEdit_Joint2->setText(lineEdit_Joint2_S->text());
-	lineEdit_Joint3->setText(lineEdit_Joint3_S->text());
-	lineEdit_Joint4->setText(lineEdit_Joint4_S->text());
-	lineEdit_Joint5->setText(lineEdit_Joint5_S->text());
-	lineEdit_Joint6->setText(lineEdit_Joint6_S->text());
+	std::vector<double> euler_angle(3);
+	euler_angle[0] = output_a->toPlainText().toDouble() / 180.0 * M_PI + lineEdit_incrRotateA->text().toDouble() / 180.0 * M_PI;
+	euler_angle[1] = output_b->toPlainText().toDouble() / 180.0 * M_PI + lineEdit_incrRotateB->text().toDouble() / 180.0 * M_PI;
+	euler_angle[2] = output_c->toPlainText().toDouble() / 180.0 * M_PI + lineEdit_incrRotateC->text().toDouble() / 180.0 * M_PI;
+
+	KDL::Rotation rotation = KDL::Rotation::RPY(euler_angle[0], euler_angle[1], euler_angle[2]);
+	rotation.GetQuaternion(target_pose.orientation.x, target_pose.orientation.y, target_pose.orientation.z, target_pose.orientation.w);
+
+	controller_.planTargetMotion(target_pose);
 }
+void Interface::addWaypoints() {
+	geometry_msgs::Pose target_pose;
+	target_pose.position.x = lineEdit_TransX->text().toDouble();
+	target_pose.position.y = lineEdit_TransY->text().toDouble();
+	target_pose.position.z = lineEdit_TransZ->text().toDouble();
 
+	std::vector<double> euler_angle(3);
+	euler_angle[0] = lineEdit_RotateA->text().toDouble() / 180.0 * M_PI;
+	euler_angle[1] = lineEdit_RotateB->text().toDouble() / 180.0 * M_PI;
+	euler_angle[2] = lineEdit_RotateC->text().toDouble() / 180.0 * M_PI;
+
+	KDL::Rotation rotation = KDL::Rotation::RPY(euler_angle[0], euler_angle[1], euler_angle[2]);
+	rotation.GetQuaternion(target_pose.orientation.x, target_pose.orientation.y, target_pose.orientation.z, target_pose.orientation.w);
+
+	controller_.addWaypoints(target_pose);
+}
 void Interface::executeMotionPlan() {
 
 	controller_.executeMotionPlan();
 }
 
-void Interface::newFeedbackReceived(Feedback& feedback) {
+void Interface::newFeedbackReceived(Feedback* feedback) {
+
+	Axis feedback_axis;
+	feedback_axis = feedback->getAxis();
 
 	joint_state_publish_count_++;
 	joint_state_.header.seq = joint_state_publish_count_;
-	joint_state_.position[0] = feedback.getAxis().A1 / 180.0 * M_PI;
-	joint_state_.position[1] = feedback.getAxis().A2 / 180.0 * M_PI;
-	joint_state_.position[2] = feedback.getAxis().A3 / 180.0 * M_PI;
-	joint_state_.position[3] = feedback.getAxis().A4 / 180.0 * M_PI;
-	joint_state_.position[4] = feedback.getAxis().A5 / 180.0 * M_PI;
-	joint_state_.position[5] = feedback.getAxis().A6 / 180.0 * M_PI;
+	joint_state_.position[0] = feedback_axis.A1 / 180.0 * M_PI;
+	joint_state_.position[1] = feedback_axis.A2 / 180.0 * M_PI;
+	joint_state_.position[2] = feedback_axis.A3 / 180.0 * M_PI;
+	joint_state_.position[3] = feedback_axis.A4 / 180.0 * M_PI;
+	joint_state_.position[4] = feedback_axis.A5 / 180.0 * M_PI;
+	joint_state_.position[5] = feedback_axis.A6 / 180.0 * M_PI;
 	joint_state_.header.stamp = ros::Time::now();
 	joint_state_publisher_.publish(joint_state_);
-
-	// Display feedback of joint state
-	lineEdit_Joint1_S->setText(QString::number(feedback.getAxis().A1));
-	lineEdit_Joint2_S->setText(QString::number(feedback.getAxis().A2));
-	lineEdit_Joint3_S->setText(QString::number(feedback.getAxis().A3));
-	lineEdit_Joint4_S->setText(QString::number(feedback.getAxis().A4));
-	lineEdit_Joint5_S->setText(QString::number(feedback.getAxis().A5));
-	lineEdit_Joint6_S->setText(QString::number(feedback.getAxis().A6));
 }
 void Interface::visualizeMotionPlan(
 		moveit::planning_interface::MoveGroup::Plan motion_plan) {
@@ -317,6 +334,7 @@ void Interface::visualizeMotionPlan(
 
 	display_publisher_.publish(display_trajectory_);
 }
+
 void Interface::shutdown() {
 	QApplication::exit();
 	ros::shutdown();
@@ -329,7 +347,7 @@ void Interface::trajectoryActionCb(const TrajectoryGoal& feedback) {
 }
 void Interface::addWaypointsCb() {
 	ROS_INFO("Interface: add way points callback");
-	emit addWaypoints();
+	emit addWaypointsSignal();
 }
 void Interface::visualizeExecutePlanCb() {
 	ROS_INFO("Interface: visualize and execute plan callback");
@@ -337,13 +355,31 @@ void Interface::visualizeExecutePlanCb() {
 }
 void Interface::endEffectorPosCb(
 		const InteractiveMarkerFeedbackConstPtr &feedback) {
-	lineEdit_TransX->setText(QString::number(feedback->pose.position.x));
-	lineEdit_TransY->setText(QString::number(feedback->pose.position.y));
-	lineEdit_TransZ->setText(QString::number(feedback->pose.position.z));
-	lineEdit_RotateX->setText(QString::number(feedback->pose.orientation.x));
-	lineEdit_RotateY->setText(QString::number(feedback->pose.orientation.y));
-	lineEdit_RotateZ->setText(QString::number(feedback->pose.orientation.z));
-	lineEdit_RotateW->setText(QString::number(feedback->pose.orientation.w));
+	lineEdit_TransX->setText(QString("%1").arg(feedback->pose.position.x, 8, 'f', 4));
+	lineEdit_TransY->setText(QString("%1").arg(feedback->pose.position.y, 8, 'f', 4));
+	lineEdit_TransZ->setText(QString("%1").arg(feedback->pose.position.z, 8, 'f', 4));
+
+	std::vector<double> euler_angle(3);
+	KDL::Rotation rotation = KDL::Rotation::Quaternion(feedback->pose.orientation.x, feedback->pose.orientation.y, feedback->pose.orientation.z, feedback->pose.orientation.w);
+	rotation.GetRPY(euler_angle[0], euler_angle[1], euler_angle[2]);
+	lineEdit_RotateA->setText(QString("%1").arg(euler_angle[0] / M_PI * 180.0, 8, 'f', 4));
+	lineEdit_RotateB->setText(QString("%1").arg(euler_angle[1] / M_PI * 180.0, 8, 'f', 4));
+	lineEdit_RotateC->setText(QString("%1").arg(euler_angle[2] / M_PI * 180.0, 8, 'f', 4));
+
+
+	Frame temp_frame(feedback->pose.position.x * 1000.0, feedback->pose.position.y * 1000.0, feedback->pose.position.z * 1000.0,
+			euler_angle[0] / M_PI * 180.0, euler_angle[1] / M_PI * 180.0, euler_angle[2] / M_PI * 180.0);
+	Axis temp_axis;
+	controller_.getPlannar()->getModel().Frame2Axis(last_Axis_, temp_frame, temp_axis);
+	last_Axis_.set(temp_axis);
+
+	lineEdit_Joint1->setText(QString("%1").arg(temp_axis.A1, 8, 'f', 4));
+	lineEdit_Joint2->setText(QString("%1").arg(temp_axis.A2, 8, 'f', 4));
+	lineEdit_Joint3->setText(QString("%1").arg(temp_axis.A3, 8, 'f', 4));
+	lineEdit_Joint4->setText(QString("%1").arg(temp_axis.A4, 8, 'f', 4));
+	lineEdit_Joint5->setText(QString("%1").arg(temp_axis.A5, 8, 'f', 4));
+	lineEdit_Joint6->setText(QString("%1").arg(temp_axis.A6, 8, 'f', 4));
+
 	emit endEffectorPos(feedback);
 }
 void addWaypointsCb_global(const InteractiveMarkerFeedbackConstPtr &feedback) {
@@ -356,22 +392,6 @@ void visualizeExecutePlanCb_global(
 	// The Workaround of the MenuHandler insert function problem
 	ROS_INFO("Global: visualize and execute plan");
 	kuka_interface->visualizeExecutePlanCb();
-}
-void Interface::jointStatesCb(const sensor_msgs::JointStateConstPtr &feedback) {
-
-	lineEdit_Joint1_S->setText(
-			QString::number(feedback->position[0] / M_PI * 180.0));
-	lineEdit_Joint2_S->setText(
-			QString::number(feedback->position[1] / M_PI * 180.0));
-	lineEdit_Joint3_S->setText(
-			QString::number(feedback->position[2] / M_PI * 180.0));
-	lineEdit_Joint4_S->setText(
-			QString::number(feedback->position[3] / M_PI * 180.0));
-	lineEdit_Joint5_S->setText(
-			QString::number(feedback->position[4] / M_PI * 180.0));
-	lineEdit_Joint6_S->setText(
-			QString::number(feedback->position[5] / M_PI * 180.0));
-
 }
 
 // Menu Interaction related
@@ -551,74 +571,118 @@ void Interface::on_send_pos_button_clicked() {
 	plannar_ptr_->motion(style, p, approx);
 }
 
-void Interface::displayFeedback(Feedback& fb) {
-	if (fb.getSetOK() && fb.getParsedOK()) {
-		output_x->setText(QString("%1").arg(fb.getFrame().X, 8, 'f', 4));
-		output_y->setText(QString("%1").arg(fb.getFrame().Y, 8, 'f', 4));
-		output_z->setText(QString("%1").arg(fb.getFrame().Z, 8, 'f', 4));
-		output_a->setText(QString("%1").arg(fb.getFrame().A, 8, 'f', 4));
-		output_b->setText(QString("%1").arg(fb.getFrame().B, 8, 'f', 4));
-		output_c->setText(QString("%1").arg(fb.getFrame().C, 8, 'f', 4));
+void Interface::displayFeedback(Feedback* feedback) {
 
-		output_a1->setText(QString("%1").arg(fb.getAxis().A1, 8, 'f', 4));
-		output_a2->setText(QString("%1").arg(fb.getAxis().A2, 8, 'f', 4));
-		output_a3->setText(QString("%1").arg(fb.getAxis().A3, 8, 'f', 4));
-		output_a4->setText(QString("%1").arg(fb.getAxis().A4, 8, 'f', 4));
-		output_a5->setText(QString("%1").arg(fb.getAxis().A5, 8, 'f', 4));
-		output_a6->setText(QString("%1").arg(fb.getAxis().A6, 8, 'f', 4));
+	joint_state_display_counter_++;
+	if(joint_state_display_counter_ >= 100) {
+		if (feedback->getSetOK() && feedback->getParsedOK()) {
+			Axis feedback_axis;
+			Frame feedback_frame;
+			feedback_axis = feedback->getAxis();
+			feedback_frame = feedback->getFrame();
 
-		output_s->setText(QString::number(fb.getPos().S));
-		output_t->setText(QString::number(fb.getPos().T));
+			last_Axis_.set(feedback_axis);
+			output_x->setText(QString("%1").arg(feedback_frame.X, 8, 'f', 4));
+			output_y->setText(QString("%1").arg(feedback_frame.Y, 8, 'f', 4));
+			output_z->setText(QString("%1").arg(feedback_frame.Z, 8, 'f', 4));
+			output_a->setText(QString("%1").arg(feedback_frame.A, 8, 'f', 4));
+			output_b->setText(QString("%1").arg(feedback_frame.B, 8, 'f', 4));
+			output_c->setText(QString("%1").arg(feedback_frame.C, 8, 'f', 4));
 
-		output_buf_front->setText(QString::number(fb.getBufferFront()));
-		output_buf_last->setText(QString::number(fb.getBufferLast()));
+			output_a1->setText(QString("%1").arg(feedback_axis.A1, 8, 'f', 4));
+			output_a2->setText(QString("%1").arg(feedback_axis.A2, 8, 'f', 4));
+			output_a3->setText(QString("%1").arg(feedback_axis.A3, 8, 'f', 4));
+			output_a4->setText(QString("%1").arg(feedback_axis.A4, 8, 'f', 4));
+			output_a5->setText(QString("%1").arg(feedback_axis.A5, 8, 'f', 4));
+			output_a6->setText(QString("%1").arg(feedback_axis.A6, 8, 'f', 4));
 
-		output_seq->setText(QString::number(fb.getSeq()));
-		output_result->setText(QString::number(fb.getStamp()));
+			output_s->setText(QString::number(feedback->getPos().S));
+			output_t->setText(QString::number(feedback->getPos().T));
 
-		if (fb.getText() != "Timer Feedback")
-			output_message->setText(QString::fromStdString(fb.getText()));
+			output_buf_front->setText(QString::number(feedback->getBufferFront()));
+			output_buf_last->setText(QString::number(feedback->getBufferLast()));
 
-		if (fb.getBufferExtreme() == Feedback::Full) {
-			QPalette pf = output_buf_front->palette();
-			pf.setColor(QPalette::Base, QColor(170, 0, 0));
-			output_buf_front->setPalette(pf);
+			output_seq->setText(QString::number(feedback->getSeq()));
+			output_result->setText(QString::number(feedback->getStamp()));
 
-			QPalette pl = output_buf_last->palette();
-			pl.setColor(QPalette::Base, QColor(170, 0, 0));
-			output_buf_last->setPalette(pl);
+			if (feedback->getText() != "Timer Feedback")
+				output_message->setText(QString::fromStdString(feedback->getText()));
+
+			if (feedback->getBufferExtreme() == Feedback::Full) {
+				QPalette pf = output_buf_front->palette();
+				pf.setColor(QPalette::Base, QColor(170, 0, 0));
+				output_buf_front->setPalette(pf);
+
+				QPalette pl = output_buf_last->palette();
+				pl.setColor(QPalette::Base, QColor(170, 0, 0));
+				output_buf_last->setPalette(pl);
+			} else {
+				QPalette pf = output_buf_front->palette();
+				pf.setColor(QPalette::Base, QColor(0, 170, 0));
+				output_buf_front->setPalette(pf);
+
+				QPalette pl = output_buf_last->palette();
+				pl.setColor(QPalette::Base, QColor(0, 170, 0));
+				output_buf_last->setPalette(pl);
+			}
+
+			if (feedback->getSuccess() == 0 && feedback->getType() == Feedback::Hybrid) {
+				QPalette pr = output_result->palette();
+				pr.setColor(QPalette::Base, QColor(170, 0, 0));
+				output_result->setPalette(pr);
+			} else if (feedback->getType() == Feedback::Hybrid) {
+				QPalette pr = output_result->palette();
+				pr.setColor(QPalette::Base, QColor(0, 170, 0));
+				output_result->setPalette(pr);
+			}
+
+			//setAlignment();
 		} else {
-			QPalette pf = output_buf_front->palette();
-			pf.setColor(QPalette::Base, QColor(0, 170, 0));
-			output_buf_front->setPalette(pf);
+			output_message->setText("Feedback parsing failed");
+			QPalette pm = output_message->palette();
+			pm.setColor(QPalette::Base, QColor(170, 0, 0));
+			output_message->setPalette(pm);
 
-			QPalette pl = output_buf_last->palette();
-			pl.setColor(QPalette::Base, QColor(0, 170, 0));
-			output_buf_last->setPalette(pl);
+			//setAlignment();
 		}
-
-		if (fb.getSuccess() == 0 && fb.getType() == Feedback::Hybrid) {
-			QPalette pr = output_result->palette();
-			pr.setColor(QPalette::Base, QColor(170, 0, 0));
-			output_result->setPalette(pr);
-		} else if (fb.getType() == Feedback::Hybrid) {
-			QPalette pr = output_result->palette();
-			pr.setColor(QPalette::Base, QColor(0, 170, 0));
-			output_result->setPalette(pr);
-		}
-
-		setAlignment();
-	} else {
-		output_message->setText("Feedback parsing failed");
-		QPalette pm = output_message->palette();
-		pm.setColor(QPalette::Base, QColor(170, 0, 0));
-		output_message->setPalette(pm);
-
-		setAlignment();
+		joint_state_display_counter_ = 0;
 	}
+
+}
+void Interface::convertPoseTargettoJointTarget() {
+	Frame temp_frame(lineEdit_TransX->text().toDouble() * 1000.0, lineEdit_TransY->text().toDouble() * 1000.0, lineEdit_TransZ->text().toDouble() * 1000.0,
+			lineEdit_RotateA->text().toDouble(), lineEdit_RotateB->text().toDouble(), lineEdit_RotateC->text().toDouble());
+	Axis temp_axis;
+
+	controller_.getPlannar()->getModel().Frame2Axis(last_Axis_, temp_frame, temp_axis);
+	last_Axis_.set(temp_axis);
+
+	lineEdit_Joint1->setText(QString("%1").arg(temp_axis.A1, 8, 'f', 4));
+	lineEdit_Joint2->setText(QString("%1").arg(temp_axis.A2, 8, 'f', 4));
+	lineEdit_Joint3->setText(QString("%1").arg(temp_axis.A3, 8, 'f', 4));
+	lineEdit_Joint4->setText(QString("%1").arg(temp_axis.A4, 8, 'f', 4));
+	lineEdit_Joint5->setText(QString("%1").arg(temp_axis.A5, 8, 'f', 4));
+	lineEdit_Joint6->setText(QString("%1").arg(temp_axis.A6, 8, 'f', 4));
+
 }
 
+void Interface::on_convert_button_clicked() {
+	Frame temp_frame(input_x->toPlainText().toDouble(), input_y->toPlainText().toDouble(), input_z->toPlainText().toDouble(),
+			input_a->toPlainText().toDouble(), input_b->toPlainText().toDouble(), input_c->toPlainText().toDouble());
+	Axis temp_axis;
+
+	controller_.getPlannar()->getModel().Frame2Axis(last_Axis_, temp_frame, temp_axis);
+	last_Axis_.set(temp_axis);
+
+	output_a1->setText(QString("%1").arg(temp_axis.A1, 8, 'f', 4));
+	output_a2->setText(QString("%1").arg(temp_axis.A2, 8, 'f', 4));
+	output_a3->setText(QString("%1").arg(temp_axis.A3, 8, 'f', 4));
+	output_a4->setText(QString("%1").arg(temp_axis.A4, 8, 'f', 4));
+	output_a5->setText(QString("%1").arg(temp_axis.A5, 8, 'f', 4));
+	output_a6->setText(QString("%1").arg(temp_axis.A6, 8, 'f', 4));
+}
 void Interface::on_copy_button_clicked() {
+// Single Command tab
 	input_x->setText(output_x->toPlainText());
 	input_y->setText(output_y->toPlainText());
 	input_z->setText(output_z->toPlainText());
@@ -635,9 +699,24 @@ void Interface::on_copy_button_clicked() {
 	input_a4->setText(output_a4->toPlainText());
 	input_a5->setText(output_a5->toPlainText());
 	input_a6->setText(output_a6->toPlainText());
+// Path Planning tab
+	// this tab the x y z is presented in meter unit
+	lineEdit_TransX->setText(QString("%1").arg(output_x->toPlainText().toDouble() / 1000.0, 8, 'f', 4));
+	lineEdit_TransY->setText(QString("%1").arg(output_y->toPlainText().toDouble() / 1000.0, 8, 'f', 4));
+	lineEdit_TransZ->setText(QString("%1").arg(output_z->toPlainText().toDouble() / 1000.0, 8, 'f', 4));
+	lineEdit_RotateA->setText(output_a->toPlainText());
+	lineEdit_RotateB->setText(output_b->toPlainText());
+	lineEdit_RotateC->setText(output_c->toPlainText());
+
+	lineEdit_Joint1->setText(output_a1->toPlainText());
+	lineEdit_Joint2->setText(output_a2->toPlainText());
+	lineEdit_Joint3->setText(output_a3->toPlainText());
+	lineEdit_Joint4->setText(output_a4->toPlainText());
+	lineEdit_Joint5->setText(output_a5->toPlainText());
+	lineEdit_Joint6->setText(output_a6->toPlainText());
 
 	ROS_INFO("Copy button clicked");
-	setAlignment();
+	//setAlignment();
 }
 
 void Interface::on_default_button_clicked() {
@@ -659,7 +738,7 @@ void Interface::on_default_button_clicked() {
 	input_a6->setText(QString("%1").arg( DEFAULT_A6, 8, 'f', 4));
 
 	ROS_INFO("Default button clicked");
-	setAlignment();
+	//setAlignment();
 }
 
 void Interface::on_debug_button_clicked() {

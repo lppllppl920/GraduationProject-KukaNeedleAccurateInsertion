@@ -88,15 +88,20 @@ void Plannar::executeTrajectory(const TrajectoryGoal& feedback) {
 }
 
 void Plannar::feedbackReceived(QString qs) {
+	bool isParsed;
 	while (FeedbackList.size() >= QUEUE_MAXLEN) {
 		Feedback* fb = FeedbackList.front();
 		FeedbackList.pop_front();
 		delete fb;
 	}
-	Feedback* fb = new Feedback(qs);
-	FeedbackList.push_back(fb);
-
-	updateQueueStatus(fb);
+	Feedback* fb = new Feedback(qs, isParsed);
+	if(isParsed) {
+		FeedbackList.push_back(fb);
+		updateQueueStatus(fb);
+	}
+	else {
+		return;
+	}
 }
 
 void Plannar::disconnected() {
@@ -142,14 +147,13 @@ void Plannar::updateQueueStatus(Feedback* fb) {
 	// for debugging
 //    checkStatusTurn(fb);
 
-	std::cout << "--- Feedback, Seq = " << fb->getSeq() << ", Hour = "
+	/*TODO: std::cout << "--- Feedback, Seq = " << fb->getSeq() << ", Hour = "
 			<< fb->getHour() << ", Time = " << fb->getTime() << ", Buffer: "
 			<< fb->getBufferFront() << " - " << fb->getBufferLast()
-			<< ", Text = " << fb->getText();
+			<< ", Text = " << fb->getText();*/
 
 	updateFrequencyPerformance(fb);
-
-	std::cout << std::endl;
+	//TODO: std::cout << std::endl;
 
 	if (fb->getText() == "STOP immediately")
 		stopRecv(fb);
@@ -163,9 +167,7 @@ void Plannar::updateQueueStatus(Feedback* fb) {
 		updateIterators(fb);
 
 	queryNextCommand();
-
 	lastAxis_.set(fb->getAxis());
-
 //    printFeedbackBasic();
 //    printCommandList();
 	emit newFeedback(fb);
@@ -341,17 +343,20 @@ void Plannar::updateIterators(Feedback* fb) {
 }
 
 void Plannar::updateFrequencyPerformance(Feedback* fb) {
+
 	if (feedbackCount_ == 0) {
 		feedbackCount_++;
 		lastTime_ = fb->getTime();
 		firstTime_ = fb->getTime();
+
 	} else {
 		feedbackCount_++;
-		std::cout << ", Cycle time: " << lastTime_ - fb->getTime() << " ms,";
+		//TODO: std::cout << ", Cycle time: " << lastTime_ - fb->getTime() << " ms,";
 		lastTime_ = fb->getTime();
 		averageTime_ = (double) (firstTime_ - lastTime_)
 				/ (double) (feedbackCount_ - 1);
-		std::cout << " Avg time: " << averageTime_ << " ms";
+		//TODO: std::cout << " Avg time: " << averageTime_ << " ms";
+
 	}
 }
 
@@ -620,21 +625,19 @@ bool Plannar::reachableCheck(Axis& a) {
 }
 // reachableCheck for Frame and Pos is not accomplished yet
 bool Plannar::reachableCheck(Frame &f) {
-//    Axis a_convert;
-//    if ( robot.Frame2Axis(lastAxis_, f, a_convert) )
-//        return reachableCheck(a_convert);
-//    else
-//        return false;
-	return true;
+    Axis a_convert;
+    if ( robot_.Frame2Axis(lastAxis_, f, a_convert) )
+        return reachableCheck(a_convert);
+    else
+        return false;
 }
 
 bool Plannar::reachableCheck(Pos &p) {
-//    Axis a_convert;
-//    if ( robot.Pos2Axis(lastAxis_, p, a_convert) )
-//        return reachableCheck(a_convert);
-//    else
-//        return false;
-	return true;
+    Axis a_convert;
+    if ( robot_.Pos2Axis(lastAxis_, p, a_convert) )
+        return reachableCheck(a_convert);
+    else
+        return false;
 }
 
 void Plannar::configuration(Command::Param param, float number) {

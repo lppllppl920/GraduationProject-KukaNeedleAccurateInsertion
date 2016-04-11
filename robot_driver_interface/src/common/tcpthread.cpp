@@ -11,10 +11,14 @@
 #include "tcpthread.h"
 
 TCPThread::TCPThread(quint16 port) {
-	std::cout << "TCPThread Constructing..." << std::endl;
+	ROS_INFO( "TCPThread Constructing..." );
 	this->port_ = port;
 	tcpServer_ = new QTcpServer();
-	tcpServer_->listen(QHostAddress::Any, port_);
+	//tcpServer_->listen(QHostAddress::Any, port_);
+    if(!tcpServer_->listen(QHostAddress("172.31.1.149"),port_))
+    {
+        std::cout << tcpServer_->errorString().toStdString() << std::endl;
+    }
 	tcpSocket_ = NULL;
 	connect(tcpServer_, SIGNAL(newConnection()), this, SLOT(newConnect()));
 	sendLock_ = false;
@@ -23,34 +27,32 @@ TCPThread::TCPThread(quint16 port) {
 
 TCPThread::~TCPThread() {
 	if (!feedbackQueue.empty() && stdPrint_)
-		std::cout << "Sending remaining feedback to Plannar..." << std::endl;
+		ROS_INFO( "Sending remaining feedback to Plannar..." );
 	while (!feedbackQueue.empty()) {
 		QString tp_qs = feedbackQueue.front();
 		if (stdPrint_)
-			std::cout << "Feedback TCPThread -> Plannar: " << qHash(tp_qs)
-					<< std::endl;
+			ROS_INFO( "Feedback TCPThread -> Plannar: " );
 		emit feedbackReceived(tp_qs);
 		feedbackQueue.pop_front();
 	}
 	delete tcpSocket_;
 	delete tcpServer_;
-	std::cout << "TCPThread Deconstructing..." << std::endl;
+	ROS_INFO( "TCPThread Deconstructing..." );
 }
 
 void TCPThread::run() {
-	std::cout << "Fuck tcp thread!\n";
 	ros::spin();
 }
 
 void TCPThread::newConnect() {
-	std::cout << "New connection" << std::endl;
+	ROS_INFO( "New connection" );
 	tcpSocket_ = tcpServer_->nextPendingConnection();
 	connect(tcpSocket_, SIGNAL(readyRead()), this, SLOT(readMessage()));
 	connect(tcpSocket_, SIGNAL(disconnected()), this, SLOT(destroyConnect()));
 }
 
 void TCPThread::destroyConnect() {
-	std::cout << "Destroy connection" << std::endl;
+	ROS_INFO( "Destroy connection" );
 	emit disconnected();
 }
 
@@ -62,13 +64,12 @@ void TCPThread::readMessage() {
 	QString qs = QVariant(qba).toString();
 
 	if (stdPrint_)
-		std::cout << "Feedback KRC -> TCPThread: " << qHash(qs) << std::endl;
+		ROS_INFO( "Feedback KRC -> TCPThread: " );
 	feedbackQueue.push_back(qs);
 	while (!feedbackQueue.empty()) {
 		QString tp_qs = feedbackQueue.front();
 		if (stdPrint_)
-			std::cout << "Feedback TCPThread -> Plannar: " << qHash(tp_qs)
-					<< std::endl;
+			ROS_INFO( "Feedback TCPThread -> Plannar: " );
 		emit feedbackReceived(tp_qs);
 		feedbackQueue.pop_front();
 	}
@@ -80,7 +81,7 @@ void TCPThread::sendMessage(QString qs) {
 	if (!sendLock_) {
 		mutex_.lock();
 		if (stdPrint_)
-			std::cout << "Command TCPThread -> KRC: " << qHash(qs) << std::endl;
+			ROS_INFO( "Command TCPThread -> KRC: %d", qHash(qs));
 		tcpSocket_->write(qs.toAscii());
 		mutex_.unlock();
 		sendLock_ = true;

@@ -568,7 +568,7 @@ public:
 	// Feedback constructed from plain text QString &qs
 	// When error, setOK_ is false
 	// Feedback::parseDocument is automatically called
-	Feedback(const QString &qs);
+	Feedback(const QString &qs, bool& isParsed);
 
 	// Automatically called if QDocument is successfully set
 	// Parse the document as format inexplicitly specified in this function

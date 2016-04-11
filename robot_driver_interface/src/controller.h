@@ -32,6 +32,7 @@ public:
 	boost::shared_ptr<moveit::planning_interface::MoveGroup> getMoveGroup();
 	moveit::planning_interface::MoveGroup::Plan& getMotionPlan();
 	std::map<std::string, double>& getTargetJoints();
+	geometry_msgs::Pose& getEndEffectorPos();
 	geometry_msgs::Pose& getTargetPose();
 	Eigen::Affine3d& getTargetAffine();
 	Plannar* getPlannar();
@@ -43,6 +44,7 @@ public:
 	void setTargetAffine(Eigen::Affine3d target_affine);
 
 // Motion planning related function
+	void addWaypoints(geometry_msgs::Pose waypoint_pose);
 	bool planTargetMotion(geometry_msgs::Pose target_pose);
 	bool planTargetMotion(std::map<std::string, double> target_joints);
 	bool planTargetMotion(Eigen::Affine3d target_affine);
@@ -76,7 +78,7 @@ public slots:
 	// Shut down
 	void shutdown();
 	// joint state feedback
-	void newFeedback(Feedback& fb);
+	void newFeedback(Feedback* feedback);
 	void visualizeMotionPlan(MotionPlan motion_plan);
 	void sendTrajectorySignal(const TrajectoryGoal& feedback);
 

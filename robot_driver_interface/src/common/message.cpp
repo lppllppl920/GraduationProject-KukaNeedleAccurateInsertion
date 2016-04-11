@@ -549,15 +549,17 @@ Feedback::Feedback(const char *filename) :
 	}
 }
 
-Feedback::Feedback(const QString &qs) :
+Feedback::Feedback(const QString &qs, bool& isParsed) :
 		frame_(), axis_() {
 	if (!doc_.setContent(qs)) {
 		setOK_ = false;
 		std::cout << "Feedback::Feedback: Cannot set document" << std::endl;
+		isParsed = false;
 	} else {
 		setOK_ = true;
 		parsedOK_ = false;
 		parseDocument();
+		isParsed = true;
 	}
 }
 

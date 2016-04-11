@@ -222,7 +222,7 @@ bool Model::Axis2Frame(Axis &a, Frame &f) {
 		f.Y = tipFrame.p.data[1] * 1000.0;
 		f.Z = tipFrame.p.data[2] * 1000.0;
 		double r, p, y;
-		tipFrame.M.GetEulerZYX(r, p, y);
+		tipFrame.M.GetRPY(r, p, y);
 		f.A = (float) r * 180.0 / M_PI;
 		f.B = (float) p * 180.0 / M_PI;
 		f.C = (float) y * 180.0 / M_PI;
@@ -251,7 +251,7 @@ bool Model::Frame2Axis(Axis &a_init, Frame &f, Axis &a) {
 		tipFrame.p.data[0] = f.X / 1000.0;
 		tipFrame.p.data[1] = f.Y / 1000.0;
 		tipFrame.p.data[2] = f.Z / 1000.0;
-		tipFrame.M = KDL::Rotation::EulerZYX((double) (f.A) / 180.0 * M_PI,
+		tipFrame.M = KDL::Rotation::RPY((double) (f.A) / 180.0 * M_PI,
 				(double) (f.B) / 180.0 * M_PI, (double) (f.C) / 180.0 * M_PI);
 
 		// Forward Solver
@@ -312,7 +312,7 @@ bool Model::Axis2Pos(Axis &a, Pos &p) {
 		p.F.Y = tipFrame.p.data[1] * 1000.0;
 		p.F.Z = tipFrame.p.data[2] * 1000.0;
 		double rr, pp, yy;
-		tipFrame.M.GetEulerZYX(rr, pp, yy);
+		tipFrame.M.GetRPY(rr, pp, yy);
 		p.F.A = (float) rr * 180.0 / M_PI;
 		p.F.B = (float) pp * 180.0 / M_PI;
 		p.F.C = (float) yy * 180.0 / M_PI;

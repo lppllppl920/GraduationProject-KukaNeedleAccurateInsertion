@@ -32,31 +32,32 @@ public:
 	InteractiveMarker makeEmptyMarker(bool dummyBox);
 	void initMenu();
 	void makeMenuMarker(std::string name);
+// Callback function
 	void trajectoryActionCb(
 			const control_msgs::FollowJointTrajectoryActionGoalConstPtr& feedback);
 	void addWaypointsCb();
 	void visualizeExecutePlanCb();
 	void endEffectorPosCb(const InteractiveMarkerFeedbackConstPtr &feedback);
-// joint states subscribe function
-	void jointStatesCb(const sensor_msgs::JointStateConstPtr &feedback);
 
 	void setAlignment();
 
 public slots:
-	void newFeedbackReceived(Feedback& feedback);
+	void newFeedbackReceived(Feedback* feedback);
 	void shutdown();
 	void visualizeMotionPlan(MotionPlan motion_plan);
 	void visualizeJointPlan();
 	void visualizePosePlan();
+	void visualizeIncrPosePlan();
 	void executeMotionPlan();
-	void copyJointState();
-	void displayFeedback(Feedback& fb);
+	void addWaypoints();
+	void displayFeedback(Feedback* feedback);
 	void manipulateCollisionObject();
+	void convertPoseTargettoJointTarget();
 
 signals:
-	// Send trajectory to controller object
+// Send trajectory to controller object
 	void sendTrajectory(const TrajectoryGoal& feedback);
-	void addWaypoints();
+	void addWaypointsSignal();
 	void visualizeExecutePlan();
 	void endEffectorPos(const InteractiveMarkerFeedbackConstPtr &feedback);
 
@@ -73,6 +74,7 @@ private slots:
 	void on_pause_button_clicked();
 	void on_stop_button_clicked();
 	void on_terminate_buf_button_clicked();
+	void on_convert_button_clicked();
 
 private:
 	boost::shared_ptr<ros::NodeHandle> node_handle_;
@@ -88,7 +90,6 @@ private:
 
 // Joints state publisher and subscriber
 	ros::Publisher joint_state_publisher_;
-	ros::Subscriber joint_state_subscriber_;
 	sensor_msgs::JointState joint_state_;
 	int joint_state_publish_count_;
 
@@ -105,6 +106,13 @@ private:
 // Publisher for planning scene
 	ros::Publisher planning_scene_diff_publisher_;
 	int collision_operation_counter_;
+
+// counter for displaying robot state
+	int joint_state_display_counter_;
+	int joint_state_callback_counter_;
+
+// latest joint state
+	Axis last_Axis_;
 };
 
 void addWaypointsCb_global(const InteractiveMarkerFeedbackConstPtr &feedback);
