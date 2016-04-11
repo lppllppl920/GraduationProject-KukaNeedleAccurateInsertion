@@ -38,6 +38,10 @@ Interface::Interface(QWidget *parent) :
 			SLOT(convertPoseTargettoJointTarget()));
 	connect(pushButton_VisualizeIncrPosePlan, SIGNAL(clicked()), this,
 			SLOT(visualizeIncrPosePlan()));
+	connect(pushButton_VisualizeRotatePlan, SIGNAL(clicked()), this,
+			SLOT(rotateAroundAxis()));
+	connect(pushButton_ExecuteRotatePlan, SIGNAL(clicked()), this,
+			SLOT(executeMotionPlan()));
 
 	// Others related
 	connect(this, SIGNAL(sendTrajectory(const TrajectoryGoal&)), &controller_,
@@ -302,6 +306,75 @@ void Interface::addWaypoints() {
 	rotation.GetQuaternion(target_pose.orientation.x, target_pose.orientation.y, target_pose.orientation.z, target_pose.orientation.w);
 
 	controller_.addWaypoints(target_pose);
+}
+void Interface::rotateAroundAxis() {
+	// Axis type
+	int axis_type = comboBox_AxisType->currentIndex();
+	// Pose target
+	geometry_msgs::Pose target_pose;
+	// Euler angle
+	std::vector<double> euler_angle(3);
+	std::vector<double> euler_angle_rotate(3);
+	// rotation matrix
+	KDL::Rotation rotation;
+
+	target_pose.position.x = lineEdit_TransX->text().toDouble();
+	target_pose.position.y = lineEdit_TransY->text().toDouble();
+	target_pose.position.z = lineEdit_TransZ->text().toDouble();
+
+	// position of TCP
+	KDL::Vector vector(target_pose.position.x, target_pose.position.y, target_pose.position.z);
+	KDL::Vector vector_rotate;
+
+	euler_angle[0] = lineEdit_RotateA->text().toDouble() / 180.0 * M_PI;
+	euler_angle[1] = lineEdit_RotateB->text().toDouble() / 180.0 * M_PI;
+	euler_angle[2] = lineEdit_RotateC->text().toDouble() / 180.0 * M_PI;
+
+	// rotate degree
+	double rotate_degree = lineEdit_RotateDegree->text().toDouble();
+
+	switch(axis_type) {
+	case Interface::X: {
+		rotation = KDL::Rotation::RotX(rotate_degree / 180.0 * M_PI) * KDL::Rotation::RPY(euler_angle[0], euler_angle[1], euler_angle[2]);
+		vector_rotate = KDL::Rotation::RotX(rotate_degree / 180.0 * M_PI) * vector;
+		break;
+	}
+	case Interface::Y: {
+		rotation = KDL::Rotation::RotY(rotate_degree / 180.0 * M_PI) * KDL::Rotation::RPY(euler_angle[0], euler_angle[1], euler_angle[2]);
+		vector_rotate = KDL::Rotation::RotY(rotate_degree / 180.0 * M_PI) * vector;
+		break;
+	}
+	case Interface::Z: {
+		rotation = KDL::Rotation::RotZ(rotate_degree / 180.0 * M_PI) * KDL::Rotation::RPY(euler_angle[0], euler_angle[1], euler_angle[2]);
+		vector_rotate = KDL::Rotation::RotZ(rotate_degree / 180.0 * M_PI) * vector;
+		break;
+	}
+	case Interface::Custom: {
+		// custom rotate axis
+		KDL::Vector rotate_axis(lineEdit_AxisVectorX->text().toDouble(),
+				lineEdit_AxisVectorY->text().toDouble(), lineEdit_AxisVectorZ->text().toDouble());
+		rotation = KDL::Rotation::Rot(rotate_axis, rotate_degree / 180.0 * M_PI) * KDL::Rotation::RPY(euler_angle[0], euler_angle[1], euler_angle[2]);
+		vector_rotate = KDL::Rotation::Rot(rotate_axis, rotate_degree / 180.0 * M_PI) * vector;
+		break;
+	}
+	default: {
+		ROS_ERROR("Axis type is wrong");
+	}
+	}
+
+	rotation.GetRPY(euler_angle_rotate[0], euler_angle_rotate[1], euler_angle_rotate[2]);
+	ROS_INFO("euler_angle: %f %f %f, euler_angle_rotate: %f %f %f", euler_angle[0] / M_PI * 180.0, euler_angle[1] / M_PI * 180.0, euler_angle[2] / M_PI * 180.0,
+			euler_angle_rotate[0] /M_PI * 180.0, euler_angle_rotate[1] /M_PI * 180.0, euler_angle_rotate[2] /M_PI * 180.0);
+	ROS_INFO("vector: %f %f %f, vector_rotate: %f %f %f", vector.data[0], vector.data[1], vector.data[2],
+			vector_rotate.data[0], vector_rotate.data[1], vector_rotate.data[2]);
+
+	rotation.GetQuaternion(target_pose.orientation.x, target_pose.orientation.y, target_pose.orientation.z, target_pose.orientation.w);
+	target_pose.position.x = vector_rotate.data[0];
+	target_pose.position.y = vector_rotate.data[1];
+	target_pose.position.z = vector_rotate.data[2];
+
+	controller_.planTargetMotion(target_pose);
+
 }
 void Interface::executeMotionPlan() {
 
@@ -743,7 +816,8 @@ void Interface::on_default_button_clicked() {
 
 void Interface::on_debug_button_clicked() {
 	ROS_INFO("Debug button clicked");
-	plannar_ptr_->test();
+	//plannar_ptr_->test();
+	rotateAroundAxis();
 }
 
 void Interface::on_send_config_button_clicked() {

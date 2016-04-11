@@ -1,13 +1,13 @@
 /********************************************************************************
-** Form generated from reading UI file 'robotControlInterface.ui'
+** Form generated from reading UI file 'robotInterface.ui'
 **
 ** Created by: Qt User Interface Compiler version 4.8.6
 **
 ** WARNING! All changes made in this file will be lost when recompiling UI file!
 ********************************************************************************/
 
-#ifndef UI_ROBOTCONTROLINTERFACE_H
-#define UI_ROBOTCONTROLINTERFACE_H
+#ifndef UI_ROBOTINTERFACE_H
+#define UI_ROBOTINTERFACE_H
 
 #include <QtCore/QVariant>
 #include <QtGui/QAction>
@@ -77,6 +77,19 @@ public:
     QLineEdit *lineEdit_incrRotateC;
     QPushButton *pushButton_VisualizeIncrPosePlan;
     QPushButton *pushButton_AddWaypoint;
+    QWidget *tab_Calibration;
+    QWidget *gridLayoutWidget_10;
+    QGridLayout *gridLayout_10;
+    QLineEdit *lineEdit_AxisVectorZ;
+    QLabel *label_AxisType;
+    QLabel *label_RotateDegree;
+    QLineEdit *lineEdit_RotateDegree;
+    QLabel *label_AxisVector;
+    QPushButton *pushButton_ExecuteRotatePlan;
+    QPushButton *pushButton_VisualizeRotatePlan;
+    QComboBox *comboBox_AxisType;
+    QLineEdit *lineEdit_AxisVectorX;
+    QLineEdit *lineEdit_AxisVectorY;
     QWidget *tab_Environment;
     QWidget *gridLayoutWidget_6;
     QGridLayout *gridLayout_2;
@@ -465,6 +478,70 @@ public:
         gridLayout->addWidget(pushButton_AddWaypoint, 7, 1, 1, 1);
 
         tabWidget->addTab(tab_PathPlanning, QString());
+        tab_Calibration = new QWidget();
+        tab_Calibration->setObjectName(QString::fromUtf8("tab_Calibration"));
+        gridLayoutWidget_10 = new QWidget(tab_Calibration);
+        gridLayoutWidget_10->setObjectName(QString::fromUtf8("gridLayoutWidget_10"));
+        gridLayoutWidget_10->setGeometry(QRect(0, 10, 481, 281));
+        gridLayout_10 = new QGridLayout(gridLayoutWidget_10);
+        gridLayout_10->setObjectName(QString::fromUtf8("gridLayout_10"));
+        gridLayout_10->setContentsMargins(0, 0, 0, 0);
+        lineEdit_AxisVectorZ = new QLineEdit(gridLayoutWidget_10);
+        lineEdit_AxisVectorZ->setObjectName(QString::fromUtf8("lineEdit_AxisVectorZ"));
+        lineEdit_AxisVectorZ->setMaximumSize(QSize(160, 27));
+
+        gridLayout_10->addWidget(lineEdit_AxisVectorZ, 1, 3, 1, 1);
+
+        label_AxisType = new QLabel(gridLayoutWidget_10);
+        label_AxisType->setObjectName(QString::fromUtf8("label_AxisType"));
+
+        gridLayout_10->addWidget(label_AxisType, 0, 0, 1, 1);
+
+        label_RotateDegree = new QLabel(gridLayoutWidget_10);
+        label_RotateDegree->setObjectName(QString::fromUtf8("label_RotateDegree"));
+
+        gridLayout_10->addWidget(label_RotateDegree, 2, 0, 1, 1);
+
+        lineEdit_RotateDegree = new QLineEdit(gridLayoutWidget_10);
+        lineEdit_RotateDegree->setObjectName(QString::fromUtf8("lineEdit_RotateDegree"));
+        lineEdit_RotateDegree->setMaximumSize(QSize(160, 27));
+
+        gridLayout_10->addWidget(lineEdit_RotateDegree, 2, 1, 1, 1);
+
+        label_AxisVector = new QLabel(gridLayoutWidget_10);
+        label_AxisVector->setObjectName(QString::fromUtf8("label_AxisVector"));
+
+        gridLayout_10->addWidget(label_AxisVector, 1, 0, 1, 1);
+
+        pushButton_ExecuteRotatePlan = new QPushButton(gridLayoutWidget_10);
+        pushButton_ExecuteRotatePlan->setObjectName(QString::fromUtf8("pushButton_ExecuteRotatePlan"));
+
+        gridLayout_10->addWidget(pushButton_ExecuteRotatePlan, 4, 0, 1, 1);
+
+        pushButton_VisualizeRotatePlan = new QPushButton(gridLayoutWidget_10);
+        pushButton_VisualizeRotatePlan->setObjectName(QString::fromUtf8("pushButton_VisualizeRotatePlan"));
+
+        gridLayout_10->addWidget(pushButton_VisualizeRotatePlan, 3, 0, 1, 1);
+
+        comboBox_AxisType = new QComboBox(gridLayoutWidget_10);
+        comboBox_AxisType->setObjectName(QString::fromUtf8("comboBox_AxisType"));
+        comboBox_AxisType->setMaximumSize(QSize(266, 27));
+
+        gridLayout_10->addWidget(comboBox_AxisType, 0, 1, 1, 1);
+
+        lineEdit_AxisVectorX = new QLineEdit(gridLayoutWidget_10);
+        lineEdit_AxisVectorX->setObjectName(QString::fromUtf8("lineEdit_AxisVectorX"));
+        lineEdit_AxisVectorX->setMaximumSize(QSize(160, 27));
+
+        gridLayout_10->addWidget(lineEdit_AxisVectorX, 1, 1, 1, 1);
+
+        lineEdit_AxisVectorY = new QLineEdit(gridLayoutWidget_10);
+        lineEdit_AxisVectorY->setObjectName(QString::fromUtf8("lineEdit_AxisVectorY"));
+        lineEdit_AxisVectorY->setMaximumSize(QSize(160, 27));
+
+        gridLayout_10->addWidget(lineEdit_AxisVectorY, 1, 2, 1, 1);
+
+        tabWidget->addTab(tab_Calibration, QString());
         tab_Environment = new QWidget();
         tab_Environment->setObjectName(QString::fromUtf8("tab_Environment"));
         gridLayoutWidget_6 = new QWidget(tab_Environment);
@@ -2155,7 +2232,7 @@ public:
 
         retranslateUi(robotInterface);
 
-        tabWidget->setCurrentIndex(0);
+        tabWidget->setCurrentIndex(1);
 
 
         QMetaObject::connectSlotsByName(robotInterface);
@@ -2191,6 +2268,19 @@ public:
         pushButton_VisualizeIncrPosePlan->setText(QApplication::translate("robotInterface", "Incr. Pose Plan", 0, QApplication::UnicodeUTF8));
         pushButton_AddWaypoint->setText(QApplication::translate("robotInterface", "Add Waypoint", 0, QApplication::UnicodeUTF8));
         tabWidget->setTabText(tabWidget->indexOf(tab_PathPlanning), QApplication::translate("robotInterface", "Path Planning", 0, QApplication::UnicodeUTF8));
+        label_AxisType->setText(QApplication::translate("robotInterface", "Axis Type", 0, QApplication::UnicodeUTF8));
+        label_RotateDegree->setText(QApplication::translate("robotInterface", "Rotate Degree", 0, QApplication::UnicodeUTF8));
+        label_AxisVector->setText(QApplication::translate("robotInterface", "Axis Vector", 0, QApplication::UnicodeUTF8));
+        pushButton_ExecuteRotatePlan->setText(QApplication::translate("robotInterface", "Execute Rotate Plan", 0, QApplication::UnicodeUTF8));
+        pushButton_VisualizeRotatePlan->setText(QApplication::translate("robotInterface", "Visualize Rotate Plan", 0, QApplication::UnicodeUTF8));
+        comboBox_AxisType->clear();
+        comboBox_AxisType->insertItems(0, QStringList()
+         << QApplication::translate("robotInterface", "X", 0, QApplication::UnicodeUTF8)
+         << QApplication::translate("robotInterface", "Y", 0, QApplication::UnicodeUTF8)
+         << QApplication::translate("robotInterface", "Z", 0, QApplication::UnicodeUTF8)
+         << QApplication::translate("robotInterface", "Custom", 0, QApplication::UnicodeUTF8)
+        );
+        tabWidget->setTabText(tabWidget->indexOf(tab_Calibration), QApplication::translate("robotInterface", "Calibration", 0, QApplication::UnicodeUTF8));
         label_Dimension_Z->setText(QApplication::translate("robotInterface", "Z", 0, QApplication::UnicodeUTF8));
         label_CurrenCollisionObject->setText(QApplication::translate("robotInterface", "Current Collision Object", 0, QApplication::UnicodeUTF8));
         label_Operation->setText(QApplication::translate("robotInterface", "Operation", 0, QApplication::UnicodeUTF8));
@@ -2294,4 +2384,4 @@ namespace Ui {
 
 QT_END_NAMESPACE
 
-#endif // UI_ROBOTCONTROLINTERFACE_H
+#endif // UI_ROBOTINTERFACE_H

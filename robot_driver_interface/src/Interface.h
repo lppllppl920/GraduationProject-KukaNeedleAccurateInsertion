@@ -50,6 +50,7 @@ public slots:
 	void visualizeIncrPosePlan();
 	void executeMotionPlan();
 	void addWaypoints();
+	void rotateAroundAxis();
 	void displayFeedback(Feedback* feedback);
 	void manipulateCollisionObject();
 	void convertPoseTargettoJointTarget();
@@ -113,6 +114,9 @@ private:
 
 // latest joint state
 	Axis last_Axis_;
+
+// enum for rotating around a specific axis
+	enum {X = 0, Y = 1, Z = 2, Custom = 3};
 };
 
 void addWaypointsCb_global(const InteractiveMarkerFeedbackConstPtr &feedback);
