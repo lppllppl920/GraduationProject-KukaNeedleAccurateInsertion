@@ -209,7 +209,7 @@ void Interface::manipulateCollisionObject() {
 		euler_angle[1] = lineEdit_RotateB->text().toDouble() / 180.0 * M_PI;
 		euler_angle[2] = lineEdit_RotateC->text().toDouble() / 180.0 * M_PI;
 
-		KDL::Rotation rotation = KDL::Rotation::RPY(euler_angle[0], euler_angle[1], euler_angle[2]);
+		KDL::Rotation rotation = KDL::Rotation::RPY(euler_angle[2], euler_angle[1], euler_angle[0]);
 		rotation.GetQuaternion(collision_pose.orientation.x, collision_pose.orientation.y, collision_pose.orientation.z, collision_pose.orientation.w);
 
 		collision_object.operation = collision_object.ADD;
@@ -270,23 +270,25 @@ void Interface::visualizePosePlan() {
 	euler_angle[1] = lineEdit_RotateB->text().toDouble() / 180.0 * M_PI;
 	euler_angle[2] = lineEdit_RotateC->text().toDouble() / 180.0 * M_PI;
 
-	KDL::Rotation rotation = KDL::Rotation::RPY(euler_angle[0], euler_angle[1], euler_angle[2]);
+	KDL::Rotation rotation = KDL::Rotation::RPY(euler_angle[2], euler_angle[1], euler_angle[0]);
 	rotation.GetQuaternion(target_pose.orientation.x, target_pose.orientation.y, target_pose.orientation.z, target_pose.orientation.w);
 
+	//Axis2Frame()
 	controller_.planTargetMotion(target_pose);
 }
 void Interface::visualizeIncrPosePlan() {
 	geometry_msgs::Pose target_pose;
-	target_pose.position.x = output_x->toPlainText().toDouble() + lineEdit_incrTransX->text().toDouble();
-	target_pose.position.y = output_y->toPlainText().toDouble() + lineEdit_incrTransY->text().toDouble();
-	target_pose.position.z = output_z->toPlainText().toDouble() + lineEdit_incrTransZ->text().toDouble();
+	target_pose.position.x = output_x->toPlainText().toDouble() / 1000.0 + lineEdit_incrTransX->text().toDouble();
+	target_pose.position.y = output_y->toPlainText().toDouble() / 1000.0 + lineEdit_incrTransY->text().toDouble();
+	target_pose.position.z = output_z->toPlainText().toDouble() / 1000.0 + lineEdit_incrTransZ->text().toDouble();
 
 	std::vector<double> euler_angle(3);
 	euler_angle[0] = output_a->toPlainText().toDouble() / 180.0 * M_PI + lineEdit_incrRotateA->text().toDouble() / 180.0 * M_PI;
 	euler_angle[1] = output_b->toPlainText().toDouble() / 180.0 * M_PI + lineEdit_incrRotateB->text().toDouble() / 180.0 * M_PI;
 	euler_angle[2] = output_c->toPlainText().toDouble() / 180.0 * M_PI + lineEdit_incrRotateC->text().toDouble() / 180.0 * M_PI;
 
-	KDL::Rotation rotation = KDL::Rotation::RPY(euler_angle[0], euler_angle[1], euler_angle[2]);
+
+	KDL::Rotation rotation = KDL::Rotation::RPY(euler_angle[2], euler_angle[1], euler_angle[0]);
 	rotation.GetQuaternion(target_pose.orientation.x, target_pose.orientation.y, target_pose.orientation.z, target_pose.orientation.w);
 
 	controller_.planTargetMotion(target_pose);
@@ -302,7 +304,7 @@ void Interface::addWaypoints() {
 	euler_angle[1] = lineEdit_RotateB->text().toDouble() / 180.0 * M_PI;
 	euler_angle[2] = lineEdit_RotateC->text().toDouble() / 180.0 * M_PI;
 
-	KDL::Rotation rotation = KDL::Rotation::RPY(euler_angle[0], euler_angle[1], euler_angle[2]);
+	KDL::Rotation rotation = KDL::Rotation::RPY(euler_angle[2], euler_angle[1], euler_angle[0]);
 	rotation.GetQuaternion(target_pose.orientation.x, target_pose.orientation.y, target_pose.orientation.z, target_pose.orientation.w);
 
 	controller_.addWaypoints(target_pose);
@@ -318,34 +320,41 @@ void Interface::rotateAroundAxis() {
 	// rotation matrix
 	KDL::Rotation rotation;
 
-	target_pose.position.x = lineEdit_TransX->text().toDouble();
+	target_pose.position.x = output_x->toPlainText().toDouble() / 1000.0;
+	target_pose.position.y = output_y->toPlainText().toDouble() / 1000.0;
+	target_pose.position.z = output_z->toPlainText().toDouble() / 1000.0;
+
+	/*target_pose.position.x = lineEdit_TransX->text().toDouble();
 	target_pose.position.y = lineEdit_TransY->text().toDouble();
-	target_pose.position.z = lineEdit_TransZ->text().toDouble();
+	target_pose.position.z = lineEdit_TransZ->text().toDouble();*/
 
 	// position of TCP
 	KDL::Vector vector(target_pose.position.x, target_pose.position.y, target_pose.position.z);
 	KDL::Vector vector_rotate;
 
-	euler_angle[0] = lineEdit_RotateA->text().toDouble() / 180.0 * M_PI;
-	euler_angle[1] = lineEdit_RotateB->text().toDouble() / 180.0 * M_PI;
-	euler_angle[2] = lineEdit_RotateC->text().toDouble() / 180.0 * M_PI;
+	euler_angle[0] = output_a->toPlainText().toDouble() / 180.0 * M_PI;
+	euler_angle[1] = output_b->toPlainText().toDouble() / 180.0 * M_PI;
+	euler_angle[2] = output_c->toPlainText().toDouble() / 180.0 * M_PI;
 
+	/*euler_angle[0] = lineEdit_RotateA->text().toDouble() / 180.0 * M_PI;
+	euler_angle[1] = lineEdit_RotateB->text().toDouble() / 180.0 * M_PI;
+	euler_angle[2] = lineEdit_RotateC->text().toDouble() / 180.0 * M_PI;*/
 	// rotate degree
 	double rotate_degree = lineEdit_RotateDegree->text().toDouble();
 
 	switch(axis_type) {
 	case Interface::X: {
-		rotation = KDL::Rotation::RotX(rotate_degree / 180.0 * M_PI) * KDL::Rotation::RPY(euler_angle[0], euler_angle[1], euler_angle[2]);
+		rotation = KDL::Rotation::RotX(rotate_degree / 180.0 * M_PI) * KDL::Rotation::RPY(euler_angle[2], euler_angle[1], euler_angle[0]);
 		vector_rotate = KDL::Rotation::RotX(rotate_degree / 180.0 * M_PI) * vector;
 		break;
 	}
 	case Interface::Y: {
-		rotation = KDL::Rotation::RotY(rotate_degree / 180.0 * M_PI) * KDL::Rotation::RPY(euler_angle[0], euler_angle[1], euler_angle[2]);
+		rotation = KDL::Rotation::RotY(rotate_degree / 180.0 * M_PI) * KDL::Rotation::RPY(euler_angle[2], euler_angle[1], euler_angle[0]);
 		vector_rotate = KDL::Rotation::RotY(rotate_degree / 180.0 * M_PI) * vector;
 		break;
 	}
 	case Interface::Z: {
-		rotation = KDL::Rotation::RotZ(rotate_degree / 180.0 * M_PI) * KDL::Rotation::RPY(euler_angle[0], euler_angle[1], euler_angle[2]);
+		rotation = KDL::Rotation::RotZ(rotate_degree / 180.0 * M_PI) * KDL::Rotation::RPY(euler_angle[2], euler_angle[1], euler_angle[0]);
 		vector_rotate = KDL::Rotation::RotZ(rotate_degree / 180.0 * M_PI) * vector;
 		break;
 	}
@@ -353,7 +362,7 @@ void Interface::rotateAroundAxis() {
 		// custom rotate axis
 		KDL::Vector rotate_axis(lineEdit_AxisVectorX->text().toDouble(),
 				lineEdit_AxisVectorY->text().toDouble(), lineEdit_AxisVectorZ->text().toDouble());
-		rotation = KDL::Rotation::Rot(rotate_axis, rotate_degree / 180.0 * M_PI) * KDL::Rotation::RPY(euler_angle[0], euler_angle[1], euler_angle[2]);
+		rotation = KDL::Rotation::Rot(rotate_axis, rotate_degree / 180.0 * M_PI) * KDL::Rotation::RPY(euler_angle[2], euler_angle[1], euler_angle[0]);
 		vector_rotate = KDL::Rotation::Rot(rotate_axis, rotate_degree / 180.0 * M_PI) * vector;
 		break;
 	}
@@ -362,13 +371,15 @@ void Interface::rotateAroundAxis() {
 	}
 	}
 
-	rotation.GetRPY(euler_angle_rotate[0], euler_angle_rotate[1], euler_angle_rotate[2]);
-	ROS_INFO("euler_angle: %f %f %f, euler_angle_rotate: %f %f %f", euler_angle[0] / M_PI * 180.0, euler_angle[1] / M_PI * 180.0, euler_angle[2] / M_PI * 180.0,
-			euler_angle_rotate[0] /M_PI * 180.0, euler_angle_rotate[1] /M_PI * 180.0, euler_angle_rotate[2] /M_PI * 180.0);
-	ROS_INFO("vector: %f %f %f, vector_rotate: %f %f %f", vector.data[0], vector.data[1], vector.data[2],
-			vector_rotate.data[0], vector_rotate.data[1], vector_rotate.data[2]);
+//	rotation.GetRPY(euler_angle_rotate[2], euler_angle_rotate[1], euler_angle_rotate[0]);
+//	ROS_INFO("euler_angle: %f %f %f, euler_angle_rotate: %f %f %f", euler_angle[0] / M_PI * 180.0, euler_angle[1] / M_PI * 180.0, euler_angle[2] / M_PI * 180.0,
+//			euler_angle_rotate[0] /M_PI * 180.0, euler_angle_rotate[1] /M_PI * 180.0, euler_angle_rotate[2] /M_PI * 180.0);
+//	ROS_INFO("vector: %f %f %f, vector_rotate: %f %f %f", vector.data[0], vector.data[1], vector.data[2],
+//			vector_rotate.data[0], vector_rotate.data[1], vector_rotate.data[2]);
 
+	//rotation = KDL::Rotation::RPY(euler_angle[2], euler_angle[1], euler_angle[0]);
 	rotation.GetQuaternion(target_pose.orientation.x, target_pose.orientation.y, target_pose.orientation.z, target_pose.orientation.w);
+
 	target_pose.position.x = vector_rotate.data[0];
 	target_pose.position.y = vector_rotate.data[1];
 	target_pose.position.z = vector_rotate.data[2];
@@ -434,7 +445,7 @@ void Interface::endEffectorPosCb(
 
 	std::vector<double> euler_angle(3);
 	KDL::Rotation rotation = KDL::Rotation::Quaternion(feedback->pose.orientation.x, feedback->pose.orientation.y, feedback->pose.orientation.z, feedback->pose.orientation.w);
-	rotation.GetRPY(euler_angle[0], euler_angle[1], euler_angle[2]);
+	rotation.GetRPY(euler_angle[2], euler_angle[1], euler_angle[0]);
 	lineEdit_RotateA->setText(QString("%1").arg(euler_angle[0] / M_PI * 180.0, 8, 'f', 4));
 	lineEdit_RotateB->setText(QString("%1").arg(euler_angle[1] / M_PI * 180.0, 8, 'f', 4));
 	lineEdit_RotateC->setText(QString("%1").arg(euler_angle[2] / M_PI * 180.0, 8, 'f', 4));
@@ -652,15 +663,10 @@ void Interface::displayFeedback(Feedback* feedback) {
 			Axis feedback_axis;
 			Frame feedback_frame;
 			feedback_axis = feedback->getAxis();
-			feedback_frame = feedback->getFrame();
 
 			last_Axis_.set(feedback_axis);
-			output_x->setText(QString("%1").arg(feedback_frame.X, 8, 'f', 4));
-			output_y->setText(QString("%1").arg(feedback_frame.Y, 8, 'f', 4));
-			output_z->setText(QString("%1").arg(feedback_frame.Z, 8, 'f', 4));
-			output_a->setText(QString("%1").arg(feedback_frame.A, 8, 'f', 4));
-			output_b->setText(QString("%1").arg(feedback_frame.B, 8, 'f', 4));
-			output_c->setText(QString("%1").arg(feedback_frame.C, 8, 'f', 4));
+			// TODO: Trying to solve the ABC orientation problem
+			plannar_ptr_->getModel().Axis2Frame(feedback_axis, feedback_frame);
 
 			output_a1->setText(QString("%1").arg(feedback_axis.A1, 8, 'f', 4));
 			output_a2->setText(QString("%1").arg(feedback_axis.A2, 8, 'f', 4));
@@ -668,6 +674,13 @@ void Interface::displayFeedback(Feedback* feedback) {
 			output_a4->setText(QString("%1").arg(feedback_axis.A4, 8, 'f', 4));
 			output_a5->setText(QString("%1").arg(feedback_axis.A5, 8, 'f', 4));
 			output_a6->setText(QString("%1").arg(feedback_axis.A6, 8, 'f', 4));
+
+			output_x->setText(QString("%1").arg(feedback_frame.X, 8, 'f', 4));
+			output_y->setText(QString("%1").arg(feedback_frame.Y, 8, 'f', 4));
+			output_z->setText(QString("%1").arg(feedback_frame.Z, 8, 'f', 4));
+			output_a->setText(QString("%1").arg(feedback_frame.A, 8, 'f', 4));
+			output_b->setText(QString("%1").arg(feedback_frame.B, 8, 'f', 4));
+			output_c->setText(QString("%1").arg(feedback_frame.C, 8, 'f', 4));
 
 			output_s->setText(QString::number(feedback->getPos().S));
 			output_t->setText(QString::number(feedback->getPos().T));

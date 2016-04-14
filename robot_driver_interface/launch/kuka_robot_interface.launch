@@ -3,7 +3,7 @@
   <rosparam command="load" file="$(find kuka_kr6_moveit_config)/config/joint_names.yaml"/>
   
   <!-- the "sim" argument controls whether we connect to a Simulated or Real robot -->
-  <arg name="sim" default="true" />
+  <arg name="sim" default="false" />
   
   <!-- load the robot_description parameter before launching ROS-I nodes -->
   <include file="$(find kuka_kr6_moveit_config)/launch/planning_context.launch" >
