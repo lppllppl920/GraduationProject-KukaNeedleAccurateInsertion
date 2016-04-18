@@ -44,6 +44,60 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR} ${or
 include_directories( /opt/ros/indigo/include )
 link_directories( /opt/ros/indigo/lib )
 
+IF (QtSerialPort_INCLUDE_DIR AND QtSerialPort_LIBRARIES) 
+      SET (QtSerialPort_FOUND TRUE) 
+ELSE (QtSerialPort_INCLUDE_DIR AND QtSerialPort_LIBRARIES) 
+      IF (UNIX) 
+              FIND_LIBRARY (QtSerialPort_LIBRARIES 
+                              NAMES 
+                                      SerialPort 
+                              PATH_SUFFIXES 
+                                      qt4 
+                              ) 
+              FIND_PATH (QtSerialPort_INCLUDE_DIR QtAddOnSerialPort/serialport.h 
+                              PATHS 
+                                      ${QtSerialPort_DIR}/include 
+                                      ENV PATH 
+                              ) 
+      ELSE () 
+              IF (MINGW) 
+                      IF (NOT QtSerialPort_DIR) 
+                              MESSAGE (FATAL_ERRO "Set the QtSerialPort_DIR") 
+                      ELSE () 
+                              FIND_LIBRARY (QtSerialPort_LIBRARIES 
+                                      NAMES 
+                                              SerialPort1 
+                                      PATH_SUFFIXES 
+                                              release 
+                                      PATHS 
+                                              ${QtSerialPort_DIR}/src/serialport 
+                                      ) 
+                              FIND_PATH (QtSerialPort_INCLUDE_DIR QtAddOnSerialPort/serialport.h 
+                                      PATHS 
+                                              ${QtSerialPort_DIR}/include 
+                                      ENV PATH 
+                                      ) 
+                      ENDIF () 
+              ENDIF () 
+      ENDIF () 
+ENDIF () 
+ 
+IF (QtSerialPort_LIBRARIES AND QtSerialPort_INCLUDE_DIR) 
+      SET (QtSerialPort_FOUND 1) 
+ENDIF () 
+ 
+IF (QtSerialPort_FOUND) 
+      MESSAGE (STATU "Found the QtSerialPort libraries at: ${QtSerialPort_LIBRARIES}") 
+      MESSAGE (STATU "Found QtSerialPort headers at: ${QtSerialPort_INCLUDE_DIR}") 
+ELSE (QtSerialPort_FOUND) 
+      IF (QtSerialPort_FIND_REQUIRED) 
+              MESSAGE (FATAL_ERRO "Could NOT find required QtSerialPort library, aborting") 
+      ELSE (QtSerialPort_FIND_REQUIRED) 
+              MESSAGE (STATU "Could NOT find QtSerialPort") 
+      ENDIF () 
+ENDIF ()  
+
+
 add_executable(
     KRC4_control_async
     src/main.cpp
