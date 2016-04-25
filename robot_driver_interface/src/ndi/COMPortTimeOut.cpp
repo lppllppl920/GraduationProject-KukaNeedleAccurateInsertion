@@ -11,11 +11,9 @@ COMPortTimeOut::COMPortTimeOut(QDialog* parent) {
 	setupUi(this);
 	connect(pushButton_CloseApplication, SIGNAL(clicked()), this,
 			SLOT(Closeapplication()));
-	connect(pushButton_Retry, SIGNAL(clicked()), this,
-			SLOT(Retry()));
-	connect(pushButton_Restart, SIGNAL(clicked()), this,
-			SLOT(Restart()));
-	ReturnValue_ = 0;
+	connect(pushButton_Retry, SIGNAL(clicked()), this, SLOT(Retry()));
+	connect(pushButton_Restart, SIGNAL(clicked()), this, SLOT(Restart()));
+	nReturnValue_ = 0;
 }
 
 COMPortTimeOut::~COMPortTimeOut() {
@@ -23,56 +21,53 @@ COMPortTimeOut::~COMPortTimeOut() {
 }
 
 /*****************************************************************
-Name:				Retry
+ Name:				Retry
 
-Inputs:
-	None.
+ Inputs:
+ None.
 
-Return Value:
-	None.
+ Return Value:
+ None.
 
-Description:   This routine handles what happens when the user
-			   chooses to retry the command.
-*****************************************************************/
-void COMPortTimeOut::Retry()
-{
+ Description:   This routine handles what happens when the user
+ chooses to retry the command.
+ *****************************************************************/
+void COMPortTimeOut::Retry() {
 	/* return Continue value */
-	ReturnValue_ = ERROR_TIMEOUT_CONT;
+	nReturnValue_ = ERROR_TIMEOUT_CONT;
 	this->close();
 } /* Retry */
 /*****************************************************************
-Name:				CloseApplication
+ Name:				CloseApplication
 
-Inputs:
-	None.
+ Inputs:
+ None.
 
-Return Value:
-	None.
+ Return Value:
+ None.
 
-Description:	This routine handles what happens when the user
-				chooses to close the application.
-*****************************************************************/
-void COMPortTimeOut::Closeapplication()
-{
+ Description:	This routine handles what happens when the user
+ chooses to close the application.
+ *****************************************************************/
+void COMPortTimeOut::Closeapplication() {
 	/* get the main window handle */
-	ReturnValue_ = ERROR_TIMEOUT_CLOSE;
+	nReturnValue_ = ERROR_TIMEOUT_CLOSE;
 	this->close();
 } /* Closeapplication */
 /*****************************************************************
-Name:				Restart
+ Name:				Restart
 
-Inputs:
-	None.
+ Inputs:
+ None.
 
-Return Value:
-	None.
+ Return Value:
+ None.
 
-Description:    This routine handles what happens when the user
-				pressed the Restart button.
-*****************************************************************/
-void COMPortTimeOut::Restart()
-{
+ Description:    This routine handles what happens when the user
+ pressed the Restart button.
+ *****************************************************************/
+void COMPortTimeOut::Restart() {
 	/* get the main window handle */
-	ReturnValue_ = ERROR_TIMEOUT_RESTART;
+	nReturnValue_ = ERROR_TIMEOUT_RESTART;
 	this->close();
 } /* Restart */

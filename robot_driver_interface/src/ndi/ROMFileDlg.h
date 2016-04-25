@@ -23,16 +23,16 @@ public:
 	void ReadINIParam_array(std::string Section, std::string Key, char* array);
 
 public:
-	int TypeofSystem_;
-	std::string PortID_;
-	std::string ROMFile_;
-	std::string ConfigurationFile_;
-	int NoActivePorts_;
-	int NoPassivePorts_;
-	int NoMagneticPorts_;
-	bool ChangesSaved_;
-	CIniFile IniFile_;
-	int ROMSelection_;
+	int nTypeofSystem_;
+	int nROMSelection_;
+	std::string strPortID_;
+	std::string strROMFile_;
+	std::string strConfigurationFile_;
+	int nNoActivePorts_;
+	int nNoPassivePorts_;
+	int nNoMagneticPorts_;
+	bool bChangesSaved_;
+	CIniFile dtIniFile_;
 
 public slots:
 	void Init();

@@ -10,20 +10,20 @@
 ProgramOptions::ProgramOptions(QWidget* parent) {
 	setupUi(this);
 
-	if (!IniFile_.Load("/home/lxt12/NDIConfiguration.ini")) {
+	if (!dtIniFile_.Load("/home/lxt12/NDIConfiguration.ini")) {
 		ROS_ERROR("ProgramOptions: cannot find configuration file");
 	}
 
-	BeepOnError_ = false;
-	BeepOnWarning_ = false;
-	ClearLogFile_ = false;
-	DateTimeStampFile_ = false;
-	LogToFile_ = false;
-	NoErrorBeeps_ = 0;
-	NoWarningBeeps_ = 0;
-	ReportWhileTracking_ = false;
-	LogFile_ = "";
-	ConfigurationFile_ = "/home/lxt12/NDIConfiguration.ini";
+	bBeepOnError_ = false;
+	bBeepOnWarning_ = false;
+	bClearLogFile_ = false;
+	bDateTimeStampFile_ = false;
+	bLogToFile_ = false;
+	nNoErrorBeeps_ = 0;
+	nNoWarningBeeps_ = 0;
+	bReportWhileTracking_ = false;
+	strLogFile_ = "";
+	strConfigurationFile_ = "/home/lxt12/NDIConfiguration.ini";
 
 	connect(pushButton_OK, SIGNAL(clicked()), this, SLOT(OK()));
 	connect(pushButton_Cancel, SIGNAL(clicked()), this, SLOT(Cancel()));
@@ -42,15 +42,15 @@ ProgramOptions::~ProgramOptions() {
 }
 void ProgramOptions::Init() {
 
-	BeepOnError_ = false;
-	BeepOnWarning_ = false;
-	ClearLogFile_ = false;
-	DateTimeStampFile_ = false;
-	LogToFile_ = false;
-	NoErrorBeeps_ = 0;
-	NoWarningBeeps_ = 0;
-	ReportWhileTracking_ = false;
-	LogFile_ = "";
+	bBeepOnError_ = false;
+	bBeepOnWarning_ = false;
+	bClearLogFile_ = false;
+	bDateTimeStampFile_ = false;
+	bLogToFile_ = false;
+	nNoErrorBeeps_ = 0;
+	nNoWarningBeeps_ = 0;
+	bReportWhileTracking_ = false;
+	strLogFile_ = "";
 
 	FillForm();
 	LogToFile();
@@ -74,12 +74,12 @@ void ProgramOptions::OK() {
 	std::string szErrorMessage;
 	bool bFileValid = TRUE;
 
-	LogFile_ = lineEdit_File->text().toStdString();
+	strLogFile_ = lineEdit_File->text().toStdString();
 
-	if (LogFile_.size() > 0) {
-		pfOut = fopen(LogFile_.c_str(), "a+t");
+	if (strLogFile_.size() > 0) {
+		pfOut = fopen(strLogFile_.c_str(), "a+t");
 		if (pfOut == NULL) {
-			szErrorMessage = "Invalid File Name: " + LogFile_;
+			szErrorMessage = "Invalid File Name: " + strLogFile_;
 			ROS_ERROR("%s", szErrorMessage.c_str());
 			lineEdit_File->setFocus();
 			bFileValid = false;
@@ -88,7 +88,7 @@ void ProgramOptions::OK() {
 			fclose(pfOut);
 	} /* if */
 
-	if (LogToFile_ && LogFile_.size() == 0) {
+	if (bLogToFile_ && strLogFile_.size() == 0) {
 		ROS_ERROR("Please specify a log file.");
 		lineEdit_File->setFocus();
 		bFileValid = false;
@@ -96,25 +96,25 @@ void ProgramOptions::OK() {
 
 	if (bFileValid) {
 		//TODO: ini file need to be saved
-		IniFile_.SetKeyValue("Logging Options", "Log File Name", LogFile_);
-		IniFile_.SetKeyValue("Logging Options", "Log To File",
-				boost::lexical_cast<std::string>(LogToFile_));
-		IniFile_.SetKeyValue("Logging Options", "Clear File",
-				boost::lexical_cast<std::string>(ClearLogFile_));
-		IniFile_.SetKeyValue("Logging Options", "Date Time Stamp",
-				boost::lexical_cast<std::string>(DateTimeStampFile_));
+		dtIniFile_.SetKeyValue("Logging Options", "Log File Name", strLogFile_);
+		dtIniFile_.SetKeyValue("Logging Options", "Log To File",
+				boost::lexical_cast<std::string>(bLogToFile_));
+		dtIniFile_.SetKeyValue("Logging Options", "Clear File",
+				boost::lexical_cast<std::string>(bClearLogFile_));
+		dtIniFile_.SetKeyValue("Logging Options", "Date Time Stamp",
+				boost::lexical_cast<std::string>(bDateTimeStampFile_));
 
-		IniFile_.SetKeyValue("Beeping Options", "Beep On Error",
-				boost::lexical_cast<std::string>(BeepOnError_));
-		IniFile_.SetKeyValue("Beeping Options", "No Error Beeps",
-				boost::lexical_cast<std::string>(NoErrorBeeps_));
-		IniFile_.SetKeyValue("Beeping Options", "Beep On Warning",
-				boost::lexical_cast<std::string>(BeepOnWarning_));
-		IniFile_.SetKeyValue("Beeping Options", "No Warning Beeps",
-				boost::lexical_cast<std::string>(NoWarningBeeps_));
-		IniFile_.SetKeyValue("Reporting Options", "Report While Tracking",
-				boost::lexical_cast<std::string>(ReportWhileTracking_));
-		if (!IniFile_.Save(ConfigurationFile_)) {
+		dtIniFile_.SetKeyValue("Beeping Options", "Beep On Error",
+				boost::lexical_cast<std::string>(bBeepOnError_));
+		dtIniFile_.SetKeyValue("Beeping Options", "No Error Beeps",
+				boost::lexical_cast<std::string>(nNoErrorBeeps_));
+		dtIniFile_.SetKeyValue("Beeping Options", "Beep On Warning",
+				boost::lexical_cast<std::string>(bBeepOnWarning_));
+		dtIniFile_.SetKeyValue("Beeping Options", "No Warning Beeps",
+				boost::lexical_cast<std::string>(nNoWarningBeeps_));
+		dtIniFile_.SetKeyValue("Reporting Options", "Report While Tracking",
+				boost::lexical_cast<std::string>(bReportWhileTracking_));
+		if (!dtIniFile_.Save(strConfigurationFile_)) {
 			ROS_ERROR("Cannot save configuration file");
 			return;
 		}
@@ -136,12 +136,12 @@ void ProgramOptions::OK() {
  check box is select or unselected.
  *****************************************************************/
 void ProgramOptions::LogToFile() {
-	LogToFile_ = checkBox_LogCOMPortToFile->isChecked();
+	bLogToFile_ = checkBox_LogCOMPortToFile->isChecked();
 
-	lineEdit_File->setEnabled(LogToFile_);
-	pushButton_browse->setEnabled(LogToFile_);
-	checkBox_ClearFileonSystemInitialization->setEnabled(LogToFile_);
-	checkBox_IncludeTimeStamp->setEnabled(LogToFile_);
+	lineEdit_File->setEnabled(bLogToFile_);
+	pushButton_browse->setEnabled(bLogToFile_);
+	checkBox_ClearFileonSystemInitialization->setEnabled(bLogToFile_);
+	checkBox_IncludeTimeStamp->setEnabled(bLogToFile_);
 }
 /*****************************************************************
  Name:		BeepError()
@@ -156,9 +156,9 @@ void ProgramOptions::LogToFile() {
  Error" check box is clicked.
  *****************************************************************/
 void ProgramOptions::BeepOnError() {
-	BeepOnError_ = checkBox_BeepSystemOnERROR->isChecked();
+	bBeepOnError_ = checkBox_BeepSystemOnERROR->isChecked();
 	/* active or de-activate the appropriate fields */
-	lineEdit_BeepERRORNum->setEnabled(BeepOnError_);
+	lineEdit_BeepERRORNum->setEnabled(bBeepOnError_);
 } /* BeepError */
 /*****************************************************************
  /*****************************************************************
@@ -174,9 +174,9 @@ void ProgramOptions::BeepOnError() {
  Warning" check box is clicked.
  *****************************************************************/
 void ProgramOptions::BeepOnWarning() {
-	BeepOnWarning_ = checkBox_BeepSystemOnWARNING->isChecked();
+	bBeepOnWarning_ = checkBox_BeepSystemOnWARNING->isChecked();
 	/* active or de-activate the appropriate fields */
-	lineEdit_BeepWARNINGNum->setEnabled(BeepOnWarning_);
+	lineEdit_BeepWARNINGNum->setEnabled(bBeepOnWarning_);
 } /* BeepOnWarning */
 /*****************************************************************
  Name:				FillForm()
@@ -191,41 +191,42 @@ void ProgramOptions::BeepOnWarning() {
  file and displays it in the form.
  *****************************************************************/
 void ProgramOptions::FillForm() {
-	LogToFile_ = false;
-	ClearLogFile_ = false;
-	DateTimeStampFile_ = false;
-	BeepOnError_ = false;
-	NoErrorBeeps_ = 1;
-	BeepOnWarning_ = false;
-	NoWarningBeeps_ = 1;
-	ReportWhileTracking_ = true;
+	bLogToFile_ = false;
+	bClearLogFile_ = false;
+	bDateTimeStampFile_ = false;
+	bBeepOnError_ = false;
+	nNoErrorBeeps_ = 1;
+	bBeepOnWarning_ = false;
+	nNoWarningBeeps_ = 1;
+	bReportWhileTracking_ = true;
 
-	ReadINIParam("Logging Options", "Log File Name", LogFile_);
-	ReadINIParam("Logging Options", "Log To File", LogToFile_);
-	ReadINIParam("Logging Options", "Clear File", ClearLogFile_);
-	ReadINIParam("Logging Options", "Date Time Stamp", DateTimeStampFile_);
+	ReadINIParam("Logging Options", "Log File Name", strLogFile_);
+	ReadINIParam("Logging Options", "Log To File", bLogToFile_);
+	ReadINIParam("Logging Options", "Clear File", bClearLogFile_);
+	ReadINIParam("Logging Options", "Date Time Stamp", bDateTimeStampFile_);
 
-	ReadINIParam("Beeping Options", "Beep On Error", BeepOnError_);
-	ReadINIParam("Beeping Options", "No Error Beeps", NoErrorBeeps_);
-	ReadINIParam("Beeping Options", "Beep On Warning", BeepOnWarning_);
-	ReadINIParam("Beeping Options", "No Warning Beeps", NoWarningBeeps_);
+	ReadINIParam("Beeping Options", "Beep On Error", bBeepOnError_);
+	ReadINIParam("Beeping Options", "No Error Beeps", nNoErrorBeeps_);
+	ReadINIParam("Beeping Options", "Beep On Warning", bBeepOnWarning_);
+	ReadINIParam("Beeping Options", "No Warning Beeps", nNoWarningBeeps_);
 
 	ReadINIParam("Reporting Options", "Report While Tracking",
-			ReportWhileTracking_);
+			bReportWhileTracking_);
 
-	lineEdit_File->setText(QString(LogFile_.c_str()));
-	checkBox_LogCOMPortToFile->setChecked(LogToFile_);
-	checkBox_ClearFileonSystemInitialization->setChecked(ClearLogFile_);
-	checkBox_IncludeTimeStamp->setChecked(DateTimeStampFile_);
+	lineEdit_File->setText(QString(strLogFile_.c_str()));
+	checkBox_LogCOMPortToFile->setChecked(bLogToFile_);
+	checkBox_ClearFileonSystemInitialization->setChecked(bClearLogFile_);
+	checkBox_IncludeTimeStamp->setChecked(bDateTimeStampFile_);
 
-	checkBox_BeepSystemOnERROR->setChecked(BeepOnError_);
-	checkBox_BeepSystemOnWARNING->setChecked(BeepOnWarning_);
+	checkBox_BeepSystemOnERROR->setChecked(bBeepOnError_);
+	checkBox_BeepSystemOnWARNING->setChecked(bBeepOnWarning_);
 	lineEdit_BeepERRORNum->setText(
-			QString(boost::lexical_cast<std::string>(NoErrorBeeps_).c_str()));
+			QString(boost::lexical_cast<std::string>(nNoErrorBeeps_).c_str()));
 	lineEdit_BeepWARNINGNum->setText(
-			QString(boost::lexical_cast<std::string>(NoWarningBeeps_).c_str()));
+			QString(
+					boost::lexical_cast<std::string>(nNoWarningBeeps_).c_str()));
 
-	checkBox_DisplayError->setChecked(ReportWhileTracking_);
+	checkBox_DisplayError->setChecked(bReportWhileTracking_);
 
 } /* FillForm */
 /*****************************************************************
@@ -250,23 +251,23 @@ void ProgramOptions::Browse() {
 		qDebug("%s", filename.toStdString().c_str());
 	}
 
-	LogFile_ = filename.toStdString();
-	lineEdit_File->setText(QString(LogFile_.c_str()));
+	strLogFile_ = filename.toStdString();
+	lineEdit_File->setText(QString(strLogFile_.c_str()));
 
 } /* Browse */
 void ProgramOptions::Cancel() {
 	FILE *pfOut;
 	std::string szErrorMessage;
 
-	LogFile_ = lineEdit_File->text().toStdString();
+	strLogFile_ = lineEdit_File->text().toStdString();
 
-	if (LogFile_.size() > 0) {
-		pfOut = fopen(LogFile_.c_str(), "a+t");
+	if (strLogFile_.size() > 0) {
+		pfOut = fopen(strLogFile_.c_str(), "a+t");
 		if (pfOut == NULL) {
 			szErrorMessage = std::string("Invalid File Name: \n"
 					"The COM Stream will not be logged until this is fixed.\n"
 					"Please reopen this dialog later for logging correctly.")
-					+ LogFile_;
+					+ strLogFile_;
 		} /* if */
 		else
 			fclose(pfOut);

@@ -9,17 +9,17 @@
 
 ROMFileDlg::ROMFileDlg() {
 	setupUi(this);
-	PortID_ = "";
-	ROMFile_ = "";
-	ChangesSaved_ = false;
-	NoActivePorts_ = 0;
-	NoPassivePorts_ = 0;
-	NoMagneticPorts_ = 0;
-	TypeofSystem_ = 0;
-	ROMSelection_ = 0;
-	ConfigurationFile_ = "/home/lxt12/NDIConfiguration.ini";
+	strPortID_ = "";
+	strROMFile_ = "";
+	bChangesSaved_ = false;
+	nNoActivePorts_ = 0;
+	nNoPassivePorts_ = 0;
+	nNoMagneticPorts_ = 0;
+	nTypeofSystem_ = 0;
+	nROMSelection_ = 0;
+	strConfigurationFile_ = "/home/lxt12/NDIConfiguration.ini";
 
-	if (!IniFile_.Load("/home/lxt12/NDIConfiguration.ini")) {
+	if (!dtIniFile_.Load("/home/lxt12/NDIConfiguration.ini")) {
 		ROS_ERROR("Cannot load configuration file");
 	}
 
@@ -39,23 +39,14 @@ ROMFileDlg::~ROMFileDlg() {
  *****************************************************************/
 
 void ROMFileDlg::Init() {
-	PortID_ = "";
-	ROMFile_ = "";
-	ChangesSaved_ = false;
-	NoActivePorts_ = 0;
-	NoPassivePorts_ = 0;
-	NoMagneticPorts_ = 0;
-	TypeofSystem_ = 0;
-	ROMSelection_ = 0;
-
-	listWidget->addScrollBarWidget(new QWidget,
-			Qt::Alignment::enum_type::AlignRight);
-	listWidget->insertItem(0, QString("Port ID\rSROM Image File"));
+	//listWidget->addScrollBarWidget(new QWidget,
+	//		Qt::Alignment::enum_type::AlignRight);
+	listWidget->insertItem(0, QString("Port ID    SROM Image File"));
 	listWidget->setFocusPolicy(Qt::FocusPolicy::ClickFocus);
 
 	FillROMFileTable();
 
-	ROMSelection_ = 0;
+	nROMSelection_ = 0;
 
 	return;
 }
@@ -75,14 +66,15 @@ void ROMFileDlg::Init() {
  *****************************************************************/
 void ROMFileDlg::Browse() {
 	QString filename = QFileDialog::getOpenFileName(this, tr("Open Document"),
-			QDir::currentPath(), tr("ROM (*.rom;*.ROM)"));
+			QDir::currentPath(), tr("*.rom;*.ROM"));
 
 	if (!filename.isNull()) {
 		qDebug("%s", filename.toStdString().c_str());
 
 	}
-	ROMFile_ = filename.toStdString();
-	lineEdit_SROMImageFile->setText(QString(ROMFile_.c_str()));
+	strROMFile_ = filename.toStdString();
+	lineEdit_SROMImageFile->setText(QString(strROMFile_.c_str()));
+	pushButton_Save->setEnabled(true);
 } /* Browse */
 /*****************************************************************
  Name:				Close
@@ -102,25 +94,8 @@ void ROMFileDlg::Close() {
 	bool bOkToClose = true;
 	std::string szErrorMsg;
 
-	ROMFile_ = lineEdit_SROMImageFile->text().toStdString();
-	/*
-	 * if there is a file name of TTCFG is selected, ask if
-	 * they wish to save their changes
-	 */
-	if (((ROMFile_.size() > 0) && ROMFile_.find("TDS Expansion Port", 0))) {
-		/*
-		 * TDS expansion port shall not be treated as a normal port.
-		 */
-		if (ROMFile_.size() > 0) {
-			szErrorMsg = ROMFile_ + std::string("could not be found.");
-			ROS_ERROR("Invalid SROM Image File: %s", szErrorMsg.c_str());
-			lineEdit_SROMImageFile->setFocus();
-			bOkToClose = false;
-		} /* if */
-	} /* if */
-
 	if (bOkToClose) {
-		if (ChangesSaved_) {
+		if (bChangesSaved_) {
 			ROS_INFO("You must re-initialize your system before SROM Image File"
 					"changes will be applied.");
 
@@ -148,23 +123,23 @@ void ROMFileDlg::ClickPortListing() {
 	std::string item = listWidget->currentItem()->text().toStdString();
 	int pos;
 
-	if (!(pos = item.find("\r", 0))) {
+	if (!(pos = item.find("   ", 0))) {
 		return;
 	}
 
-	PortID_ = item.substr(0, pos - 1);
-	ROMFile_ = item.substr(pos + 1, item.length() - 1);
+	strPortID_ = item.substr(0, pos);
+	strROMFile_ = item.substr(pos + 3, item.length() - 1);
 	/* get the text and values for the selected item */
-	ROMSelection_ = listWidget->currentRow();
+	nROMSelection_ = listWidget->currentRow();
 
-	lineEdit_Port->setText(QString(PortID_.c_str()));
-	lineEdit_SROMImageFile->setText(QString(ROMFile_.c_str()));
+	lineEdit_Port->setText(QString(strPortID_.c_str()));
+	lineEdit_SROMImageFile->setText(QString(strROMFile_.c_str()));
 	/* set the appropriate dialog items */
 	/*
 	 * Handle the special TDS expansion port case.
 	 * - Also make sure it's an aurora system!
 	 */
-	if ((TypeofSystem_ != AURORA_SYSTEM) && (PortID_ == "Port 4")) {
+	if ((nTypeofSystem_ != AURORA_SYSTEM) && (strPortID_ == "Port 4")) {
 		lineEdit_SROMImageFile->setHidden(true);
 		label_SROMImageFile->setHidden(true);
 		pushButton_Browse->setHidden(true);
@@ -196,13 +171,14 @@ void ROMFileDlg::FillROMFileTable() {
 	char pszROMFileName[MAX_PATH];
 	char pszPortID[20];
 	int i = 0;
-
 	/* for the number of passive ports supported */
-	for (i = NoPassivePorts_; i > 0; i--) {
+	for (i = nNoPassivePorts_; i > 0; i--) {
 		sprintf(pszPortID, "Wireless Tool %02d", i);
+		ROS_INFO("%s", pszPortID);
 		strcpy(pszROMFileName, "");
 		ReadINIParam_array("POLARIS SROM Image Files", pszPortID,
 				pszROMFileName);
+		ROS_INFO("%s", pszROMFileName);
 		AddItemToList(pszPortID, pszROMFileName);
 	} /* for */
 
@@ -210,11 +186,11 @@ void ROMFileDlg::FillROMFileTable() {
 	 * if the system supports 4 active ports show 12
 	 * for the case that the TDS is plugged in and active
 	 */
-	if (NoActivePorts_ == 4)
-		NoActivePorts_ = 12;
+	if (nNoActivePorts_ == 4)
+		nNoActivePorts_ = 12;
 
 	/* for the number of active ports supported */
-	for (i = NoActivePorts_; i > 0; i--) {
+	for (i = nNoActivePorts_; i > 0; i--) {
 		/*
 		 * TDS expansion port shall not be treated as a normal port.
 		 */
@@ -232,7 +208,7 @@ void ROMFileDlg::FillROMFileTable() {
 	} /* for */
 
 	/* for the number of magnetic ports supported */
-	for (i = NoMagneticPorts_; i > 0; i--) {
+	for (i = nNoMagneticPorts_; i > 0; i--) {
 		sprintf(pszPortID, "Port %d", i);
 		strcpy(pszROMFileName, "");
 		ReadINIParam_array("AURORA SROM Image Files", pszPortID,
@@ -255,9 +231,9 @@ void ROMFileDlg::FillROMFileTable() {
  in the spot the corresponds to the specified pszPortID.
  *****************************************************************/
 void ROMFileDlg::AddItemToList(char* pszPortID, char* pszROMFileName) {
-	std::string item = std::string(pszPortID) + std::string("\r")
+	std::string item = std::string(pszPortID) + std::string("   ")
 			+ std::string(pszROMFileName);
-	listWidget->insertItem(0, QString(item.c_str()));
+	listWidget->insertItem(1, QString(item.c_str()));
 
 } /* AddItemToList */
 /*****************************************************************
@@ -277,14 +253,14 @@ void ROMFileDlg::AddItemToList(char* pszPortID, char* pszROMFileName) {
 void ROMFileDlg::SaveItemToINI(const char* pszPortID,
 		const char* pszROMFileName) {
 	/* if Magnetic Ports is greater than zero, attached to AURORA */
-	if (NoMagneticPorts_ > 0)
-		IniFile_.SetKeyValue("AURORA SROM Image Files", std::string(pszPortID),
-				std::string(pszROMFileName));
+	if (nNoMagneticPorts_ > 0)
+		dtIniFile_.SetKeyValue("AURORA SROM Image Files",
+				std::string(pszPortID), std::string(pszROMFileName));
 	else
-		IniFile_.SetKeyValue("POLARIS SROM Image Files", std::string(pszPortID),
-				std::string(pszROMFileName));
+		dtIniFile_.SetKeyValue("POLARIS SROM Image Files",
+				std::string(pszPortID), std::string(pszROMFileName));
 
-	IniFile_.Save(ConfigurationFile_);
+	dtIniFile_.Save(strConfigurationFile_);
 } /* SaveItemToINI */
 
 /*****************************************************************
@@ -307,15 +283,15 @@ void ROMFileDlg::Accept() {
 	std::string item = listWidget->currentItem()->text().toStdString();
 	int pos;
 
-	if (!(pos = item.find("\r", 0))) {
+	if (!(pos = item.find("   ", 0))) {
 		ROS_ERROR("Save: cannot find valid PortID and ROMFile");
 		return;
 	}
-	PortID_ = item.substr(0, pos - 1);
-	ROMFile_ = lineEdit_SROMImageFile->text().toStdString();
-	ROMSelection_ = listWidget->currentRow();
+	strPortID_ = item.substr(0, pos);
+	strROMFile_ = lineEdit_SROMImageFile->text().toStdString();
+	nROMSelection_ = listWidget->currentRow();
 
-	if (ROMFile_.size() < 0) {
+	if (strROMFile_.size() < 0) {
 		bValidFile = false;
 	} /* if */
 
@@ -324,16 +300,17 @@ void ROMFileDlg::Accept() {
 	 * dialog options accordingly
 	 */
 	if (bValidFile) {
-		listWidget->clearSelection();
-		listWidget->insertItem(ROMSelection_,
-				QString(std::string(PortID_ + std::string("\r") + ROMFile_).c_str()));
+		listWidget->currentItem()->setText(
+				QString(
+						std::string(
+								strPortID_ + std::string("   ") + strROMFile_).c_str()));
 		pushButton_Browse->setEnabled(false);
 		listWidget->setEnabled(true);
 		lineEdit_SROMImageFile->setReadOnly(true);
-		SaveItemToINI(PortID_.c_str(), ROMFile_.c_str());
-		ChangesSaved_ = true;
+		SaveItemToINI(strPortID_.c_str(), strROMFile_.c_str());
+		bChangesSaved_ = true;
 
-		ROMFile_ = "";
+		strROMFile_ = "";
 		lineEdit_SROMImageFile->setText(QString(""));
 	} /* if */
 } /* On Accept */
@@ -341,7 +318,7 @@ void ROMFileDlg::Accept() {
 void ROMFileDlg::ReadINIParam_array(std::string Section, std::string Key,
 		char* array) {
 	std::string temp_string;
-	temp_string = IniFile_.GetKeyValue(Section, Key);
+	temp_string = dtIniFile_.GetKeyValue(Section, Key);
 	strcpy(array, temp_string.c_str());
 }
 

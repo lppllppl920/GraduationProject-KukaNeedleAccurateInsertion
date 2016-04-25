@@ -84,31 +84,31 @@ public slots:
 
 private:
 // Motion
-	boost::shared_ptr<moveit::planning_interface::MoveGroup> group_;
-	moveit::planning_interface::PlanningSceneInterface planning_scene_interface_;
-	moveit::planning_interface::MoveGroup::Plan motion_plan_;
-	ros::Publisher planning_scene_diff_publisher_;
+	boost::shared_ptr<moveit::planning_interface::MoveGroup> pdtMoveGroup_;
+	moveit::planning_interface::PlanningSceneInterface dtPlanningSceneInterface_;
+	moveit::planning_interface::MoveGroup::Plan dtMotionPlan_;
+	ros::Publisher dtPlanningSceneDiffPublisher_;
 	// Target pose for motion
-	geometry_msgs::Pose target_pose_;
-	std::map<std::string, double> target_joints_;
-	Eigen::Affine3d target_affine_;
+	geometry_msgs::Pose dtTargetPose_;
+	std::map<std::string, double> mpTargetJoints_;
+	Eigen::Affine3d dtTargetAffine_;
 	// Indicator for motion plan
-	bool plan_success_;
+	bool bPlanSuccess_;
 	// Indicator for motion execution
-	moveit_msgs::MoveItErrorCodes motion_status_;
-	Plannar plannar_;
+	moveit_msgs::MoveItErrorCodes dtMotionStatus_;
+	Plannar dtPlannar_;
 	// Way points for motion planning
-	std::vector<geometry_msgs::Pose> waypoints_;
+	std::vector<geometry_msgs::Pose> vecdtWaypoints_;
 	// current interactive marker position
-	geometry_msgs::Pose end_effector_pos_;
-	int waypoint_count_;
+	geometry_msgs::Pose dtEndEffectorPos_;
+	int nWaypointCount_;
 
 // Add or remove collision object
-	geometry_msgs::Pose collision_pose_;
-	shape_msgs::SolidPrimitive collision_shape_;
-	moveit_msgs::CollisionObject collision_object_;
-	std::vector<std::string> remove_collision_ids_;
-	std::vector<moveit_msgs::CollisionObject> collision_objects_;
+	geometry_msgs::Pose dtCollisionPose_;
+	shape_msgs::SolidPrimitive dtCollisionShape_;
+	moveit_msgs::CollisionObject dtCollisionObject_;
+	std::vector<std::string> vecstrRemoveCollisionIds_;
+	std::vector<moveit_msgs::CollisionObject> vecdtCollisionObjects_;
 
 };
 

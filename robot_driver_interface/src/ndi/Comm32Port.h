@@ -89,13 +89,12 @@ public:
 
 	int SerialErrorStatus();
 
-private:
-	boost::shared_ptr<QSerialPort> serial_port_;
-	unsigned long server_break_delay_; /* delay after a serial break */
-	bool flow_control_; /* hardware handshaking */
-	char input_buffer_[READ_BUFFER_SIZE]; /* input buffer */
-	int index_buffer_; /* index of buffer */
-	int num_bytes_; /* number of bytes read or sent */
+	boost::shared_ptr<QSerialPort> pdtSerialPort_;
+	unsigned long ulSerialBreakDelay_; /* delay after a serial break */
+	bool bFlowControl_; /* hardware handshaking */
+	char pchrInputBuffer_[READ_BUFFER_SIZE]; /* input buffer */
+	int nIndexBuffer_; /* index of buffer */
+	int nNumBytes_; /* number of bytes read or sent */
 
 };
 

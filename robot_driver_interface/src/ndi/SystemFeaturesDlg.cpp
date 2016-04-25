@@ -9,12 +9,12 @@
 
 SystemFeaturesDlg::SystemFeaturesDlg() {
 	setupUi(this);
-	NoActivePorts_ = 0;
-	NoActiveWireless_ = 0;
-	NoPassivePorts_ = 0;
-	NoTIPDetectionPorts_ = 0;
-	VersionInfo_ = "";
-	TypeOfSystem_ = 0;
+	nNoActivePorts_ = 0;
+	nNoActiveWireless_ = 0;
+	nNoPassivePorts_ = 0;
+	nNoTIPDetectionPorts_ = 0;
+	strVersionInfo_ = "";
+	nTypeOfSystem_ = 0;
 
 	connect(pushButton_OK, SIGNAL(clicked()), this, SLOT(close()));
 	connect(pushButton_Cancel, SIGNAL(clicked()), this, SLOT(close()));
@@ -26,14 +26,14 @@ SystemFeaturesDlg::~SystemFeaturesDlg() {
 
 void SystemFeaturesDlg::Init() {
 
-	NoActivePorts_ = 0;
-	NoActiveWireless_ = 0;
-	NoPassivePorts_ = 0;
-	NoTIPDetectionPorts_ = 0;
-	VersionInfo_ = "";
-	TypeOfSystem_ = 0;
+	nNoActivePorts_ = 0;
+	nNoActiveWireless_ = 0;
+	nNoPassivePorts_ = 0;
+	nNoTIPDetectionPorts_ = 0;
+	strVersionInfo_ = "";
+	nTypeOfSystem_ = 0;
 
-	if (TypeOfSystem_ == AURORA_SYSTEM) {
+	if (nTypeOfSystem_ == AURORA_SYSTEM) {
 		label_ActivePortsNum->setText(QString("Number of tool ports:"));
 
 		label_SupportingPortsNum->setHidden(true);
@@ -76,36 +76,37 @@ void SystemFeaturesDlg::SetVariables(std::string pszVersionInfo,
 		int nNoTIPDetection, int nTypeofSystem) {
 	QListWidgetItem* TypeofSystem = new QListWidgetItem;
 
-	VersionInfo_ = pszVersionInfo;
+	strVersionInfo_ = pszVersionInfo;
 	switch (nNoActivePorts) {
 	case 12:	// TDS supported and present
 	case 4:		// TDS supported but not present
-		NoActivePorts_ = nNoActivePorts - 1;
+		nNoActivePorts_ = nNoActivePorts - 1;
 		break;
 	default:
-		NoActivePorts_ = nNoActivePorts;
+		nNoActivePorts_ = nNoActivePorts;
 		break;
 	}/* switch */
-	NoActiveWireless_ = nNoActiveWireless;
-	NoPassivePorts_ = nNoPassivePorts;
-	NoTIPDetectionPorts_ = nNoTIPDetection;
-	TypeOfSystem_ = nTypeofSystem;
+	nNoActiveWireless_ = nNoActiveWireless;
+	nNoPassivePorts_ = nNoPassivePorts;
+	nNoTIPDetectionPorts_ = nNoTIPDetection;
+	nTypeOfSystem_ = nTypeofSystem;
 
 	TypeofSystem->setText(
 			QString(
-					boost::lexical_cast<std::string>(NoActiveWireless_).c_str()));
+					boost::lexical_cast<std::string>(nNoActiveWireless_).c_str()));
 	listWidget->insertItem(1, TypeofSystem);
 
 	lineEdit_ActiveWirelessPorts->setText(
 			QString(
-					boost::lexical_cast<std::string>(NoActiveWireless_).c_str()));
+					boost::lexical_cast<std::string>(nNoActiveWireless_).c_str()));
 	lineEdit_ActivePortsNum->setText(
-			QString(boost::lexical_cast<std::string>(NoActivePorts_).c_str()));
+			QString(boost::lexical_cast<std::string>(nNoActivePorts_).c_str()));
 	lineEdit_SupportingPortsNum->setText(
 			QString(
-					boost::lexical_cast<std::string>(NoTIPDetectionPorts_).c_str()));
+					boost::lexical_cast<std::string>(nNoTIPDetectionPorts_).c_str()));
 	lineEdit_WirelessNum->setText(
-			QString(boost::lexical_cast<std::string>(NoPassivePorts_).c_str()));
+			QString(
+					boost::lexical_cast<std::string>(nNoPassivePorts_).c_str()));
 
 }
 
@@ -136,27 +137,28 @@ void SystemFeaturesDlg::SetVariables(std::string pszVersionInfo,
 		int nNoFieldGeneratorCards, int nTypeofSystem) {
 	QListWidgetItem* TypeofSystem = new QListWidgetItem;
 
-	VersionInfo_ = pszVersionInfo;
-	NoActivePorts_ = nNoMagneticPorts;
-	NoActiveWireless_ = nNoFieldGenerators;
-	NoPassivePorts_ = nNoFieldGeneratorCards;
-	TypeOfSystem_ = nTypeofSystem;
+	strVersionInfo_ = pszVersionInfo;
+	nNoActivePorts_ = nNoMagneticPorts;
+	nNoActiveWireless_ = nNoFieldGenerators;
+	nNoPassivePorts_ = nNoFieldGeneratorCards;
+	nTypeOfSystem_ = nTypeofSystem;
 
 	TypeofSystem->setText(
 			QString(
-					boost::lexical_cast<std::string>(NoActiveWireless_).c_str()));
+					boost::lexical_cast<std::string>(nNoActiveWireless_).c_str()));
 	listWidget->insertItem(1, TypeofSystem);
 
 	lineEdit_ActiveWirelessPorts->setText(
 			QString(
-					boost::lexical_cast<std::string>(NoActiveWireless_).c_str()));
+					boost::lexical_cast<std::string>(nNoActiveWireless_).c_str()));
 	lineEdit_ActivePortsNum->setText(
-			QString(boost::lexical_cast<std::string>(NoActivePorts_).c_str()));
+			QString(boost::lexical_cast<std::string>(nNoActivePorts_).c_str()));
 	lineEdit_SupportingPortsNum->setText(
 			QString(
-					boost::lexical_cast<std::string>(NoTIPDetectionPorts_).c_str()));
+					boost::lexical_cast<std::string>(nNoTIPDetectionPorts_).c_str()));
 	lineEdit_WirelessNum->setText(
-			QString(boost::lexical_cast<std::string>(NoPassivePorts_).c_str()));
+			QString(
+					boost::lexical_cast<std::string>(nNoPassivePorts_).c_str()));
 
 } /* SetVariables */
 

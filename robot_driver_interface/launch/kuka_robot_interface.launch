@@ -20,7 +20,7 @@
   
   <!-- publish the robot state (tf transforms) -->
   <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" />
- 
+  
   <include file="$(find kuka_kr6_moveit_config)/launch/move_group.launch">
     <arg name="publish_monitored_planning_scene" value="true" />
   </include>
@@ -30,5 +30,6 @@
   </include>
   
   <include file="$(find kuka_kr6_moveit_config)/launch/default_warehouse_db.launch" />
-
+  
+ 
 </launch>

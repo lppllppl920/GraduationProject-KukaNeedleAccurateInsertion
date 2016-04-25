@@ -23,17 +23,17 @@ public:
 	template<class T> void ReadINIParam(std::string Section, std::string Key,
 			T& Value) {
 		std::string temp_string;
-		temp_string = IniFile_.GetKeyValue(Section, Key);
+		temp_string = dtIniFile_.GetKeyValue(Section, Key);
 		if (!temp_string.empty()) {
 			Value = boost::lexical_cast<T>(temp_string);
 		}
 		return;
 	}
 
-	int FiringRate_;
-	int TypeOfSystem_;
-	CIniFile IniFile_;
-	std::string ConfigurationFile_;
+	int nFiringRate_;
+	int nTypeOfSystem_;
+	CIniFile dtIniFile_;
+	std::string strConfigurationFile_;
 
 public slots:
 	void Init();

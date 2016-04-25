@@ -22,7 +22,7 @@ public:
 public slots:
 	void OK();
 public:
-	DiagNewAlertFlags NewAlerts_;
+	DiagNewAlertFlags dtNewAlerts_;
 };
 
 #endif /* ROBOT_DRIVER_INTERFACE_SRC_NDI_NEWALERTFLAGSDLG_H_ */

@@ -10,23 +10,23 @@
 
 #include "Interface.h"
 /* 	DDX_Control(pDX, IDC_FRAME_NO, m_ctlFrameNo);
-	DDX_Control(pDX, IDC_PORT_HANDLES, m_ctlPortHandleCB);
-	DDX_Control(pDX, IDC_REFERENCE_HANDLE_CMB, m_ctlRefHandleCB);
-	DDX_Control(pDX, IDC_TRACKING_LIST, m_ctlTrackingList);
-	DDX_Text(pDX, IDC_FRAME_NO, m_szFrameNumber);
-	DDX_Text(pDX, IDC_SYSTEMMODE, m_szSystemMode);
-	DDX_Check(pDX, IDC_TRACKING_REPORT_OOV, m_bUse0x0800Option);
-	DDX_Check(pDX, IDC_EULER_ANGLES, m_bUseEulerAngles);
-	DDX_Radio(pDX, IDC_TRACKING_TX, m_nTrackingMode);
-	DDX_Text(pDX, IDC_MANUF_ID, m_szManufID);
-	DDX_Check(pDX, IDC_PORT_ENABLED, m_bPortEnabled);
-	DDX_Check(pDX, IDC_PORT_INIT, m_bPortInitialized);
-	DDX_Text(pDX, IDC_SERIAL_NO, m_szSerialNo);
-	DDX_Text(pDX, IDC_TOOL_REV, m_szToolRev);
-	DDX_Text(pDX, IDC_TOOL_TYPE, m_szToolType);
-	DDX_Text(pDX, IDC_PARTNUMBER, m_szPartNumber); */
+ DDX_Control(pDX, IDC_PORT_HANDLES, m_ctlPortHandleCB);
+ DDX_Control(pDX, IDC_REFERENCE_HANDLE_CMB, m_ctlRefHandleCB);
+ DDX_Control(pDX, IDC_TRACKING_LIST, m_ctlTrackingList);
+ DDX_Text(pDX, IDC_FRAME_NO, m_szFrameNumber);
+ DDX_Text(pDX, IDC_SYSTEMMODE, m_szSystemMode);
+ DDX_Check(pDX, IDC_TRACKING_REPORT_OOV, m_bUse0x0800Option);
+ DDX_Check(pDX, IDC_EULER_ANGLES, m_bUseEulerAngles);
+ DDX_Radio(pDX, IDC_TRACKING_TX, m_nTrackingMode);
+ DDX_Text(pDX, IDC_MANUF_ID, m_szManufID);
+ DDX_Check(pDX, IDC_PORT_ENABLED, m_bPortEnabled);
+ DDX_Check(pDX, IDC_PORT_INIT, m_bPortInitialized);
+ DDX_Text(pDX, IDC_SERIAL_NO, m_szSerialNo);
+ DDX_Text(pDX, IDC_TOOL_REV, m_szToolRev);
+ DDX_Text(pDX, IDC_TOOL_TYPE, m_szToolType);
+ DDX_Text(pDX, IDC_PARTNUMBER, m_szPartNumber); */
 Interface::Interface(QMainWindow *parent) :
-		controller_(), last_Axis_(0, 0, 0, 0, 0, 0) {
+		dtController_(), dtLastAxis_(0, 0, 0, 0, 0, 0) {
 
 	ROS_INFO("Interface Constructing...");
 
@@ -34,7 +34,7 @@ Interface::Interface(QMainWindow *parent) :
 	setAlignment();
 
 	// pointer to node handle
-	node_handle_ = boost::make_shared<ros::NodeHandle>("");
+	pdtNodeHandle_ = boost::make_shared<ros::NodeHandle>("");
 
 	// GUI related
 	// KUKA related
@@ -46,7 +46,7 @@ Interface::Interface(QMainWindow *parent) :
 			SLOT(executeMotionPlan()));
 	connect(pushButton_AddWaypoint, SIGNAL(clicked()), this,
 			SLOT(addWaypoints()));
-	connect(pushButton_ExecuteWaypointsPlan, SIGNAL(clicked()), &controller_,
+	connect(pushButton_ExecuteWaypointsPlan, SIGNAL(clicked()), &dtController_,
 			SLOT(visualizeExecutePlanCb()));
 	connect(pushButton_Do, SIGNAL(clicked()), this,
 			SLOT(manipulateCollisionObject()));
@@ -70,7 +70,7 @@ Interface::Interface(QMainWindow *parent) :
 
 	connect(actionCOM_Port_Settings, SIGNAL(triggered()), this,
 			SLOT(settingsComportsettings()));
-	connect(&SubWindow_COMPortSettings_, SIGNAL(OK_signal()), this,
+	connect(&dtSubWindowCOMPortSettings_, SIGNAL(OK_signal()), this,
 			SLOT(settingsComPortSettings_OK()));
 
 	connect(actionDiagnostic_Alerts, SIGNAL(triggered()), this,
@@ -80,7 +80,7 @@ Interface::Interface(QMainWindow *parent) :
 	connect(actionStart_Tracking, SIGNAL(triggered()), this,
 			SLOT(systemStarttracking()));
 	connect(actionStop_Tracking, SIGNAL(triggered()), this,
-			SLOT(systemStarttracking()));
+			SLOT(systemStoptracking()));
 	connect(actionActivate_Handles, SIGNAL(triggered()), this,
 			SLOT(systemActivateports()));
 	connect(actionInitialize_System, SIGNAL(triggered()), this,
@@ -88,17 +88,17 @@ Interface::Interface(QMainWindow *parent) :
 
 	connect(actionProgram_Options, SIGNAL(triggered()), this,
 			SLOT(optionsProgramoptions()));
-	connect(&SubWindow_ProgramOptions_, SIGNAL(OK_signal()), this,
+	connect(&dtSubWindowProgramOptions_, SIGNAL(OK_signal()), this,
 			SLOT(optionsProgramoptions_OK()));
 
 	connect(actionIlluminator_Activation_Rate, SIGNAL(triggered()), this,
 			SLOT(optionsIlluminatorfiringrate()));
-	connect(&SubWindow_IlluminatorFiringRate_, SIGNAL(OK_signal()), this,
+	connect(&dtSubWindowIlluminatorFiringRate_, SIGNAL(OK_signal()), this,
 			SLOT(optionsIlluminatorfiringrate_OK()));
 
 	connect(actionSROM_Image_File_Settings, SIGNAL(triggered()), this,
 			SLOT(settingsRomfilesettings()));
-	connect(&SubWindow_ROMFile_, SIGNAL(ReInitialize_signal()), this,
+	connect(&dtSubWindowROMFile_, SIGNAL(ReInitialize_signal()), this,
 			SLOT(reInitializeSystem()));
 
 	connect(actionExit, SIGNAL(triggered()), this, SLOT(close()));
@@ -107,102 +107,124 @@ Interface::Interface(QMainWindow *parent) :
 			SLOT(selchangePortHandles()));
 	connect(comboBox_Reference, SIGNAL(currentIndexChanged(int)), this,
 			SLOT(selchangeRefPortHandle()));
-	connect(checkBox_HandleEnable, SIGNAL(stateChanged(int)), this,
+	connect(checkBox_HandleEnable, SIGNAL(clicked(bool)), this,
 			SLOT(portEnabled()));
 
 	// Others related
-	connect(this, SIGNAL(sendTrajectory(const TrajectoryGoal&)), &controller_,
+	connect(this, SIGNAL(sendTrajectory(const TrajectoryGoal&)), &dtController_,
 			SLOT(sendTrajectory(const TrajectoryGoal&)));
 
-	connect(&controller_, SIGNAL(newFeedback(Feedback* )), this,
+	connect(&dtController_, SIGNAL(newFeedback(Feedback* )), this,
 			SLOT(newFeedbackReceived(Feedback* )));
 
-	connect(&controller_, SIGNAL(newFeedback(Feedback* )), this,
+	connect(&dtController_, SIGNAL(newFeedback(Feedback* )), this,
 			SLOT(displayFeedback(Feedback* )));
 
-	connect(&controller_, SIGNAL(shutdown()), this, SLOT(shutdown()));
+	connect(&dtController_, SIGNAL(shutdown()), this, SLOT(shutdown()));
 	// When motion plan is obtain in controller_, transfer plan to interface object for visualization
-	connect(&controller_, SIGNAL(visualizeMotionPlan(MotionPlan)), this,
+	connect(&dtController_, SIGNAL(visualizeMotionPlan(MotionPlan)), this,
 			SLOT(visualizeMotionPlan(MotionPlan)));
-	connect(this, SIGNAL(addWaypointsSignal()), &controller_,
+	connect(this, SIGNAL(addWaypointsSignal()), &dtController_,
 			SLOT(addWaypointsCb()));
-	connect(this, SIGNAL(visualizeExecutePlan()), &controller_,
+	connect(this, SIGNAL(visualizeExecutePlan()), &dtController_,
 			SLOT(visualizeExecutePlanCb()));
 	connect(this,
 			SIGNAL(endEffectorPos(const InteractiveMarkerFeedbackConstPtr&)),
-			&controller_,
+			&dtController_,
 			SLOT(endEffectorPosCb(const InteractiveMarkerFeedbackConstPtr&)));
 
 	// Set publisher for planned path display
-	display_publisher_ =
-			node_handle_->advertise<moveit_msgs::DisplayTrajectory>(
-					"/move_group/display_planned_path", 1, true);
+	dtDisplayPublisher_ = pdtNodeHandle_->advertise<
+			moveit_msgs::DisplayTrajectory>("/move_group/display_planned_path",
+			1, true);
 
 	// Set publisher for joint state visualization
-	joint_state_publisher_ = node_handle_->advertise<sensor_msgs::JointState>(
+	dtJointStatePublisher_ = pdtNodeHandle_->advertise<sensor_msgs::JointState>(
 			"/joint_states", 1000, true);
 
 	// Set subscriber for obtaining interactive marker position
-	interactive_marker_subsriber_ =
-			node_handle_->subscribe<
+	dtInteractiveMarkerSubsriber_ =
+			pdtNodeHandle_->subscribe<
 					visualization_msgs::InteractiveMarkerFeedback, Interface>(
 					"/rviz_moveit_motion_planning_display/robot_interaction_interactive_marker_topic/feedback",
 					10, &Interface::endEffectorPosCb, this);
 
 	// Set subscriber for Motion trajectory execution
-	motion_trajectory_subsriber_ = node_handle_->subscribe<
+	dtMotionTrajectorySubsriber_ = pdtNodeHandle_->subscribe<
 			control_msgs::FollowJointTrajectoryActionGoal, Interface>(
 			"/joint_trajectory_action/goal", 10, &Interface::trajectoryActionCb,
 			this);
 
-	planning_scene_diff_publisher_ = node_handle_->advertise<
+	dtPlanningSceneDiffPublisher_ = pdtNodeHandle_->advertise<
 			moveit_msgs::PlanningScene>("/planning_scene", 1);
 
 	// Set up menu marker
 	marker_pos_ = 0.0;
-	interactive_marker_server_.reset(
+	pdtInteractiveMarkerServer_.reset(
 			new interactive_markers::InteractiveMarkerServer("moveit_test", "",
 					false));
 	initMenu();
 	makeMenuMarker("marker1");
-	menu_handler_.apply(*interactive_marker_server_, "marker1");
-	interactive_marker_server_->applyChanges();
+	dtMenuHandler_.apply(*pdtInteractiveMarkerServer_, "marker1");
+	pdtInteractiveMarkerServer_->applyChanges();
 
 	// initialize joint state publish count
-	joint_state_publish_count_ = 0;
+	nJointStatePublishCount_ = 0;
 	// allocate memory for position variable
-	joint_state_.position.resize(6);
-	joint_state_.name.resize(6);
-	joint_state_.name[0] = "joint1";
-	joint_state_.name[1] = "joint2";
-	joint_state_.name[2] = "joint3";
-	joint_state_.name[3] = "joint4";
-	joint_state_.name[4] = "joint5";
-	joint_state_.name[5] = "joint6";
-	joint_state_display_counter_ = 0;
-	joint_state_callback_counter_ = 0;
+	dtJointState_.position.resize(6);
+	dtJointState_.name.resize(6);
+	dtJointState_.name[0] = "joint1";
+	dtJointState_.name[1] = "joint2";
+	dtJointState_.name[2] = "joint3";
+	dtJointState_.name[3] = "joint4";
+	dtJointState_.name[4] = "joint5";
+	dtJointState_.name[5] = "joint6";
+	nJointStateDisplayCount_ = 0;
+	nJointStateCallbackCount_ = 0;
 
 	// pointer to plannar_
-	plannar_ptr_ = boost::shared_ptr<Plannar>(controller_.getPlannar());
+	pdtPlannar_ = boost::shared_ptr<Plannar>(dtController_.getPlannar());
 
-	collision_operation_counter_ = 0;
-
+	nCollisionOperationCount_ = 0;
 
 // NDI related
-	CommandHandling_ = boost::make_shared<CommandHandling>();
+	pdtCommandHandling_ = boost::make_shared<CommandHandling>();
 
-	SystemMode_ = "Setup Mode";
-	lineEdit_Mode->setText(QString(SystemMode_.c_str()));
-	setMode( MODE_PRE_INIT );
+	strSystemMode_ = "Setup Mode";
+	lineEdit_Mode->setText(QString(strSystemMode_.c_str()));
+	setMode( MODE_PRE_INIT);
 
-	StopTracking_ = false;
-	IsTracking_ = false;
-	ResetHardware_ = false;
-	Wireless_ = false;
-	SystemInitialized_ = false;
-	PortsActivated_ = false;
 
-	COMPort_ = 0;
+	nCOMPort_ = 0;
+	nTrackingMode_ = 0;
+	bStopTracking_ = false;
+	bIsTracking_ = false;
+	bResetHardware_ = false;
+	bWireless_ = false;
+	bSystemInitialized_ = false;
+	bPortsActivated_ = false;
+	bInterference_ = false;
+
+	bUse0x0800Option_ = false;
+	bUseEulerAngles_ = false;
+	bPortEnabled_ = false;
+	bPortInitialized_ = false;
+	strFrameNumber_ = "";
+	strManufID_ = "";
+	strSerialNo_ = "";
+	strToolRev_ = "";
+	strToolType_ = "";
+	strPartNumber_ = "";
+
+	lineEdit_Manufacturer->setText(QString(strManufID_.c_str()));
+	lineEdit_Serial->setText(QString(strSerialNo_.c_str()));
+	lineEdit_Tool->setText(QString(strToolType_.c_str()));
+	lineEdit_Tool_2->setText(QString(strToolRev_.c_str()));
+	lineEdit_Part->setText(QString(strPartNumber_.c_str()));
+	checkBox_HandleEnable->setChecked(bPortEnabled_);
+	checkBox_HandleInitialize->setChecked(bPortInitialized_);
+	checkBox_0x0800->setChecked(bUse0x0800Option_);
+	radioButton_TXMode->setChecked(!nTrackingMode_);
 }
 
 Interface::~Interface() {
@@ -214,237 +236,234 @@ Interface::~Interface() {
 // Slots function
 //call back function for GUI push button
 /*****************************************************************
-Name:				OnTrackingBut
+ Name:				OnTrackingBut
 
-Inputs:
-	None.
+ Inputs:
+ None.
 
-Return Value:
-	None.
+ Return Value:
+ None.
 
-Description:   This routine handles what happens when the user
-			   presses the Tracking Button.
-*****************************************************************/
-void Interface::trackingButton()
-{
+ Description:   This routine handles what happens when the user
+ presses the Tracking Button.
+ *****************************************************************/
+void Interface::trackingButton() {
 	/* if the text read Start, then we start, else we stop tracking */
-	if (  pushButton_StartTracking->accessibleName() == "Start Tracking" )
+	if (pushButton_StartTracking->accessibleName() == "Start Tracking")
 		startTracking();
 	else
 		stopTracking();
 } /* OnTrackingBut */
 /*****************************************************************
-Name:				initializeNDISystem
+ Name:				initializeNDISystem
 
-Inputs:
-	None.
+ Inputs:
+ None.
 
-Return Value:
-	None.
+ Return Value:
+ None.
 
-Description:    This routine handles what happen when the user
-				presses the Intialize System button.  We initialize
-				the System.
-*****************************************************************/
+ Description:    This routine handles what happen when the user
+ presses the Intialize System button.  We initialize
+ the System.
+ *****************************************************************/
 void Interface::initializeNDISystem() {
-	int
-		nBaudRate = 0,
-		nStopBits = 0,
-		nParity   = 0,
-		nDataBits = 0,
-		nHardware = 0,
-		nWireless = 0;
-	COMPort_ = 0;
-	Wireless_ = false;
-	ResetHardware_ = false;
+	int nBaudRate = 0, nStopBits = 0, nParity = 0, nDataBits = 0, nHardware = 0,
+			nWireless = 0;
+	nCOMPort_ = 0;
+	bWireless_ = false;
+	bResetHardware_ = false;
 
 	/*
 	 * read the COM port parameters from the ini file
 	 */
-	CommandHandling_->ReadINIParam<int>("Communication", "Baud Rate", nBaudRate);
-	CommandHandling_->ReadINIParam<int>("Communication", "Stop Bits", nStopBits);
-	CommandHandling_->ReadINIParam<int>("Communication", "Parity", nParity);
-	CommandHandling_->ReadINIParam<int>("Communication", "Data Bits", nDataBits);
-	CommandHandling_->ReadINIParam<int>("Communication", "Hardware", nHardware);
-	CommandHandling_->ReadINIParam<int>("Communication", "COM Port", COMPort_);
-	CommandHandling_->ReadINIParam<bool>("Communication", "Wireless", Wireless_);
+	pdtCommandHandling_->ReadINIParam<int>("Communication", "Baud Rate",
+			nBaudRate);
+	pdtCommandHandling_->ReadINIParam<int>("Communication", "Stop Bits",
+			nStopBits);
+	pdtCommandHandling_->ReadINIParam<int>("Communication", "Parity", nParity);
+	pdtCommandHandling_->ReadINIParam<int>("Communication", "Data Bits",
+			nDataBits);
+	pdtCommandHandling_->ReadINIParam<int>("Communication", "Hardware",
+			nHardware);
+	pdtCommandHandling_->ReadINIParam<int>("Communication", "COM Port",
+			nCOMPort_);
+	pdtCommandHandling_->ReadINIParam<bool>("Communication", "Wireless",
+			bWireless_);
 	/*
 	 * This feature is useful for debugging only, m_bResetHardware is set to
 	 * true to disable it.
 	 */
-	CommandHandling_->ReadINIParam<bool>("Communication", "Reset Hardware", ResetHardware_);
+	pdtCommandHandling_->ReadINIParam<bool>("Communication", "Reset Hardware",
+			bResetHardware_);
 	/*
 	 * close, then open the port
 	 */
-	CommandHandling_->CloseComPorts();
-	if (!CommandHandling_->OpenComPort( COMPort_ ))
-	{
+	pdtCommandHandling_->CloseComPorts();
+	if (!pdtCommandHandling_->OpenComPort(nCOMPort_)) {
 		ROS_ERROR("COM ERROR: COM Port could not be opened.  "
-		"Check your COM Port settings and\n"
-		"make sure you system is turned on.");
+				"Check your COM Port settings and\n"
+				"make sure you system is turned on.");
 		return;
 	} /* if */
 
 	/*
 	 * if we are supposed to reset, call the reset now
 	 */
-	if ( ResetHardware_ )
-	{
-		if (!CommandHandling_->HardWareReset(Wireless_))
+	if (bResetHardware_) {
+		if (!pdtCommandHandling_->HardWareReset(bWireless_)) {
+			ROS_ERROR("Interface: Cannot reset hardware");
 			return;
+		}
 	}/* if */
-
 	/*
 	 * get the timeout values for the commands
 	 * this will return an error with all other systems, other than Vicra
 	 */
-	CommandHandling_->CreateTimeoutTable();
-
+	if (!pdtCommandHandling_->CreateTimeoutTable()) {
+		ROS_ERROR("Create Timeout Table failed");
+	}
 	/*
 	 * set the System COM Port parameters, then the computers COM Port parameters.
 	 * if that is successful, initialize the system
 	 */
-	if(CommandHandling_->SetSystemComParms( nBaudRate, nDataBits, nParity, nStopBits, nHardware ))
-	{
-		if(CommandHandling_->SetCompCommParms( nBaudRate, nDataBits, nParity, nStopBits, nHardware ))
-		{
-			if(CommandHandling_->InitializeSystem())
-			{
+	if (pdtCommandHandling_->SetSystemComParms(nBaudRate, nDataBits, nParity,
+			nStopBits, nHardware)) {
+		if (pdtCommandHandling_->SetCompCommParms(nBaudRate, nDataBits, nParity,
+				nStopBits, nHardware)) {
+			if (pdtCommandHandling_->InitializeSystem()) {
 				/*
 				 * get the system information
 				 */
-				if (!CommandHandling_->GetSystemInfo())
-				{
+				if (!pdtCommandHandling_->GetSystemInfo()) {
 					/*
 					 * Check system type: Polaris, Polaris Accedo, and Aurora
 					 */
-					ROS_ERROR( "INIT ERROR: Could not determine type of system\n"
-					"(Polaris, Polaris Accedo, Polaris Vicra or Aurora)");
+					ROS_ERROR(
+							"INIT ERROR: Could not determine type of system\n"
+									"(Polaris, Polaris Accedo, Polaris Vicra or Aurora)");
 					return;
 				} /* if */
 
 				/*
 				 * Set firing rate if system type is Polaris or Polaris Accedo.
 				 */
-				if( CommandHandling_->SystemInformation_.TypeofSystem != AURORA_SYSTEM )
-				{
-					CommandHandling_->SetFiringRate();
+				if (pdtCommandHandling_->dtSystemInformation_.nTypeofSystem
+						!= AURORA_SYSTEM) {
+					pdtCommandHandling_->SetFiringRate();
 				}/* if */
-				SystemMode_ = "System Initialized";
-				lineEdit_Mode->setText(QString(SystemMode_.c_str()));
-				setMode( MODE_INIT );
-				SystemInitialized_ = true;
-
-				ROS_INFO( "System successfully initialized");
+				strSystemMode_ = "System Initialized";
+				lineEdit_Mode->setText(QString(strSystemMode_.c_str()));
+				setMode( MODE_INIT);
+				bSystemInitialized_ = true;
+				ROS_INFO("System successfully initialized");
 				return;
 			} /* if */
-			else
-			{
-				ROS_ERROR( "INIT ERROR: System could not be initialized. "
-				"Check your COM Port settings, make sure your\n"
-				"system is turned on and the system components are compatible."
-				);
+			else {
+				ROS_ERROR(
+						"INIT ERROR: System could not be initialized. "
+								"Check your COM Port settings, make sure your\n"
+								"system is turned on and the system components are compatible.");
 			}/* else */
 		}/* if */
+		else {
+			ROS_ERROR("SetCompComParms failed");
+		}/* else */
 	}/* if */
+	else {
+		ROS_ERROR("SetSystemComParms failed");
+	}/* else */
 
 }/* initializeNDISystem */
 /*****************************************************************
-Name:				resetNDISystem
+ Name:				resetNDISystem
 
-Inputs:
-	None.
+ Inputs:
+ None.
 
-Return Value:
-	None.
+ Return Value:
+ None.
 
-Description:    This routine handles what happens when the user
-				presses the Reset System button.  It resets the
-				system they are connected to.
-*****************************************************************/
+ Description:    This routine handles what happens when the user
+ presses the Reset System button.  It resets the
+ system they are connected to.
+ *****************************************************************/
 void Interface::resetNDISystem() {
-	COMPort_ = 0;
-	Wireless_ = false;
-	ResetHardware_ = false;
+	nCOMPort_ = 0;
+	bWireless_ = false;
+	bResetHardware_ = false;
 	/*
 	 * read the reset variable from the ini file, this tells us
 	 * if you want to reset the system.
 	 */
-	CommandHandling_->ReadINIParam<int>("Communication", "COM Port", COMPort_);
-	CommandHandling_->ReadINIParam<bool>("Communication", "Wireless", Wireless_);
+	pdtCommandHandling_->ReadINIParam<int>("Communication", "COM Port",
+			nCOMPort_);
+	pdtCommandHandling_->ReadINIParam<bool>("Communication", "Wireless",
+			bWireless_);
 	/*
 	 * This feature is useful for debugging only
 	 */
-	CommandHandling_->ReadINIParam<bool>("Communication", "Reset Hardware", ResetHardware_);
-
-	CommandHandling_->CloseComPorts();
-
-	if (!CommandHandling_->OpenComPort(COMPort_)) {
+	pdtCommandHandling_->ReadINIParam<bool>("Communication", "Reset Hardware",
+			bResetHardware_);
+	pdtCommandHandling_->CloseComPorts();
+	if (!pdtCommandHandling_->OpenComPort(nCOMPort_)) {
 		ROS_ERROR("COM ERROR: COM Port could not be opened. "
 				"Check your COM Port settings and "
-				"make sure you system is turned on."
-				);
+				"make sure you system is turned on.");
 		return;
 	} /* if */
-
-	if (ResetHardware_) {
-		if (!CommandHandling_->HardWareReset(Wireless_))
+	if (bResetHardware_) {
+		if (!pdtCommandHandling_->HardWareReset(bWireless_))
 			return;
 
-		if (!CommandHandling_->SetSystemComParms(0, 0, 0, 0, 0))
+		if (!pdtCommandHandling_->SetSystemComParms(0, 0, 0, 0, 0))
 			return;
 	} /* if */
-
 	/*
 	 * set the new mode
 	 */
-	SystemMode_ = "Setup Mode";
-	lineEdit_Mode->setText(QString(SystemMode_.c_str()));
-	setMode (MODE_PRE_INIT);
-	ROS_INFO( "System reset successful");
+	strSystemMode_ = "Setup Mode";
+	lineEdit_Mode->setText(QString(strSystemMode_.c_str()));
+	setMode(MODE_PRE_INIT);
+	ROS_INFO("System reset successful");
 	//UpdateData(false);
 } /* resetNDISystem */
 /*****************************************************************
-Name:				activateHandles
+ Name:				activateHandles
 
-Inputs:
-	None.
+ Inputs:
+ None.
 
-Return Value:
-	None.
+ Return Value:
+ None.
 
-Description:   This routine handles what happens when the user presses
-			   the active ports button.
-*****************************************************************/
-void Interface::activateHandles()
-{
+ Description:   This routine handles what happens when the user presses
+ the active ports button.
+ *****************************************************************/
+void Interface::activateHandles() {
 	activatePorts();
 } /* activateHandles */
 /*****************************************************************
-Name:				activePorts
+ Name:				activePorts
 
-Inputs:
-	None.
+ Inputs:
+ None.
 
-Return Value:
-	int - 1 if successful, 0 otherwise
+ Return Value:
+ int - 1 if successful, 0 otherwise
 
-Description:   This routine actives the ports plugged into the system
-*****************************************************************/
-int Interface::activatePorts()
-{
-	char
-		pszPortID[9];
-	int
-		i = 0;
+ Description:   This routine actives the ports plugged into the system
+ *****************************************************************/
+int Interface::activatePorts() {
+	char pszPortID[9];
+	int i = 0;
 
 	/*
 	 * if we can active the ports, we then fill the port information
 	 * on the main dialog
 	 */
-	if (CommandHandling_->ActivateAllPorts())
-	{
-		PortsActivated_ = true;
+	if (pdtCommandHandling_->ActivateAllPorts()) {
+		bPortsActivated_ = true;
 		comboBox_Port->clear();
 		comboBox_Reference->clear();
 
@@ -457,37 +476,36 @@ int Interface::activatePorts()
 		lineEdit_Qz->clear();
 		lineEdit_Qo->clear();
 
-		ManufID_ = "";
-		PortEnabled_ = false;
-		PortInitialized_ = false;
-		SerialNo_ = "";
-		ToolRev_ = "";
-		ToolType_ = "";
-		PartNumber_ = "";
+		strManufID_ = "";
+		bPortEnabled_ = false;
+		bPortInitialized_ = false;
+		strSerialNo_ = "";
+		strToolRev_ = "";
+		strToolType_ = "";
+		strPartNumber_ = "";
 
-		lineEdit_Manufacturer->setText(QString(ManufID_.c_str()));
-		lineEdit_Serial->setText(QString(SerialNo_.c_str()));
-		lineEdit_Tool->setText(QString(ToolType_.c_str()));
-		lineEdit_Tool_2->setText(QString(ToolRev_.c_str()));
-		lineEdit_Part->setText(QString(PartNumber_.c_str()));
-		checkBox_HandleEnable->setChecked(PortEnabled_);
-		checkBox_HandleInitialize->setChecked(PortInitialized_);
+		lineEdit_Manufacturer->setText(QString(strManufID_.c_str()));
+		lineEdit_Serial->setText(QString(strSerialNo_.c_str()));
+		lineEdit_Tool->setText(QString(strToolType_.c_str()));
+		lineEdit_Tool_2->setText(QString(strToolRev_.c_str()));
+		lineEdit_Part->setText(QString(strPartNumber_.c_str()));
+		checkBox_HandleEnable->setChecked(bPortEnabled_);
+		checkBox_HandleInitialize->setChecked(bPortInitialized_);
 
 		comboBox_Reference->addItem(QString("None"));
 
-		for ( int i = NO_HANDLES; i > 0; i-- )
-		{
-			if ( CommandHandling_->HandleInformation_[i].HandleInfo.Initialized == 1 )
-			{
-				sprintf( pszPortID, "%02X", i );
+		for (int i = NO_HANDLES; i > 0; i--) {
+			if (pdtCommandHandling_->pdtHandleInformation_[i].dtHandleInfo.nInitialized
+					== 1) {
+				sprintf(pszPortID, "%02X", i);
 				//TODO:
-				//if( CommandHandling_->HandleInformation_[i].ToolType[1] != '8' )
+				//if( CommandHandling_->HandleInformation_[i].pchrToolType[1] != '8' )
 				//{
-					//m_ctlTrackingList.InsertItem( 0, NULL );
-					//m_ctlTrackingList.SetItemText( 0, 1,
-					//	CommandHandling_->HandleInformation_[i].PhysicalPort );
+				//m_ctlTrackingList.InsertItem( 0, NULL );
+				//m_ctlTrackingList.SetItemText( 0, 1,
+				//	CommandHandling_->HandleInformation_[i].PhysicalPort );
 
-					//m_ctlTrackingList.SetItemText( 0, 0, pszPortID );
+				//m_ctlTrackingList.SetItemText( 0, 0, pszPortID );
 				//}/* if */
 				comboBox_Port->addItem(QString(pszPortID));
 				comboBox_Reference->addItem(QString(pszPortID));
@@ -499,50 +517,48 @@ int Interface::activatePorts()
 		comboBox_Handle->setEnabled(true);
 		// set to no reference tool
 		comboBox_Reference->setCurrentIndex(0);
-		setMode( MODE_ACTIVATED );
+		setMode( MODE_ACTIVATED);
 
-		if (!IsTracking_)
-			ROS_INFO( "Ports successfully activated");
+		if (!bIsTracking_)
+			ROS_INFO("Ports successfully activated");
 		return 1;
 	} /* if */
 
-	PortsActivated_ = false;
-	ROS_ERROR( "PORT ACTIVATION ERROR: Ports could not be activated.\n"
-	"Check your SROM image file settings and\n"
-	"make sure your system is turned on and initialized.");
-	setMode( MODE_PRE_INIT );
+	bPortsActivated_ = false;
+	ROS_ERROR("PORT ACTIVATION ERROR: Ports could not be activated.\n"
+			"Check your SROM image file settings and\n"
+			"make sure your system is turned on and initialized.");
+	setMode( MODE_PRE_INIT);
 	return 0;
 } /* activatePorts */
 /*****************************************************************
-Name:				startTracking
+ Name:				startTracking
 
-Inputs:
-	None.
+ Inputs:
+ None.
 
-Return Value:
-	int - 1 if successful, 0 otherwise
+ Return Value:
+ int - 1 if successful, 0 otherwise
 
-Description:   This routine starts the System tracking
-*****************************************************************/
-int Interface::startTracking()
-{
-	if ( CommandHandling_->StartTracking() )
-	{
+ Description:   This routine starts the System tracking
+ *****************************************************************/
+int Interface::startTracking() {
+	if (pdtCommandHandling_->StartTracking()) {
 		/*
 		 * if we can start tracking, set the appropriate window text,
 		 * start the tracking thread and set the mode.
 		 */
-		IsTracking_ = true;
-		StopTracking_ = false;
+		bIsTracking_ = true;
+		bStopTracking_ = false;
 
 		pushButton_StartTracking->setAccessibleName(QString("Stop Tracking"));
 		checkBox_HandleEnable->setEnabled(false);
 
-		SystemMode_ = "System Tracking";
-		lineEdit_Mode->setText(QString(SystemMode_.c_str()));
-		setMode( MODE_TRACKING );
+		strSystemMode_ = "System Tracking";
+		lineEdit_Mode->setText(QString(strSystemMode_.c_str()));
+		setMode( MODE_TRACKING);
 
-		if(comboBox_Port->count() > 0) {
+		if (comboBox_Port->count() > 0) {
 			comboBox_Port->setCurrentIndex(0);
 			selchangePortHandles();
 		}
@@ -559,35 +575,33 @@ int Interface::startTracking()
 	return 0;
 } /* startTracking */
 /*****************************************************************
-Name:				stopTracking
+ Name:				stopTracking
 
-Inputs:
-	None.
+ Inputs:
+ None.
 
-Return Value:
-	int - 1 if successful, 0 otherwise
+ Return Value:
+ int - 1 if successful, 0 otherwise
 
-Description:
-	This routine stops the tracking procedure.
-*****************************************************************/
-int Interface::stopTracking()
-{
-	if ( CommandHandling_->StopTracking() )
-	{
+ Description:
+ This routine stops the tracking procedure.
+ *****************************************************************/
+int Interface::stopTracking() {
+	if (pdtCommandHandling_->StopTracking()) {
 		/*
 		 * set the variable that will stop the thread.
 		 * set the text on the dialog and put program in proper mode.
 		 */
-		IsTracking_ = false;
-		StopTracking_ = true;
+		bIsTracking_ = false;
+		bStopTracking_ = true;
 		pushButton_StartTracking->setAccessibleName(QString("Start Tracking"));
 
-		SystemMode_ = "System Initialized";
-		lineEdit_Mode->setText(QString(SystemMode_.c_str()));
-		setMode( MODE_ACTIVATED );
+		strSystemMode_ = "System Initialized";
+		lineEdit_Mode->setText(QString(strSystemMode_.c_str()));
+		setMode( MODE_ACTIVATED);
 
 		pushButton_StartTracking->setAccessibleName(QString("Start Tracking"));
-		if(comboBox_Port->count() > -1) {
+		if (comboBox_Port->count() > -1) {
 			comboBox_Port->setEnabled(true);
 		}
 		return 1;
@@ -597,83 +611,75 @@ int Interface::stopTracking()
 } /* stopTracking */
 
 /*****************************************************************
-Name:				FillTrackingTable
+ Name:				FillTrackingTable
 
-Inputs:
-	input LPVOID pParam - normal thread input
+ Inputs:
+ input LPVOID pParam - normal thread input
 
-Return Value:
-	UINT - normal thread return
+ Return Value:
+ UINT - normal thread return
 
-Description:
-	This is the thread call that controls the collection of data
+ Description:
+ This is the thread call that controls the collection of data
 
-	This thread allows the user to perform other tasks
-	within the program while data is being collected
-*****************************************************************/
+ This thread allows the user to perform other tasks
+ within the program while data is being collected
+ *****************************************************************/
 //TODO: need to redesign this method
 //UINT FillTrackingTable( LPVOID pParam)
 //{
 //	HWND hWnd = (HWND)pParam;
-
 //	while ( !StopTracking_ )
 //	{
-		/*
-		 * while tracking, post messages to fill the list
-		 */
+/*
+ * while tracking, post messages to fill the list
+ */
 //		if ( IsTracking_ )
 //			::SendMessage( hWnd, WM_FILL_LIST, 0, 0 );
 //		else
 //			StopTracking_ = true;
 //	}/* while */
-
-	/* when tracking stopped, kill the thread */
+/* when tracking stopped, kill the thread */
 //	StopTracking_ = false;
 //	AfxEndThread( 0, true );
 //	return 0;
 //} /* FillTrackingTable */
 /*****************************************************************
-Name:				getSystemTransformData
+ Name:				getSystemTransformData
 
-Inputs:
+ Inputs:
 
-Return Value:
-	long is the normal return for a message handling routine
+ Return Value:
+ long is the normal return for a message handling routine
 
-Description:
-	This routine gets the next set of transformation data and displays
-	it in the main dialog.
-*****************************************************************/
-long Interface::getSystemTransformData()
-{
-	char
-		pszTemp[256];
-	std::string
-		szCBHandle,
-		szPortNo;
-	int
-		nRow = -1;
+ Description:
+ This routine gets the next set of transformation data and displays
+ it in the main dialog.
+ *****************************************************************/
+long Interface::getSystemTransformData() {
+	char pszTemp[256];
+	std::string szCBHandle, szPortNo;
+	int nRow = -1;
 
-	Rotation
-		dtEulerRot;
+	Rotation dtEulerRot;
 
-	if (!IsTracking_)
+	if (!bIsTracking_)
 		return 0;
 
-	Use0x0800Option_ = checkBox_0x0800->isChecked();
-	TrackingMode_ = radioButton_TXMode->isChecked()? 0:1;
+	bUse0x0800Option_ = checkBox_0x0800->isChecked();
+	nTrackingMode_ = radioButton_TXMode->isChecked() ? 0 : 1;
 	/*
 	 * if tracking mode is 0, we are asking for TX data, else we are
 	 * asking for BX data.
 	 */
-	if ( TrackingMode_ == 0 )
-	{
-		if ( !CommandHandling_->GetTXTransforms( Use0x0800Option_ ? true : false ) )
+	if (nTrackingMode_ == 0) {
+		if (!pdtCommandHandling_->GetTXTransforms(
+				bUse0x0800Option_ ? true : false))
 			return 0;
 	} /* if */
-	else if ( TrackingMode_ == 1 )
-	{
-		if ( !CommandHandling_->GetBXTransforms( Use0x0800Option_ ? true : false ) )
+	else if (nTrackingMode_ == 1) {
+		if (!pdtCommandHandling_->GetBXTransforms(
+				bUse0x0800Option_ ? true : false))
 			return 0;
 	} /* else if */
 
@@ -683,12 +689,9 @@ long Interface::getSystemTransformData()
 	 * 2) Activate Ports
 	 * 3) Start Tracking
 	 */
-	if ( CommandHandling_->SystemInformation_.PortOccupied )
-	{
-		if ( CommandHandling_->StopTracking() &&
-			 activatePorts() &&
-			 CommandHandling_->StartTracking() )
-		{
+	if (pdtCommandHandling_->dtSystemInformation_.nPortOccupied) {
+		if (pdtCommandHandling_->StopTracking() && activatePorts()
+				&& pdtCommandHandling_->StartTracking()) {
 			return 1;
 		}/* if */
 
@@ -696,73 +699,78 @@ long Interface::getSystemTransformData()
 		 * We don't want the tracking thread to track if
 		 * activating the ports failed!
 		 */
-		StopTracking_ = true;
-		IsTracking_ = false;
+		bStopTracking_ = true;
+		bIsTracking_ = false;
 		return 0;
 	} /* if */
 
-	int i = ASCIIToHex((char*)(comboBox_Handle->currentText().toStdString().c_str()), 2);
-	if ( CommandHandling_->HandleInformation_[i].HandleInfo.Initialized > 0 &&
-		 CommandHandling_->HandleInformation_[i].ToolType[1] != '8' )
-	{
+	int i = ASCIIToHex(
+			(char*) (comboBox_Handle->currentText().toStdString().c_str()), 2);
+	if (pdtCommandHandling_->pdtHandleInformation_[i].dtHandleInfo.nInitialized
+			> 0
+			&& pdtCommandHandling_->pdtHandleInformation_[i].pchrToolType[1]
+					!= '8') {
 		/* only update the frame if the handle isn't disabled*/
-		if ( CommandHandling_->HandleInformation_[i].Xfrms.Flags == TRANSFORM_VALID ||
-			 CommandHandling_->HandleInformation_[i].Xfrms.Flags == TRANSFORM_MISSING )
-		{
-			FrameNumber_ = boost::lexical_cast<std::string>(CommandHandling_->HandleInformation_[i].Xfrms.FrameNumber);
-			lineEdit_Frame->setText(QString(FrameNumber_.c_str()));
+		if (pdtCommandHandling_->pdtHandleInformation_[i].dtXfrms.ulFlags
+				== TRANSFORM_VALID
+				|| pdtCommandHandling_->pdtHandleInformation_[i].dtXfrms.ulFlags
+						== TRANSFORM_MISSING) {
+			strFrameNumber_ =
+					boost::lexical_cast<std::string>(
+							pdtCommandHandling_->pdtHandleInformation_[i].dtXfrms.ulFrameNumber);
+			lineEdit_Frame->setText(QString(strFrameNumber_.c_str()));
 		}/* if */
 
-		if( i == CommandHandling_->RefHandle_ )
-			sprintf( pszTemp, "R%02X", i );
+		if (i == pdtCommandHandling_->nRefHandle_)
+			sprintf(pszTemp, "R%02X", i);
 		else
-			sprintf( pszTemp, "%02X", i );
+			sprintf(pszTemp, "%02X", i);
 
-		if ( CommandHandling_->HandleInformation_[i].Xfrms.Flags == TRANSFORM_VALID )
-		{
-			sprintf( pszTemp, "%.2f",
-				CommandHandling_->HandleInformation_[i].Xfrms.translation.x );
+		if (pdtCommandHandling_->pdtHandleInformation_[i].dtXfrms.ulFlags
+				== TRANSFORM_VALID) {
+			sprintf(pszTemp, "%.2f",
+					pdtCommandHandling_->pdtHandleInformation_[i].dtXfrms.dtTranslation.fTx);
 			lineEdit_Tx->setText(QString(pszTemp));
-			sprintf( pszTemp, "%.2f",
-				CommandHandling_->HandleInformation_[i].Xfrms.translation.y );
+			sprintf(pszTemp, "%.2f",
+					pdtCommandHandling_->pdtHandleInformation_[i].dtXfrms.dtTranslation.fTy);
 			lineEdit_Ty->setText(QString(pszTemp));
-			sprintf( pszTemp, "%.2f",
-				CommandHandling_->HandleInformation_[i].Xfrms.translation.z );
+			sprintf(pszTemp, "%.2f",
+					pdtCommandHandling_->pdtHandleInformation_[i].dtXfrms.dtTranslation.fTz);
 			lineEdit_Tz->setText(QString(pszTemp));
-			sprintf( pszTemp, "%.4f",
-				CommandHandling_->HandleInformation_[i].Xfrms.rotation.q0 );
+			sprintf(pszTemp, "%.4f",
+					pdtCommandHandling_->pdtHandleInformation_[i].dtXfrms.dtRotation.fQ0);
 			lineEdit_Qo->setText(QString(pszTemp));
-			sprintf( pszTemp, "%.4f",
-				CommandHandling_->HandleInformation_[i].Xfrms.rotation.qx );
+			sprintf(pszTemp, "%.4f",
+					pdtCommandHandling_->pdtHandleInformation_[i].dtXfrms.dtRotation.fQx);
 			lineEdit_Qx->setText(QString(pszTemp));
-			sprintf( pszTemp, "%.4f",
-				CommandHandling_->HandleInformation_[i].Xfrms.rotation.qy );
+			sprintf(pszTemp, "%.4f",
+					pdtCommandHandling_->pdtHandleInformation_[i].dtXfrms.dtRotation.fQy);
 			lineEdit_Qy->setText(QString(pszTemp));
-			sprintf( pszTemp, "%.4f",
-				CommandHandling_->HandleInformation_[i].Xfrms.rotation.qz );
+			sprintf(pszTemp, "%.4f",
+					pdtCommandHandling_->pdtHandleInformation_[i].dtXfrms.dtRotation.fQz);
 			lineEdit_Qz->setText(QString(pszTemp));
-			sprintf( pszTemp, "%.4f",
-				CommandHandling_->HandleInformation_[i].Xfrms.Error );
+			sprintf(pszTemp, "%.4f",
+					pdtCommandHandling_->pdtHandleInformation_[i].dtXfrms.fError);
 			lineEdit_Error->setText(QString(pszTemp));
 
-			if ( CommandHandling_->HandleInformation_[i].HandleInfo.PartiallyOutOfVolume )
+			if (pdtCommandHandling_->pdtHandleInformation_[i].dtHandleInfo.nPartiallyOutOfVolume)
 				lineEdit_Status->setText(QString("POOV"));
-			else if ( CommandHandling_->HandleInformation_[i].HandleInfo.OutOfVolume )
+			else if (pdtCommandHandling_->pdtHandleInformation_[i].dtHandleInfo.nOutOfVolume)
 				lineEdit_Status->setText(QString("OOV"));
 			else
 				lineEdit_Status->setText(QString("OK"));
 		}/* if */
-		else
-		{
-			if ( CommandHandling_->HandleInformation_[i].Xfrms.Flags == TRANSFORM_MISSING ) {
+		else {
+			if (pdtCommandHandling_->pdtHandleInformation_[i].dtXfrms.ulFlags
+					== TRANSFORM_MISSING) {
 				lineEdit_Status->setText(QString("MISSING"));
 			} else {
 				lineEdit_Status->setText(QString("DISABLED"));
 			}
 
-			if ( CommandHandling_->HandleInformation_[i].HandleInfo.PartiallyOutOfVolume )
+			if (pdtCommandHandling_->pdtHandleInformation_[i].dtHandleInfo.nPartiallyOutOfVolume)
 				lineEdit_Status->setText(QString("POOV"));
-			else if ( CommandHandling_->HandleInformation_[i].HandleInfo.OutOfVolume )
+			else if (pdtCommandHandling_->pdtHandleInformation_[i].dtHandleInfo.nOutOfVolume)
 				lineEdit_Status->setText(QString("OOV"));
 			else
 				lineEdit_Status->setText(QString("---"));
@@ -771,31 +779,30 @@ long Interface::getSystemTransformData()
 	return 1;
 } /* getSystemTransformData */
 /*****************************************************************
-Name:				comPortTimeout
+ Name:				comPortTimeout
 
-Inputs:
-	UNIT wParam and long lParam are normal message handling inputs
+ Inputs:
+ UNIT wParam and long lParam are normal message handling inputs
 
-Return Value:
-	long is the normal return for a message handling routine
+ Return Value:
+ long is the normal return for a message handling routine
 
-Description:
-	This routine is the message handler for a WM_COM_TIMEOUT posting.
-	This routine handles what happens when a COM port timeout occurs.
-*****************************************************************/
-long Interface::comPortTimeout()
-{
+ Description:
+ This routine is the message handler for a WM_COM_TIMEOUT posting.
+ This routine handles what happens when a COM port timeout occurs.
+ *****************************************************************/
+long Interface::comPortTimeout() {
 
 	//switch (wParam)
 	//{
-		/* if close application was choosen */
+	/* if close application was choosen */
 	//	case ERROR_TIMEOUT_CLOSE:
 	//	{
 	//		IsTracking_ = false;
 	//		PostMessage( WM_CLOSE, 0, 0l );
 	//		break;
 	//	}
-		/* if restart application was selected */
+	/* if restart application was selected */
 	//	case ERROR_TIMEOUT_RESTART:
 	//	{
 	//		IsTracking_ = false;
@@ -805,179 +812,178 @@ long Interface::comPortTimeout()
 	//		UpdateData(false);
 	//		break;
 	//	}
-		/* if retry was choosen */
+	/* if retry was choosen */
 	//	case ERROR_TIMEOUT_CONT:
 	//		break;
 	//}; /* switch */
-
 	return 0;
 } /* comPortTimeout */
 /*****************************************************************
-Name:				selchangePortHandles
+ Name:				selchangePortHandles
 
-Inputs:
-	None.
+ Inputs:
+ None.
 
-Return Value:
-	None.
+ Return Value:
+ None.
 
-Description:   This routine handles the selection of port handles
-			   from the port handle combo box.  It fills the form
-			   with the information that pertains to the select
-			   port handle.
-*****************************************************************/
-void Interface::selchangePortHandles()
-{
-	int
-		nPortHandle = 0,
-		nSelection = 0;
-	std::string
-		szPortHandle = "";
+ Description:   This routine handles the selection of port handles
+ from the port handle combo box.  It fills the form
+ with the information that pertains to the select
+ port handle.
+ *****************************************************************/
+void Interface::selchangePortHandles() {
+	int nPortHandle = 0, nSelection = 0;
+	std::string szPortHandle = "";
 
 	nSelection = comboBox_Port->currentIndex();
 	szPortHandle = comboBox_Port->currentText().toStdString();
-	nPortHandle = ASCIIToHex((char*)(szPortHandle.c_str()), 2);
+	nPortHandle = ASCIIToHex((char*) (szPortHandle.c_str()), 2);
 
 	/* fill the form with the info that pertains to the selected handle */
-	ManufID_ = CommandHandling_->HandleInformation_[nPortHandle].Manufact;
-	PortEnabled_ = CommandHandling_->HandleInformation_[nPortHandle].HandleInfo.Enabled;
-	PortInitialized_ = CommandHandling_->HandleInformation_[nPortHandle].HandleInfo.Initialized;
-	SerialNo_ = CommandHandling_->HandleInformation_[nPortHandle].SerialNo;
-	ToolRev_ = CommandHandling_->HandleInformation_[nPortHandle].Rev;
-	ToolType_ = CommandHandling_->HandleInformation_[nPortHandle].ToolType;
-	PartNumber_ = CommandHandling_->HandleInformation_[nPortHandle].PartNumber;
+	strManufID_ =
+			pdtCommandHandling_->pdtHandleInformation_[nPortHandle].pchrManufact;
+	bPortEnabled_ =
+			pdtCommandHandling_->pdtHandleInformation_[nPortHandle].dtHandleInfo.nEnabled;
+	bPortInitialized_ =
+			pdtCommandHandling_->pdtHandleInformation_[nPortHandle].dtHandleInfo.nInitialized;
+	strSerialNo_ =
+			pdtCommandHandling_->pdtHandleInformation_[nPortHandle].pchrSerialNo;
+	strToolRev_ =
+			pdtCommandHandling_->pdtHandleInformation_[nPortHandle].pchrRev;
+	strToolType_ =
+			pdtCommandHandling_->pdtHandleInformation_[nPortHandle].pchrToolType;
+	strPartNumber_ =
+			pdtCommandHandling_->pdtHandleInformation_[nPortHandle].pchrPartNumber;
 
-	lineEdit_Manufacturer->setText(QString(ManufID_.c_str()));
-	lineEdit_Serial->setText(QString(SerialNo_.c_str()));
-	lineEdit_Tool->setText(QString(ToolType_.c_str()));
-	lineEdit_Tool_2->setText(QString(ToolRev_.c_str()));
-	lineEdit_Part->setText(QString(PartNumber_.c_str()));
-	checkBox_HandleEnable->setChecked(PortEnabled_);
-	checkBox_HandleInitialize->setChecked(PortInitialized_);
-	if(!IsTracking_) {
+	lineEdit_Manufacturer->setText(QString(strManufID_.c_str()));
+	lineEdit_Serial->setText(QString(strSerialNo_.c_str()));
+	lineEdit_Tool->setText(QString(strToolType_.c_str()));
+	lineEdit_Tool_2->setText(QString(strToolRev_.c_str()));
+	lineEdit_Part->setText(QString(strPartNumber_.c_str()));
+	checkBox_HandleEnable->setChecked(bPortEnabled_);
+	checkBox_HandleInitialize->setChecked(bPortInitialized_);
+	if (!bIsTracking_) {
 		checkBox_HandleEnable->setEnabled(true);
 	}
 } /* selchangePortHandles */
 
 /*****************************************************************
-Name:				selchangeRefPortHandles
+ Name:				selchangeRefPortHandles
 
-Inputs:
-	None.
+ Inputs:
+ None.
 
-Return Value:
-	None.
+ Return Value:
+ None.
 
-Description:   This routine handles the selection of port handles
-			   from the port handle combo box.  It fills the form
-			   with the information that pertains to the select
-			   port handle.
-*****************************************************************/
-void Interface::selchangeRefPortHandle()
-{
-	int
-		nPortHandle = 0,
-		nSelection = 0;
-	std::string
-		szPortHandle = "";
+ Description:   This routine handles the selection of port handles
+ from the port handle combo box.  It fills the form
+ with the information that pertains to the select
+ port handle.
+ *****************************************************************/
+void Interface::selchangeRefPortHandle() {
+	int nPortHandle = 0, nSelection = 0;
+	std::string szPortHandle = "";
 
 	nSelection = comboBox_Reference->currentIndex();
 	szPortHandle = comboBox_Reference->currentText().toStdString();
 
-	if( szPortHandle != "None" )
-		CommandHandling_->RefHandle_ = ASCIIToHex((char*)(szPortHandle.c_str()), 2 );
+	if (szPortHandle != "None")
+		pdtCommandHandling_->nRefHandle_ = ASCIIToHex(
+				(char*) (szPortHandle.c_str()), 2);
 	else
-		CommandHandling_->RefHandle_ = -1;
+		pdtCommandHandling_->nRefHandle_ = -1;
 } /* selchangeRefPortHandles */
 /*****************************************************************
-Name:				portEnabled
+ Name:				portEnabled
 
-Inputs:
-	None.
+ Inputs:
+ None.
 
-Return Value:
-	None.
+ Return Value:
+ None.
 
-Description:   This routine enables or disables the select port
-			   handle depending on the status of the check box
-*****************************************************************/
-void Interface::portEnabled()
-{
-	int
-		nPortHandle = 0,
-		nSelection = 0;
-	std::string
-		szPortHandle = "";
+ Description:   This routine enables or disables the select port
+ handle depending on the status of the check box
+ *****************************************************************/
+void Interface::portEnabled() {
+	int nPortHandle = 0, nSelection = 0;
+	std::string szPortHandle = "";
 
 	nSelection = comboBox_Port->currentIndex();
 	szPortHandle = comboBox_Port->currentText().toStdString();
 	/* get the port handle */
-	nPortHandle = ASCIIToHex((char*)(szPortHandle.c_str()), 2 );
-	PortEnabled_ = checkBox_HandleEnable->isChecked();
+	nPortHandle = ASCIIToHex((char*) (szPortHandle.c_str()), 2);
+	bPortEnabled_ = checkBox_HandleEnable->isChecked();
 
 	/*
 	 * enable or disable the port depending on the status of
 	 * the check box
 	 */
 
-	if ( !PortEnabled_ )
-			CommandHandling_->DisablePort( nPortHandle );
+	if (!bPortEnabled_)
+		pdtCommandHandling_->DisablePort(nPortHandle);
 	else
-			CommandHandling_->EnableOnePorts( nPortHandle );
+		pdtCommandHandling_->EnableOnePorts(nPortHandle);
 } /* portEnabled */
 
 /*****************************************************************
-Name:			settingsComportsettings
+ Name:			settingsComportsettings
 
-Inputs:
-	None.
+ Inputs:
+ None.
 
-Return Value:
-	None.
+ Return Value:
+ None.
 
-Description:    This routine handles the Setting Menu's COM Port
-				Settings call
-*****************************************************************/
-void Interface::settingsComportsettings()
-{
-	SubWindow_COMPortSettings_.Init();
-	SubWindow_COMPortSettings_.show();
+ Description:    This routine handles the Setting Menu's COM Port
+ Settings call
+ *****************************************************************/
+void Interface::settingsComportsettings() {
+	dtSubWindowCOMPortSettings_.Init();
+	dtSubWindowCOMPortSettings_.show();
 } /* settingsComportsettings */
 
-void Interface::settingsComPortSettings_OK(){
+void Interface::settingsComPortSettings_OK() {
 	ROS_INFO("Interface: COM Port Settings OK signal received");
-	ResetHardware_ = SubWindow_COMPortSettings_.Reset_;
-	COMPort_ = SubWindow_COMPortSettings_.COMPort_;
-	Wireless_ = SubWindow_COMPortSettings_.Wireless_;
+	bResetHardware_ = dtSubWindowCOMPortSettings_.bReset_;
+	nCOMPort_ = dtSubWindowCOMPortSettings_.nCOMPort_;
+	bWireless_ = dtSubWindowCOMPortSettings_.bWireless_;
 }
 /*****************************************************************
-Name:			settingsRomfilesettings
+ Name:			settingsRomfilesettings
 
-Inputs:
-	None.
+ Inputs:
+ None.
 
-Return Value:
-	None.
+ Return Value:
+ None.
 
-Description:    This routine handles the Setting Menu's ROM File
-				Settings call
-*****************************************************************/
-void Interface::settingsRomfilesettings()
-{
+ Description:    This routine handles the Setting Menu's ROM File
+ Settings call
+ *****************************************************************/
+void Interface::settingsRomfilesettings() {
 
 	/*
 	 * we need to know what system we are connect to so we need to
 	 * initialize the system if not already done.
 	 */
-	if ( !SystemInitialized_ )
+	if (!bSystemInitialized_)
 		initializeNDISystem();
 
-	SubWindow_ROMFile_.Init();
-	SubWindow_ROMFile_.NoActivePorts_ = CommandHandling_->SystemInformation_.NoActivePorts;
-	SubWindow_ROMFile_.NoPassivePorts_ = CommandHandling_->SystemInformation_.NoPassivePorts;
-	SubWindow_ROMFile_.NoMagneticPorts_ = CommandHandling_->SystemInformation_.NoMagneticPorts;
-	SubWindow_ROMFile_.TypeofSystem_ = CommandHandling_->SystemInformation_.TypeofSystem;
-	SubWindow_ROMFile_.show();
+	dtSubWindowROMFile_.nNoActivePorts_ =
+			pdtCommandHandling_->dtSystemInformation_.nNoActivePorts;
+	dtSubWindowROMFile_.nNoPassivePorts_ =
+			pdtCommandHandling_->dtSystemInformation_.nNoPassivePorts;
+	dtSubWindowROMFile_.nNoMagneticPorts_ =
+			pdtCommandHandling_->dtSystemInformation_.nNoMagneticPorts;
+	dtSubWindowROMFile_.nTypeofSystem_ =
+			pdtCommandHandling_->dtSystemInformation_.nTypeofSystem;
+	ROS_INFO("ROMFileSettings: %d %d %d %d", dtSubWindowROMFile_.nNoActivePorts_, dtSubWindowROMFile_.nNoPassivePorts_,
+			dtSubWindowROMFile_.nNoMagneticPorts_, dtSubWindowROMFile_.nTypeofSystem_);
+	dtSubWindowROMFile_.Init();
+	dtSubWindowROMFile_.show();
 
 } /* settingsRomfilesettings */
 void Interface::reInitializeSystem() {
@@ -987,243 +993,230 @@ void Interface::reInitializeSystem() {
 	actionActivate_Handles->setEnabled(true);
 }
 /*****************************************************************
-Name:			systemActivateports
+ Name:			systemActivateports
 
-Inputs:
-	None.
+ Inputs:
+ None.
 
-Return Value:
-	None.
+ Return Value:
+ None.
 
-Description:    This routine handles the System Menu's Activate
-				Ports call
-*****************************************************************/
-void Interface::systemActivateports()
-{
+ Description:    This routine handles the System Menu's Activate
+ Ports call
+ *****************************************************************/
+void Interface::systemActivateports() {
 	activateHandles();
 } /* systemActivateports */
 /*****************************************************************
-Name:			systemInitializesystem
+ Name:			systemInitializesystem
 
-Inputs:
-	None.
+ Inputs:
+ None.
 
-Return Value:
-	None.
+ Return Value:
+ None.
 
-Description:    This routine handles the Systems Menu's Initialize
-				System call
-*****************************************************************/
-void Interface::systemInitializesystem()
-{
+ Description:    This routine handles the Systems Menu's Initialize
+ System call
+ *****************************************************************/
+void Interface::systemInitializesystem() {
 	initializeNDISystem();
 } /* systemInitializesystem */
 /*****************************************************************
-Name:			systemStarttracking
+ Name:			systemStarttracking
 
-Inputs:
-	None.
+ Inputs:
+ None.
 
-Return Value:
-	None.
+ Return Value:
+ None.
 
-Description:    This routine handles the System Menu's Start
-				Tracking call
-*****************************************************************/
-void Interface::systemStarttracking()
-{
+ Description:    This routine handles the System Menu's Start
+ Tracking call
+ *****************************************************************/
+void Interface::systemStarttracking() {
 	startTracking();
 } /* systemStarttracking */
 /*****************************************************************
-Name:			systemStoptracking
+ Name:			systemStoptracking
 
-Inputs:
-	None.
+ Inputs:
+ None.
 
-Return Value:
-	None.
+ Return Value:
+ None.
 
-Description:    This routine handles the System Menu's Stop
-				Tracking call
-*****************************************************************/
-void Interface::systemStoptracking()
-{
+ Description:    This routine handles the System Menu's Stop
+ Tracking call
+ *****************************************************************/
+void Interface::systemStoptracking() {
 	stopTracking();
 } /* systemStoptracking */
 /*****************************************************************
-Name:			viewSystemproperties
+ Name:			viewSystemproperties
 
-Inputs:
-	None.
+ Inputs:
+ None.
 
-Return Value:
-	None.
+ Return Value:
+ None.
 
-Description:    This routine handles the View Menu's System
-				Properties call
-*****************************************************************/
-void Interface::viewSystemproperties()
-{
+ Description:    This routine handles the View Menu's System
+ Properties call
+ *****************************************************************/
+void Interface::viewSystemproperties() {
 
 	/* if we are connected to a POLARIS set the POLARIS variables */
-	if(!CommandHandling_->GetSystemInfo()) {
+	if (!pdtCommandHandling_->GetSystemInfo()) {
 		ROS_ERROR("Get System Info failed");
 		return;
 	}
-	SubWindow_SystemFeatures_.Init();
-	if(CommandHandling_->SystemInformation_.TypeofSystem != AURORA_SYSTEM)
-	{
-		SubWindow_SystemFeatures_.SetVariables( std::string(CommandHandling_->SystemInformation_.VersionInfo),
-									  CommandHandling_->SystemInformation_.NoActivePorts,
-									  CommandHandling_->SystemInformation_.NoPassivePorts,
-									  CommandHandling_->SystemInformation_.NoActWirelessPorts,
-									  CommandHandling_->SystemInformation_.NoActTIPPorts,
-									  CommandHandling_->SystemInformation_.TypeofSystem );
+	dtSubWindowSystemFeatures_.Init();
+	if (pdtCommandHandling_->dtSystemInformation_.nTypeofSystem != AURORA_SYSTEM) {
+		dtSubWindowSystemFeatures_.SetVariables(
+				std::string(
+						pdtCommandHandling_->dtSystemInformation_.pchrVersionInfo),
+				pdtCommandHandling_->dtSystemInformation_.nNoActivePorts,
+				pdtCommandHandling_->dtSystemInformation_.nNoPassivePorts,
+				pdtCommandHandling_->dtSystemInformation_.nNoActWirelessPorts,
+				pdtCommandHandling_->dtSystemInformation_.nNoActTIPPorts,
+				pdtCommandHandling_->dtSystemInformation_.nTypeofSystem);
 	} /* if */
-	else
-	{
+	else {
 		/* if we are connected to a AURORA set the AURORA variables */
-		SubWindow_SystemFeatures_.SetVariables( std::string(CommandHandling_->SystemInformation_.VersionInfo),
-									  CommandHandling_->SystemInformation_.NoMagneticPorts,
-									  CommandHandling_->SystemInformation_.NoFGs,
-									  CommandHandling_->SystemInformation_.NoFGCards,
-									  CommandHandling_->SystemInformation_.TypeofSystem );
+		dtSubWindowSystemFeatures_.SetVariables(
+				std::string(
+						pdtCommandHandling_->dtSystemInformation_.pchrVersionInfo),
+				pdtCommandHandling_->dtSystemInformation_.nNoMagneticPorts,
+				pdtCommandHandling_->dtSystemInformation_.nNoFGs,
+				pdtCommandHandling_->dtSystemInformation_.nNoFGCards,
+				pdtCommandHandling_->dtSystemInformation_.nTypeofSystem);
 	} /* else */
-	SubWindow_SystemFeatures_.show();
+	dtSubWindowSystemFeatures_.show();
 } /* OnViewSytemproperties */
 
 /*****************************************************************
-Name:			viewAlertFlags
+ Name:			viewAlertFlags
 
-Inputs:
-	None.
+ Inputs:
+ None.
 
-Return Value:
-	None.
+ Return Value:
+ None.
 
-Description:    This routine handles the View Menu's System
-				Properties call
-*****************************************************************/
-void Interface::viewAlertFlags()
-{
-	if(	CommandHandling_->GetAlerts( false ) ){
+ Description:    This routine handles the View Menu's System
+ Properties call
+ *****************************************************************/
+void Interface::viewAlertFlags() {
+	if (pdtCommandHandling_->GetAlerts(false)) {
 		ROS_ERROR("Get Alerts failed");
 		return;
 	}
 
-	SubWindow_NewAlertFlags_.Init();
-	SubWindow_NewAlertFlags_.NewAlerts_ = CommandHandling_->NewAlerts_;
-	SubWindow_NewAlertFlags_.show();
+	dtSubWindowNewAlertFlags_.Init();
+	dtSubWindowNewAlertFlags_.dtNewAlerts_ = pdtCommandHandling_->dtNewAlerts_;
+	dtSubWindowNewAlertFlags_.show();
 
 } /* viewAlertFlags */
 /*****************************************************************
-Name:			optionsIlluminatorfiringrate
+ Name:			optionsIlluminatorfiringrate
 
-Inputs:
-	None.
+ Inputs:
+ None.
 
-Return Value:
-	None.
+ Return Value:
+ None.
 
-Description:    This routine handles the Options Menu's
-				Illuminator Activation Rate call
-*****************************************************************/
-void Interface::optionsIlluminatorfiringrate()
-{
+ Description:    This routine handles the Options Menu's
+ Illuminator Activation Rate call
+ *****************************************************************/
+void Interface::optionsIlluminatorfiringrate() {
 
-	if(CommandHandling_->SystemInformation_.TypeofSystem != AURORA_SYSTEM)
-	{
-		SubWindow_IlluminatorFiringRate_.Init();
-		SubWindow_IlluminatorFiringRate_.TypeOfSystem_ = CommandHandling_->SystemInformation_.TypeofSystem;
-		SubWindow_IlluminatorFiringRate_.show();
+	if (pdtCommandHandling_->dtSystemInformation_.nTypeofSystem != AURORA_SYSTEM) {
+		dtSubWindowIlluminatorFiringRate_.Init();
+		dtSubWindowIlluminatorFiringRate_.nTypeOfSystem_ =
+				pdtCommandHandling_->dtSystemInformation_.nTypeofSystem;
+		dtSubWindowIlluminatorFiringRate_.show();
 	}/* if */
 
 } /* optionsIlluminatorfiringrate */
 void Interface::optionsIlluminatorfiringrate_OK() {
 	ROS_INFO("Interface: Illuminator Firing Rate OK signal received");
-	CommandHandling_->SetFiringRate();
+	pdtCommandHandling_->SetFiringRate();
 }
 /*****************************************************************
-Name:			optionsProgramoptions
+ Name:			optionsProgramoptions
 
-Inputs:
-	None.
+ Inputs:
+ None.
 
-Return Value:
-	None.
+ Return Value:
+ None.
 
-Description:    This routine handles the Options Menu's Program
-				Options call
-*****************************************************************/
-void Interface::optionsProgramoptions()
-{
-	SubWindow_ProgramOptions_.Init();
-	SubWindow_ProgramOptions_.show();
+ Description:    This routine handles the Options Menu's Program
+ Options call
+ *****************************************************************/
+void Interface::optionsProgramoptions() {
+	dtSubWindowProgramOptions_.Init();
+	dtSubWindowProgramOptions_.show();
 } /* optionsProgramoptions */
 
 void Interface::optionsProgramoptions_OK() {
 	ROS_INFO("Interface: Program Options OK signal received");
-	strcpy(CommandHandling_->LogFile_, SubWindow_ProgramOptions_.LogFile_.c_str());
-	CommandHandling_->LogToFile_ = SubWindow_ProgramOptions_.LogToFile_;
-	CommandHandling_->DateTimeStampFile_ = SubWindow_ProgramOptions_.DateTimeStampFile_;
+	strcpy(pdtCommandHandling_->pchrLogFile_,
+			dtSubWindowProgramOptions_.strLogFile_.c_str());
+	pdtCommandHandling_->bLogToFile_ = dtSubWindowProgramOptions_.bLogToFile_;
+	pdtCommandHandling_->bDateTimeStampFile_ =
+			dtSubWindowProgramOptions_.bDateTimeStampFile_;
 }
 /*****************************************************************
-Name:				setMode
+ Name:				setMode
 
-Inputs:
-	int nMode - the mode to be set in to
+ Inputs:
+ int nMode - the mode to be set in to
 
-Return Value:
-	none
+ Return Value:
+ none
 
-Description:   This routine handles the setting of the dialog
-			   items depending on the mode to be placed into.
-			   There are four modes:
-			   MODE_PRE_INIT - the preinitialization mode, first time
-			   program is opened or a reset has been called
-			   MODE_INIT - the initialization mode, the system is
-			   intialized
-			   MODE_ACTIVATED - the ports have been activated or
-			   tracking has been stopped.
-			   MODE_TRACKING - we are tracking
-*****************************************************************/
-void Interface::setMode( int nMode )
-{
-	bool
-		bTrackingMode = false,
-		bPreInitialization = false,
-		bInitialized = false;
+ Description:   This routine handles the setting of the dialog
+ items depending on the mode to be placed into.
+ There are four modes:
+ MODE_PRE_INIT - the preinitialization mode, first time
+ program is opened or a reset has been called
+ MODE_INIT - the initialization mode, the system is
+ intialized
+ MODE_ACTIVATED - the ports have been activated or
+ tracking has been stopped.
+ MODE_TRACKING - we are tracking
+ *****************************************************************/
+void Interface::setMode(int nMode) {
+	bool bTrackingMode = false, bPreInitialization = false,
+			bInitialized = false;
 
 	//pMainMenu = GetMenu();
 
-	switch (nMode)
-	{
-		case MODE_PRE_INIT:
-			{
-				bPreInitialization = true;
-				break;
-			} /* case */
-		case MODE_INIT:
-			{
-				bInitialized = true;
-				bPreInitialization = false;
-				PortsActivated_ = false;
-				break;
-			} /* case */
-		case MODE_ACTIVATED:
-			{
-				bInitialized = true;
-				break;
-			} /* case */
-		case MODE_TRACKING:
-			{
-				bTrackingMode = true;
-				break;
-			} /* case */
+	switch (nMode) {
+	case MODE_PRE_INIT: {
+		bPreInitialization = true;
+		break;
+	} /* case */
+	case MODE_INIT: {
+		bInitialized = true;
+		bPreInitialization = false;
+		bPortsActivated_ = false;
+		break;
+	} /* case */
+	case MODE_ACTIVATED: {
+		bInitialized = true;
+		break;
+	} /* case */
+	case MODE_TRACKING: {
+		bTrackingMode = true;
+		break;
+	} /* case */
 	} /* switch */
 
-	if ( nMode == MODE_PRE_INIT || nMode == MODE_INIT )
-	{
+	if (nMode == MODE_PRE_INIT || nMode == MODE_INIT) {
 		comboBox_Port->clear();
 		comboBox_Port->setEnabled(false);
 		comboBox_Reference->clear();
@@ -1244,49 +1237,56 @@ void Interface::setMode( int nMode )
 		pushButton_StartTracking->setAccessibleName(QString("Start Tracking"));
 
 		bInitialized = true;
-		ManufID_ = "";
-		SerialNo_ = "";
-		ToolRev_ = "";
-		ToolType_ = "";
-		PartNumber_ = "";
-		PortEnabled_ = false;
-		PortInitialized_ = false;
+		strManufID_ = "";
+		strSerialNo_ = "";
+		strToolRev_ = "";
+		strToolType_ = "";
+		strPartNumber_ = "";
+		bPortEnabled_ = false;
+		bPortInitialized_ = false;
 
-		lineEdit_Manufacturer->setText(QString(ManufID_.c_str()));
-		lineEdit_Serial->setText(QString(SerialNo_.c_str()));
-		lineEdit_Tool->setText(QString(ToolType_.c_str()));
-		lineEdit_Tool_2->setText(QString(ToolRev_.c_str()));
-		lineEdit_Part->setText(QString(PartNumber_.c_str()));
-		checkBox_HandleEnable->setChecked(PortEnabled_);
-		checkBox_HandleInitialize->setChecked(PortInitialized_);
+		lineEdit_Manufacturer->setText(QString(strManufID_.c_str()));
+		lineEdit_Serial->setText(QString(strSerialNo_.c_str()));
+		lineEdit_Tool->setText(QString(strToolType_.c_str()));
+		lineEdit_Tool_2->setText(QString(strToolRev_.c_str()));
+		lineEdit_Part->setText(QString(strPartNumber_.c_str()));
+		checkBox_HandleEnable->setChecked(bPortEnabled_);
+		checkBox_HandleInitialize->setChecked(bPortInitialized_);
 	} /* if */
 
-/* buttons */
+	/* buttons */
 	pushButton_ResetSystem->setEnabled(!bTrackingMode);
 	pushButton_InitializeSystem->setEnabled(!bTrackingMode);
 	pushButton_ActiveHandles->setEnabled(!bPreInitialization && !bTrackingMode);
-	pushButton_StartTracking->setEnabled((bInitialized && !bPreInitialization && PortsActivated_) || bTrackingMode);
+	pushButton_StartTracking->setEnabled(
+			(bInitialized && !bPreInitialization && bPortsActivated_)
+					|| bTrackingMode);
 
-
-/* fields */
+	/* fields */
 	radioButton_TXMode->setEnabled(bTrackingMode);
 	radioButton_BXMode->setEnabled(bTrackingMode);
 	lineEdit_Mode->setEnabled(bTrackingMode);
 	checkBox_0x0800->setEnabled(bTrackingMode);
-/* menu options */
-	actionInitialize_System->setEnabled(bTrackingMode);
-	actionActivate_Handles->setEnabled(bPreInitialization || bTrackingMode);
-	actionStart_Tracking->setEnabled(bPreInitialization || bTrackingMode || !PortsActivated_);
-	actionStop_Tracking->setEnabled(!bTrackingMode);
-	actionSystem_Properties->setEnabled(bPreInitialization || bTrackingMode);
-	actionDiagnostic_Alerts->setEnabled(bPreInitialization || bTrackingMode ||
-							   (CommandHandling_->SystemInformation_.TypeofSystem != VICRA_SYSTEM &&
-							    CommandHandling_->SystemInformation_.TypeofSystem != SPECTRA_SYSTEM));
-	actionIlluminator_Activation_Rate->setEnabled(bPreInitialization || bTrackingMode ||
-							   CommandHandling_->SystemInformation_.TypeofSystem == AURORA_SYSTEM);
-	actionCOM_Port_Settings->setEnabled(bTrackingMode);
-	actionSROM_Image_File_Settings->setEnabled(bTrackingMode);
-	actionProgram_Options->setEnabled(bTrackingMode);
+	/* menu options */
+	actionInitialize_System->setDisabled(bTrackingMode);
+	actionActivate_Handles->setDisabled(bPreInitialization || bTrackingMode);
+	actionStart_Tracking->setDisabled(
+			bPreInitialization || bTrackingMode || !bPortsActivated_);
+	actionStop_Tracking->setDisabled(!bTrackingMode);
+	actionSystem_Properties->setDisabled(bPreInitialization || bTrackingMode);
+	actionDiagnostic_Alerts->setDisabled(
+			bPreInitialization || bTrackingMode
+					|| (pdtCommandHandling_->dtSystemInformation_.nTypeofSystem
+							!= VICRA_SYSTEM
+							&& pdtCommandHandling_->dtSystemInformation_.nTypeofSystem
+									!= SPECTRA_SYSTEM));
+	actionIlluminator_Activation_Rate->setDisabled(
+			bPreInitialization || bTrackingMode
+					|| pdtCommandHandling_->dtSystemInformation_.nTypeofSystem
+							== AURORA_SYSTEM);
+	actionCOM_Port_Settings->setDisabled(bTrackingMode);
+	actionSROM_Image_File_Settings->setDisabled(bTrackingMode);
+	actionProgram_Options->setDisabled(bTrackingMode);
 
 } /* setMode */
 
@@ -1371,9 +1371,9 @@ void Interface::manipulateCollisionObject() {
 		euler_angle[1] = lineEdit_RotateB->text().toDouble() / 180.0 * M_PI;
 		euler_angle[2] = lineEdit_RotateC->text().toDouble() / 180.0 * M_PI;
 
-		KDL::Rotation rotation = KDL::Rotation::RPY(euler_angle[2],
+		KDL::Rotation dtRotation = KDL::Rotation::RPY(euler_angle[2],
 				euler_angle[1], euler_angle[0]);
-		rotation.GetQuaternion(collision_pose.orientation.x,
+		dtRotation.GetQuaternion(collision_pose.orientation.x,
 				collision_pose.orientation.y, collision_pose.orientation.z,
 				collision_pose.orientation.w);
 
@@ -1383,13 +1383,13 @@ void Interface::manipulateCollisionObject() {
 		collision_object.header.frame_id = "world";
 		collision_object.id = lineEdit_CollisionID->text().toStdString();
 		collision_object.header.stamp = ros::Time::now();
-		collision_object.header.seq = collision_operation_counter_++;
+		collision_object.header.seq = nCollisionOperationCount_++;
 
 		planning_scene.world.collision_objects.clear();
 		planning_scene.world.collision_objects.push_back(collision_object);
 
 		planning_scene.is_diff = true;
-		planning_scene_diff_publisher_.publish(planning_scene);
+		dtPlanningSceneDiffPublisher_.publish(planning_scene);
 
 		collision_item->setText(lineEdit_CollisionID->text());
 		listWidget_CurrentCollisionObject->insertItem(1, collision_item);
@@ -1405,7 +1405,7 @@ void Interface::manipulateCollisionObject() {
 		planning_scene.world.collision_objects.push_back(collision_object);
 		planning_scene.is_diff = true;
 
-		planning_scene_diff_publisher_.publish(planning_scene);
+		dtPlanningSceneDiffPublisher_.publish(planning_scene);
 
 		listWidget_CurrentCollisionObject->removeItemWidget(
 				listWidget_CurrentCollisionObject->currentItem());
@@ -1422,7 +1422,7 @@ void Interface::visualizeJointPlan() {
 	target_joints["joint5"] = lineEdit_Joint5->text().toDouble() / 180.0 * M_PI;
 	target_joints["joint6"] = lineEdit_Joint6->text().toDouble() / 180.0 * M_PI;
 
-	controller_.planTargetMotion(target_joints);
+	dtController_.planTargetMotion(target_joints);
 }
 void Interface::visualizePosePlan() {
 	geometry_msgs::Pose target_pose;
@@ -1435,13 +1435,14 @@ void Interface::visualizePosePlan() {
 	euler_angle[1] = lineEdit_RotateB->text().toDouble() / 180.0 * M_PI;
 	euler_angle[2] = lineEdit_RotateC->text().toDouble() / 180.0 * M_PI;
 
-	KDL::Rotation rotation = KDL::Rotation::RPY(euler_angle[2], euler_angle[1],
-			euler_angle[0]);
-	rotation.GetQuaternion(target_pose.orientation.x, target_pose.orientation.y,
-			target_pose.orientation.z, target_pose.orientation.w);
+	KDL::Rotation dtRotation = KDL::Rotation::RPY(euler_angle[2],
+			euler_angle[1], euler_angle[0]);
+	dtRotation.GetQuaternion(target_pose.orientation.x,
+			target_pose.orientation.y, target_pose.orientation.z,
+			target_pose.orientation.w);
 
 	//Axis2Frame()
-	controller_.planTargetMotion(target_pose);
+	dtController_.planTargetMotion(target_pose);
 }
 void Interface::visualizeIncrPosePlan() {
 	geometry_msgs::Pose target_pose;
@@ -1460,12 +1461,13 @@ void Interface::visualizeIncrPosePlan() {
 	euler_angle[2] = output_c->toPlainText().toDouble() / 180.0 * M_PI
 			+ lineEdit_incrRotateC->text().toDouble() / 180.0 * M_PI;
 
-	KDL::Rotation rotation = KDL::Rotation::RPY(euler_angle[2], euler_angle[1],
-			euler_angle[0]);
-	rotation.GetQuaternion(target_pose.orientation.x, target_pose.orientation.y,
-			target_pose.orientation.z, target_pose.orientation.w);
+	KDL::Rotation dtRotation = KDL::Rotation::RPY(euler_angle[2],
+			euler_angle[1], euler_angle[0]);
+	dtRotation.GetQuaternion(target_pose.orientation.x,
+			target_pose.orientation.y, target_pose.orientation.z,
+			target_pose.orientation.w);
 
-	controller_.planTargetMotion(target_pose);
+	dtController_.planTargetMotion(target_pose);
 }
 void Interface::addWaypoints() {
 	geometry_msgs::Pose target_pose;
@@ -1478,12 +1480,13 @@ void Interface::addWaypoints() {
 	euler_angle[1] = lineEdit_RotateB->text().toDouble() / 180.0 * M_PI;
 	euler_angle[2] = lineEdit_RotateC->text().toDouble() / 180.0 * M_PI;
 
-	KDL::Rotation rotation = KDL::Rotation::RPY(euler_angle[2], euler_angle[1],
-			euler_angle[0]);
-	rotation.GetQuaternion(target_pose.orientation.x, target_pose.orientation.y,
-			target_pose.orientation.z, target_pose.orientation.w);
+	KDL::Rotation dtRotation = KDL::Rotation::RPY(euler_angle[2],
+			euler_angle[1], euler_angle[0]);
+	dtRotation.GetQuaternion(target_pose.orientation.x,
+			target_pose.orientation.y, target_pose.orientation.z,
+			target_pose.orientation.w);
 
-	controller_.addWaypoints(target_pose);
+	dtController_.addWaypoints(target_pose);
 }
 void Interface::rotateAroundAxis() {
 	// Axis type
@@ -1493,8 +1496,8 @@ void Interface::rotateAroundAxis() {
 	// Euler angle
 	std::vector<double> euler_angle(3);
 	std::vector<double> euler_angle_rotate(3);
-	// rotation matrix
-	KDL::Rotation rotation;
+	// dtRotation matrix
+	KDL::Rotation dtRotation;
 
 	target_pose.position.x = output_x->toPlainText().toDouble() / 1000.0;
 	target_pose.position.y = output_y->toPlainText().toDouble() / 1000.0;
@@ -1521,7 +1524,7 @@ void Interface::rotateAroundAxis() {
 
 	switch (axis_type) {
 	case Interface::X: {
-		rotation = KDL::Rotation::RotX(rotate_degree / 180.0 * M_PI)
+		dtRotation = KDL::Rotation::RotX(rotate_degree / 180.0 * M_PI)
 				* KDL::Rotation::RPY(euler_angle[2], euler_angle[1],
 						euler_angle[0]);
 		vector_rotate = KDL::Rotation::RotX(rotate_degree / 180.0 * M_PI)
@@ -1529,7 +1532,7 @@ void Interface::rotateAroundAxis() {
 		break;
 	}
 	case Interface::Y: {
-		rotation = KDL::Rotation::RotY(rotate_degree / 180.0 * M_PI)
+		dtRotation = KDL::Rotation::RotY(rotate_degree / 180.0 * M_PI)
 				* KDL::Rotation::RPY(euler_angle[2], euler_angle[1],
 						euler_angle[0]);
 		vector_rotate = KDL::Rotation::RotY(rotate_degree / 180.0 * M_PI)
@@ -1537,7 +1540,7 @@ void Interface::rotateAroundAxis() {
 		break;
 	}
 	case Interface::Z: {
-		rotation = KDL::Rotation::RotZ(rotate_degree / 180.0 * M_PI)
+		dtRotation = KDL::Rotation::RotZ(rotate_degree / 180.0 * M_PI)
 				* KDL::Rotation::RPY(euler_angle[2], euler_angle[1],
 						euler_angle[0]);
 		vector_rotate = KDL::Rotation::RotZ(rotate_degree / 180.0 * M_PI)
@@ -1549,7 +1552,8 @@ void Interface::rotateAroundAxis() {
 		KDL::Vector rotate_axis(lineEdit_AxisVectorX->text().toDouble(),
 				lineEdit_AxisVectorY->text().toDouble(),
 				lineEdit_AxisVectorZ->text().toDouble());
-		rotation = KDL::Rotation::Rot(rotate_axis, rotate_degree / 180.0 * M_PI)
+		dtRotation = KDL::Rotation::Rot(rotate_axis,
+				rotate_degree / 180.0 * M_PI)
 				* KDL::Rotation::RPY(euler_angle[2], euler_angle[1],
 						euler_angle[0]);
 		vector_rotate = KDL::Rotation::Rot(rotate_axis,
@@ -1561,19 +1565,20 @@ void Interface::rotateAroundAxis() {
 	}
 	}
 
-	rotation.GetQuaternion(target_pose.orientation.x, target_pose.orientation.y,
-			target_pose.orientation.z, target_pose.orientation.w);
+	dtRotation.GetQuaternion(target_pose.orientation.x,
+			target_pose.orientation.y, target_pose.orientation.z,
+			target_pose.orientation.w);
 
 	target_pose.position.x = vector_rotate.data[0];
 	target_pose.position.y = vector_rotate.data[1];
 	target_pose.position.z = vector_rotate.data[2];
 
-	controller_.planTargetMotion(target_pose);
+	dtController_.planTargetMotion(target_pose);
 
 }
 void Interface::executeMotionPlan() {
 
-	controller_.executeMotionPlan();
+	dtController_.executeMotionPlan();
 }
 
 void Interface::newFeedbackReceived(Feedback* feedback) {
@@ -1581,26 +1586,26 @@ void Interface::newFeedbackReceived(Feedback* feedback) {
 	Axis feedback_axis;
 	feedback_axis = feedback->getAxis();
 
-	joint_state_publish_count_++;
-	joint_state_.header.seq = joint_state_publish_count_;
-	joint_state_.position[0] = feedback_axis.A1 / 180.0 * M_PI;
-	joint_state_.position[1] = feedback_axis.A2 / 180.0 * M_PI;
-	joint_state_.position[2] = feedback_axis.A3 / 180.0 * M_PI;
-	joint_state_.position[3] = feedback_axis.A4 / 180.0 * M_PI;
-	joint_state_.position[4] = feedback_axis.A5 / 180.0 * M_PI;
-	joint_state_.position[5] = feedback_axis.A6 / 180.0 * M_PI;
-	joint_state_.header.stamp = ros::Time::now();
-	joint_state_publisher_.publish(joint_state_);
+	nJointStatePublishCount_++;
+	dtJointState_.header.seq = nJointStatePublishCount_;
+	dtJointState_.position[0] = feedback_axis.A1 / 180.0 * M_PI;
+	dtJointState_.position[1] = feedback_axis.A2 / 180.0 * M_PI;
+	dtJointState_.position[2] = feedback_axis.A3 / 180.0 * M_PI;
+	dtJointState_.position[3] = feedback_axis.A4 / 180.0 * M_PI;
+	dtJointState_.position[4] = feedback_axis.A5 / 180.0 * M_PI;
+	dtJointState_.position[5] = feedback_axis.A6 / 180.0 * M_PI;
+	dtJointState_.header.stamp = ros::Time::now();
+	dtJointStatePublisher_.publish(dtJointState_);
 }
 void Interface::visualizeMotionPlan(
 		moveit::planning_interface::MoveGroup::Plan motion_plan) {
 
 	ROS_INFO("Visualizing plan");
 
-	display_trajectory_.trajectory_start = motion_plan.start_state_;
-	display_trajectory_.trajectory.push_back(motion_plan.trajectory_);
+	dtDisplayTrajectory_.trajectory_start = motion_plan.start_state_;
+	dtDisplayTrajectory_.trajectory.push_back(motion_plan.trajectory_);
 
-	display_publisher_.publish(display_trajectory_);
+	dtDisplayPublisher_.publish(dtDisplayTrajectory_);
 }
 
 void Interface::shutdown() {
@@ -1631,10 +1636,10 @@ void Interface::endEffectorPosCb(
 			QString("%1").arg(feedback->pose.position.z, 8, 'f', 4));
 
 	std::vector<double> euler_angle(3);
-	KDL::Rotation rotation = KDL::Rotation::Quaternion(
+	KDL::Rotation dtRotation = KDL::Rotation::Quaternion(
 			feedback->pose.orientation.x, feedback->pose.orientation.y,
 			feedback->pose.orientation.z, feedback->pose.orientation.w);
-	rotation.GetRPY(euler_angle[2], euler_angle[1], euler_angle[0]);
+	dtRotation.GetRPY(euler_angle[2], euler_angle[1], euler_angle[0]);
 	lineEdit_RotateA->setText(
 			QString("%1").arg(euler_angle[0] / M_PI * 180.0, 8, 'f', 4));
 	lineEdit_RotateB->setText(
@@ -1647,9 +1652,9 @@ void Interface::endEffectorPosCb(
 			feedback->pose.position.z * 1000.0, euler_angle[0] / M_PI * 180.0,
 			euler_angle[1] / M_PI * 180.0, euler_angle[2] / M_PI * 180.0);
 	Axis temp_axis;
-	controller_.getPlannar()->getModel().Frame2Axis(last_Axis_, temp_frame,
+	dtController_.getPlannar()->getModel().Frame2Axis(dtLastAxis_, temp_frame,
 			temp_axis);
-	last_Axis_.set(temp_axis);
+	dtLastAxis_.set(temp_axis);
 
 	lineEdit_Joint1->setText(QString("%1").arg(temp_axis.A1, 8, 'f', 4));
 	lineEdit_Joint2->setText(QString("%1").arg(temp_axis.A2, 8, 'f', 4));
@@ -1715,14 +1720,15 @@ void Interface::makeMenuMarker(std::string name) {
 	control.markers.push_back(makeBox(int_marker));
 	int_marker.controls.push_back(control);
 
-	interactive_marker_server_->insert(int_marker);
+	pdtInteractiveMarkerServer_->insert(int_marker);
 }
 void Interface::initMenu() {
 
-	menu_entry_.push_back(
-			menu_handler_.insert("Add into way points", addWaypointsCb_global));
-	menu_entry_.push_back(
-			menu_handler_.insert("Visualize and Execute motion plan",
+	vecdtMenuEntry_.push_back(
+			dtMenuHandler_.insert("Add into way points",
+					addWaypointsCb_global));
+	vecdtMenuEntry_.push_back(
+			dtMenuHandler_.insert("Visualize and Execute motion plan",
 					visualizeExecutePlanCb_global));
 }
 
@@ -1763,7 +1769,7 @@ void Interface::on_send_frame_button_clicked() {
 	}
 
 	ROS_INFO("Send frame button clicked");
-	plannar_ptr_->motion(style, f, approx);
+	pdtPlannar_->motion(style, f, approx);
 }
 
 void Interface::on_send_axis_button_clicked() {
@@ -1805,7 +1811,7 @@ void Interface::on_send_axis_button_clicked() {
 	}
 
 	ROS_INFO("Send axis button clicked");
-	plannar_ptr_->motion(style, a, approx);
+	pdtPlannar_->motion(style, a, approx);
 }
 
 void Interface::on_send_pos_button_clicked() {
@@ -1846,20 +1852,20 @@ void Interface::on_send_pos_button_clicked() {
 	}
 
 	ROS_INFO("Send pos button clicked");
-	plannar_ptr_->motion(style, p, approx);
+	pdtPlannar_->motion(style, p, approx);
 }
 
 void Interface::displayFeedback(Feedback* feedback) {
 
-	joint_state_display_counter_++;
-	if (joint_state_display_counter_ >= 100) {
+	nJointStateDisplayCount_++;
+	if (nJointStateDisplayCount_ >= 100) {
 		if (feedback->getSetOK() && feedback->getParsedOK()) {
 			Axis feedback_axis;
 			Frame feedback_frame;
 			feedback_axis = feedback->getAxis();
 
-			last_Axis_.set(feedback_axis);
-			plannar_ptr_->getModel().Axis2Frame(feedback_axis, feedback_frame);
+			dtLastAxis_.set(feedback_axis);
+			pdtPlannar_->getModel().Axis2Frame(feedback_axis, feedback_frame);
 
 			output_a1->setText(QString("%1").arg(feedback_axis.A1, 8, 'f', 4));
 			output_a2->setText(QString("%1").arg(feedback_axis.A2, 8, 'f', 4));
@@ -1928,7 +1934,7 @@ void Interface::displayFeedback(Feedback* feedback) {
 
 			//setAlignment();
 		}
-		joint_state_display_counter_ = 0;
+		nJointStateDisplayCount_ = 0;
 	}
 
 }
@@ -1941,9 +1947,9 @@ void Interface::convertPoseTargettoJointTarget() {
 			lineEdit_RotateC->text().toDouble());
 	Axis temp_axis;
 
-	controller_.getPlannar()->getModel().Frame2Axis(last_Axis_, temp_frame,
+	dtController_.getPlannar()->getModel().Frame2Axis(dtLastAxis_, temp_frame,
 			temp_axis);
-	last_Axis_.set(temp_axis);
+	dtLastAxis_.set(temp_axis);
 
 	lineEdit_Joint1->setText(QString("%1").arg(temp_axis.A1, 8, 'f', 4));
 	lineEdit_Joint2->setText(QString("%1").arg(temp_axis.A2, 8, 'f', 4));
@@ -1963,9 +1969,9 @@ void Interface::on_convert_button_clicked() {
 			input_c->toPlainText().toDouble());
 	Axis temp_axis;
 
-	controller_.getPlannar()->getModel().Frame2Axis(last_Axis_, temp_frame,
+	dtController_.getPlannar()->getModel().Frame2Axis(dtLastAxis_, temp_frame,
 			temp_axis);
-	last_Axis_.set(temp_axis);
+	dtLastAxis_.set(temp_axis);
 
 	output_a1->setText(QString("%1").arg(temp_axis.A1, 8, 'f', 4));
 	output_a2->setText(QString("%1").arg(temp_axis.A2, 8, 'f', 4));
@@ -2082,34 +2088,34 @@ void Interface::on_send_config_button_clicked() {
 	}
 	value = input_config->toPlainText().toFloat();
 	if (ok)
-		plannar_ptr_->configuration(param, value);
+		pdtPlannar_->configuration(param, value);
 
 	ROS_INFO("Send config button clicked");
 
 }
 
 void Interface::on_pause_buf_buton_clicked() {
-	plannar_ptr_->pauseBuffered();
+	pdtPlannar_->pauseBuffered();
 	ROS_INFO("Pause buffer button clicked");
 }
 
 void Interface::on_terminate_imm_button_clicked() {
-	plannar_ptr_->terminateImmediately();
+	pdtPlannar_->terminateImmediately();
 	ROS_INFO("Terminate immediately button clicked");
 }
 
 void Interface::on_pause_button_clicked() {
-	plannar_ptr_->pauseImmediately();
+	pdtPlannar_->pauseImmediately();
 	ROS_INFO("Pause immediately button clicked");
 }
 
 void Interface::on_stop_button_clicked() {
-	plannar_ptr_->stop();
+	pdtPlannar_->stop();
 	ROS_INFO("Stop button clicked");
 }
 
 void Interface::on_terminate_buf_button_clicked() {
-	plannar_ptr_->terminateBuffered();
+	pdtPlannar_->terminateBuffered();
 	ROS_INFO("Terminate buffer button clicked");
 }
 

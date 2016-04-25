@@ -264,16 +264,16 @@ void CvtQuatToRotationMatrix(QuatRotation *pdtQuatRot,
 	/*
 	 * Determine some calculations done more than once.
 	 */
-	fQ0Q0 = pdtQuatRot->q0 * pdtQuatRot->q0;
-	fQxQx = pdtQuatRot->qx * pdtQuatRot->qx;
-	fQyQy = pdtQuatRot->qy * pdtQuatRot->qy;
-	fQzQz = pdtQuatRot->qz * pdtQuatRot->qz;
-	fQ0Qx = pdtQuatRot->q0 * pdtQuatRot->qx;
-	fQ0Qy = pdtQuatRot->q0 * pdtQuatRot->qy;
-	fQ0Qz = pdtQuatRot->q0 * pdtQuatRot->qz;
-	fQxQy = pdtQuatRot->qx * pdtQuatRot->qy;
-	fQxQz = pdtQuatRot->qx * pdtQuatRot->qz;
-	fQyQz = pdtQuatRot->qy * pdtQuatRot->qz;
+	fQ0Q0 = pdtQuatRot->fQ0 * pdtQuatRot->fQ0;
+	fQxQx = pdtQuatRot->fQx * pdtQuatRot->fQx;
+	fQyQy = pdtQuatRot->fQy * pdtQuatRot->fQy;
+	fQzQz = pdtQuatRot->fQz * pdtQuatRot->fQz;
+	fQ0Qx = pdtQuatRot->fQ0 * pdtQuatRot->fQx;
+	fQ0Qy = pdtQuatRot->fQ0 * pdtQuatRot->fQy;
+	fQ0Qz = pdtQuatRot->fQ0 * pdtQuatRot->fQz;
+	fQxQy = pdtQuatRot->fQx * pdtQuatRot->fQy;
+	fQxQz = pdtQuatRot->fQx * pdtQuatRot->fQz;
+	fQyQz = pdtQuatRot->fQy * pdtQuatRot->fQz;
 
 	/*
 	 * Determine the rotation matrix elements.
@@ -315,10 +315,10 @@ void DetermineEuler(RotationMatrix dtRotMatrix, Rotation *pdtEulerRot) {
 	fCosRoll = cos(Roll);
 	fSinRoll = sin(Roll);
 
-	pdtEulerRot->Roll = Roll;
-	pdtEulerRot->Pitch = atan2(-dtRotMatrix[2][0],
+	pdtEulerRot->fRoll = Roll;
+	pdtEulerRot->fPitch = atan2(-dtRotMatrix[2][0],
 			(fCosRoll * dtRotMatrix[0][0]) + (fSinRoll * dtRotMatrix[1][0]));
-	pdtEulerRot->Yaw = atan2(
+	pdtEulerRot->fYaw = atan2(
 			(fSinRoll * dtRotMatrix[0][2]) - (fCosRoll * dtRotMatrix[1][2]),
 			(-fSinRoll * dtRotMatrix[0][1]) + (fCosRoll * dtRotMatrix[1][1]));
 
@@ -349,9 +349,9 @@ void CvtQuatToEulerRotation(QuatRotation *pdtQuatRot, Rotation *pdtEulerRot) {
 
 	DetermineEuler(dtRotMatrix, pdtEulerRot);
 
-	pdtEulerRot->Yaw *= RAD_TO_DEGREES;
-	pdtEulerRot->Pitch *= RAD_TO_DEGREES;
-	pdtEulerRot->Roll *= RAD_TO_DEGREES;
+	pdtEulerRot->fYaw *= RAD_TO_DEGREES;
+	pdtEulerRot->fPitch *= RAD_TO_DEGREES;
+	pdtEulerRot->fRoll *= RAD_TO_DEGREES;
 
 } /* CvtQuatToEulerRotation */
 
@@ -386,40 +386,50 @@ void QuatRotatePoint(QuatRotation *RotationQuaternionPtr,
 	Position3d UCrossV; /* The cross product of the vector part of the rotation
 	 quaternion with the original position vector */
 
-	if (OriginalPositionPtr->x < MAX_NEGATIVE
-			|| OriginalPositionPtr->y < MAX_NEGATIVE
-			|| OriginalPositionPtr->z < MAX_NEGATIVE) {
-		RotatedPositionPtr->x = RotatedPositionPtr->y = RotatedPositionPtr->z =
-		BAD_FLOAT;
+	if (OriginalPositionPtr->fTx < MAX_NEGATIVE
+			|| OriginalPositionPtr->fTy < MAX_NEGATIVE
+			|| OriginalPositionPtr->fTz < MAX_NEGATIVE) {
+		RotatedPositionPtr->fTx = RotatedPositionPtr->fTy =
+				RotatedPositionPtr->fTz =
+				BAD_FLOAT;
 
 		return;
 	} /* if */
 
-	UCrossV.x = RotationQuaternionPtr->qy * OriginalPositionPtr->z
-			- RotationQuaternionPtr->qz * OriginalPositionPtr->y;
-	UCrossV.y = RotationQuaternionPtr->qz * OriginalPositionPtr->x
-			- RotationQuaternionPtr->qx * OriginalPositionPtr->z;
-	UCrossV.z = RotationQuaternionPtr->qx * OriginalPositionPtr->y
-			- RotationQuaternionPtr->qy * OriginalPositionPtr->x;
+	UCrossV.fTx = RotationQuaternionPtr->fQy * OriginalPositionPtr->fTz
+			- RotationQuaternionPtr->fQz * OriginalPositionPtr->fTy;
+	UCrossV.fTy = RotationQuaternionPtr->fQz * OriginalPositionPtr->fTx
+			- RotationQuaternionPtr->fQx * OriginalPositionPtr->fTz;
+	UCrossV.fTz = RotationQuaternionPtr->fQx * OriginalPositionPtr->fTy
+			- RotationQuaternionPtr->fQy * OriginalPositionPtr->fTx;
 
-	RotatedPositionPtr->x = float(
-			OriginalPositionPtr->x
-					+ 2.0
-							* (RotationQuaternionPtr->q0 * UCrossV.x
-									+ RotationQuaternionPtr->qy * UCrossV.z
-									- RotationQuaternionPtr->qz * UCrossV.y));
-	RotatedPositionPtr->y = float(
-			OriginalPositionPtr->y
-					+ 2.0
-							* (RotationQuaternionPtr->q0 * UCrossV.y
-									+ RotationQuaternionPtr->qz * UCrossV.x
-									- RotationQuaternionPtr->qx * UCrossV.z));
-	RotatedPositionPtr->z = float(
-			OriginalPositionPtr->z
-					+ 2.0
-							* (RotationQuaternionPtr->q0 * UCrossV.z
-									+ RotationQuaternionPtr->qx * UCrossV.y
-									- RotationQuaternionPtr->qy * UCrossV.x));
+	RotatedPositionPtr->fTx =
+			float(
+					OriginalPositionPtr->fTx
+							+ 2.0
+									* (RotationQuaternionPtr->fQ0 * UCrossV.fTx
+											+ RotationQuaternionPtr->fQy
+													* UCrossV.fTz
+											- RotationQuaternionPtr->fQz
+													* UCrossV.fTy));
+	RotatedPositionPtr->fTy =
+			float(
+					OriginalPositionPtr->fTy
+							+ 2.0
+									* (RotationQuaternionPtr->fQ0 * UCrossV.fTy
+											+ RotationQuaternionPtr->fQz
+													* UCrossV.fTx
+											- RotationQuaternionPtr->fQx
+													* UCrossV.fTz));
+	RotatedPositionPtr->fTz =
+			float(
+					OriginalPositionPtr->fTz
+							+ 2.0
+									* (RotationQuaternionPtr->fQ0 * UCrossV.fTz
+											+ RotationQuaternionPtr->fQx
+													* UCrossV.fTy
+											- RotationQuaternionPtr->fQy
+													* UCrossV.fTx));
 } /* QuatRotatePoint */
 
 /*****************************************************************
@@ -443,17 +453,17 @@ void QuatRotatePoint(QuatRotation *RotationQuaternionPtr,
  *****************************************************************/
 void QuatInverseXfrm(QuatTransformation *pdtXfrm,
 		QuatTransformation *pdtNewXfrm) {
-	pdtNewXfrm->rotation.q0 = pdtXfrm->rotation.q0;
-	pdtNewXfrm->rotation.qx = -pdtXfrm->rotation.qx;
-	pdtNewXfrm->rotation.qy = -pdtXfrm->rotation.qy;
-	pdtNewXfrm->rotation.qz = -pdtXfrm->rotation.qz;
+	pdtNewXfrm->dtRotation.fQ0 = pdtXfrm->dtRotation.fQ0;
+	pdtNewXfrm->dtRotation.fQx = -pdtXfrm->dtRotation.fQx;
+	pdtNewXfrm->dtRotation.fQy = -pdtXfrm->dtRotation.fQy;
+	pdtNewXfrm->dtRotation.fQz = -pdtXfrm->dtRotation.fQz;
 
-	QuatRotatePoint(&pdtNewXfrm->rotation, &pdtXfrm->translation,
-			&pdtNewXfrm->translation);
+	QuatRotatePoint(&pdtNewXfrm->dtRotation, &pdtXfrm->dtTranslation,
+			&pdtNewXfrm->dtTranslation);
 
-	pdtNewXfrm->translation.x = -pdtNewXfrm->translation.x;
-	pdtNewXfrm->translation.y = -pdtNewXfrm->translation.y;
-	pdtNewXfrm->translation.z = -pdtNewXfrm->translation.z;
+	pdtNewXfrm->dtTranslation.fTx = -pdtNewXfrm->dtTranslation.fTx;
+	pdtNewXfrm->dtTranslation.fTy = -pdtNewXfrm->dtTranslation.fTy;
+	pdtNewXfrm->dtTranslation.fTz = -pdtNewXfrm->dtTranslation.fTz;
 } /* QuatInverseXfrm */
 
 /*****************************************************************
@@ -477,30 +487,30 @@ void QuatInverseXfrm(QuatTransformation *pdtXfrm,
  *****************************************************************/
 void QuatCombineXfrms(QuatTransformation *pdtXfrm12,
 		QuatTransformation *pdtXfrm23, QuatTransformation *pdtXfrm13) {
-	QuatRotation *pdtQ12 = &pdtXfrm12->rotation, *pdtQ23 = &pdtXfrm23->rotation,
-			*pdtQ13 = &pdtXfrm13->rotation;
+	QuatRotation *pdtQ12 = &pdtXfrm12->dtRotation, *pdtQ23 =
+			&pdtXfrm23->dtRotation, *pdtQ13 = &pdtXfrm13->dtRotation;
 	float fA, /* some useful temporary variables */
 	fB, fC, fD, fE, fF, fG, fH;
 
-	fA = (pdtQ23->q0 + pdtQ23->qx) * (pdtQ12->q0 + pdtQ12->qx);
-	fB = (pdtQ23->qz - pdtQ23->qy) * (pdtQ12->qy - pdtQ12->qz);
-	fC = (pdtQ23->qx - pdtQ23->q0) * (pdtQ12->qy + pdtQ12->qz);
-	fD = (pdtQ23->qy + pdtQ23->qz) * (pdtQ12->qx - pdtQ12->q0);
-	fE = (pdtQ23->qx + pdtQ23->qz) * (pdtQ12->qx + pdtQ12->qy);
-	fF = (pdtQ23->qx - pdtQ23->qz) * (pdtQ12->qx - pdtQ12->qy);
-	fG = (pdtQ23->q0 + pdtQ23->qy) * (pdtQ12->q0 - pdtQ12->qz);
-	fH = (pdtQ23->q0 - pdtQ23->qy) * (pdtQ12->q0 + pdtQ12->qz);
+	fA = (pdtQ23->fQ0 + pdtQ23->fQx) * (pdtQ12->fQ0 + pdtQ12->fQx);
+	fB = (pdtQ23->fQz - pdtQ23->fQy) * (pdtQ12->fQy - pdtQ12->fQz);
+	fC = (pdtQ23->fQx - pdtQ23->fQ0) * (pdtQ12->fQy + pdtQ12->fQz);
+	fD = (pdtQ23->fQy + pdtQ23->fQz) * (pdtQ12->fQx - pdtQ12->fQ0);
+	fE = (pdtQ23->fQx + pdtQ23->fQz) * (pdtQ12->fQx + pdtQ12->fQy);
+	fF = (pdtQ23->fQx - pdtQ23->fQz) * (pdtQ12->fQx - pdtQ12->fQy);
+	fG = (pdtQ23->fQ0 + pdtQ23->fQy) * (pdtQ12->fQ0 - pdtQ12->fQz);
+	fH = (pdtQ23->fQ0 - pdtQ23->fQy) * (pdtQ12->fQ0 + pdtQ12->fQz);
 
-	pdtQ13->q0 = float(fB + (-fE - fF + fG + fH) / 2.0);
-	pdtQ13->qx = float(fA - (fE + fF + fG + fH) / 2.0);
-	pdtQ13->qy = float(-fC + (fE - fF + fG - fH) / 2.0);
-	pdtQ13->qz = float(-fD + (fE - fF - fG + fH) / 2.0);
+	pdtQ13->fQ0 = float(fB + (-fE - fF + fG + fH) / 2.0);
+	pdtQ13->fQx = float(fA - (fE + fF + fG + fH) / 2.0);
+	pdtQ13->fQy = float(-fC + (fE - fF + fG - fH) / 2.0);
+	pdtQ13->fQz = float(-fD + (fE - fF - fG + fH) / 2.0);
 
-	QuatRotatePoint(&pdtXfrm23->rotation, &pdtXfrm12->translation,
-			&pdtXfrm13->translation);
-	pdtXfrm13->translation.x += pdtXfrm23->translation.x;
-	pdtXfrm13->translation.y += pdtXfrm23->translation.y;
-	pdtXfrm13->translation.z += pdtXfrm23->translation.z;
+	QuatRotatePoint(&pdtXfrm23->dtRotation, &pdtXfrm12->dtTranslation,
+			&pdtXfrm13->dtTranslation);
+	pdtXfrm13->dtTranslation.fTx += pdtXfrm23->dtTranslation.fTx;
+	pdtXfrm13->dtTranslation.fTy += pdtXfrm23->dtTranslation.fTy;
+	pdtXfrm13->dtTranslation.fTz += pdtXfrm23->dtTranslation.fTz;
 } /* QuatCombineXfrms */
 /**************************END OF FILE***************************/
 

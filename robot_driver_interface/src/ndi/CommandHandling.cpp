@@ -26,29 +26,30 @@ static int bFirst = 1;
  *****************************************************************/
 CommandHandling::CommandHandling() {
 	/* set up com port class, start from new. */
-	COMPort_ = new Comm32Port;
+	dtCOMPort_ = new Comm32Port;
 
 	/* reinitialize the com ports */
 	for (int i = 0; i < NUM_COM_PORTS; i++)
-		ComPortOpen_[i] = 0;
+		pbComPortOpen_[i] = 0;
 
-	PortsEnabled_ = 0;
-	LogToFile_ = DateTimeStampFile_ = false;
+	nPortsEnabled_ = 0;
+	bLogToFile_ = bDateTimeStampFile_ = false;
 //TODO: this address need to be specified
-	IniFile_.Load("/home/lxt12/NDIConfiguration.ini");
-	ErrorIniFile_.Load("/home/lxt12/NDIErrors.ini");
-	ConfigurationFile_ = "/home/lxt12/NDIConfiguration.ini";
-	ClearLogFile_ = false;
-	DisplayErrorsWhileTracking_ = false;
-	RefHandle_ = -1;
-	Timeout_ = 3;
-	DefaultTimeout_ = 10;
-	strcpy(LogFile_, "");
+	dtIniFile_.Load("/home/lxt12/NDIConfiguration.ini");
+	dtErrorIniFile_.Load("/home/lxt12/NDIErrors.ini");
+	strConfigurationFile_ = "/home/lxt12/NDIConfiguration.ini";
+	bClearLogFile_ = false;
+	bDisplayErrorsWhileTracking_ = false;
+	nRefHandle_ = -1;
+	nTimeout_ = 3;
+	nDefaultTimeout_ = 10;
+	strcpy(pchrLogFile_, "");
 
-	ReadINIParam_array("Logging Options", "Log File Name", LogFile_);
-	ReadINIParam<bool>("Logging Options", "Log To File", LogToFile_);
-	ReadINIParam<bool>("Logging Options", "Date Time Stamp", DateTimeStampFile_);
-	ReadINIParam<int>("Communication", "Timeout Time", DefaultTimeout_);
+	ReadINIParam_array("Logging Options", "Log File Name", pchrLogFile_);
+	ReadINIParam<bool>("Logging Options", "Log To File", bLogToFile_);
+	ReadINIParam<bool>("Logging Options", "Date Time Stamp",
+			bDateTimeStampFile_);
+	ReadINIParam<int>("Communication", "Timeout Time", nDefaultTimeout_);
 } /* CommandHandling()
 
  /*****************************************************************
@@ -64,8 +65,8 @@ CommandHandling::CommandHandling() {
  *****************************************************************/
 CommandHandling::~CommandHandling() {
 	/* clean up */
-	if (COMPort_)
-		delete (COMPort_);
+	if (dtCOMPort_)
+		delete (dtCOMPort_);
 } /* ~CommandHandling */
 
 /*****************************************************************
@@ -86,9 +87,9 @@ int CommandHandling::CloseComPorts() {
 	 * we should close it
 	 */
 	for (int i = 0; i < NUM_COM_PORTS; i++) {
-		if ((ComPortOpen_[i]) &&(COMPort_ != NULL)) {
-			COMPort_->SerialClose();
-			ComPortOpen_[i] = false;
+		if ((pbComPortOpen_[i]) &&(dtCOMPort_ != NULL)) {
+			dtCOMPort_->SerialClose();
+			pbComPortOpen_[i] = false;
 			return 1;
 		}/* if */
 	}/* for */
@@ -114,13 +115,13 @@ int CommandHandling::OpenComPort(int Port) {
 	 * You can still change the PARAMETERS with no problem.  This
 	 * reduces the time it takes to re-initialize the System
 	 */
-	if (ComPortOpen_[Port])
+	if (pbComPortOpen_[Port]) {
 		return 1;
-	else {
-		if (COMPort_ != NULL) {
+	} else {
+		if (dtCOMPort_ != NULL) {
 			/* set the parameters to the defaults */
-			if (COMPort_->SerialOpen(Port, 9600, COMM_8N1, false, 256)) {
-				ComPortOpen_[Port] = TRUE;
+			if (dtCOMPort_->SerialOpen(Port, 9600, COMM_8N1, false, 256)) {
+				pbComPortOpen_[Port] = TRUE;
 				return 1;
 			} /* if */
 		} /* if */
@@ -144,27 +145,27 @@ int CommandHandling::HardWareReset(bool Wireless) {
 	int Response = 0, InitTO = 3;
 
 	/* Check COM port */
-	if (COMPort_ == NULL) {
+	if (dtCOMPort_ == NULL) {
 		return 0;
 	}/* if */
 
 	if (!Wireless) {
 		/* send serial break */
-		COMPort_->SerialBreak();
+		dtCOMPort_->SerialBreak();
 
 		boost::this_thread::sleep(boost::posix_time::milliseconds(500)); /* Give the break sometime to set */
 
-		memset(Command_, 0, sizeof(Command_));
-		if (!GetResponse()) {
-			return 0;
-		}/* if */
-
+		memset(pchrCommand_, 0, sizeof(pchrCommand_));
+		//TODO: problem: Didn't receive response when doing serial break
+		//if (!GetResponse()) {
+		//	ROS_ERROR("Hardware Reset: Serial Break get response failed");
+		//	return 0;
+		//}/* if */
 		/* check for the RESET response */
-		Response = VerifyResponse(LastReply_, TRUE);
-		if (!CheckResponse(Response)) {
-			return 0;
-		}/* if */
-
+		//Response = VerifyResponse(pchrLastReply_, TRUE);
+		//if (!CheckResponse(Response)) {
+		//	return 0;
+		//}/* if */
 		/*
 		 * In order to support NDI enhanced Tool Interface Unit and Tool Docking Station,
 		 * a time delay is recommended so that the Tool Docking Station
@@ -173,22 +174,24 @@ int CommandHandling::HardWareReset(bool Wireless) {
 		boost::this_thread::sleep(
 				boost::posix_time::milliseconds(InitTO * 1000));
 
-		if (Response & REPLY_RESET) {
-			if (!SystemCheckCRC(LastReply_))
-				return REPLY_BADCRC;
-			else
-				return Response;
-		} /* if */
-		else {
-			return Response;
-		}/* else */
+		//if (Response & REPLY_RESET) {
+		//	if (!SystemCheckCRC(pchrLastReply_))
+		//		return REPLY_BADCRC;
+		//	else
+		//		return Response;
+		//} /* if */
+		//else {
+		//	return Response;
+		//}/* else */
+
+		return 1;
 	} /* if */
 	else {
-		memset(Command_, 0, sizeof(Command_));
-		sprintf(Command_, "RESET 0");
-		if (SendMessage(Command_, TRUE))
+		memset(pchrCommand_, 0, sizeof(pchrCommand_));
+		sprintf(pchrCommand_, "RESET 0");
+		if (SendMessage(pchrCommand_, TRUE))
 			if (GetResponse())
-				return CheckResponse(VerifyResponse(LastReply_, TRUE));
+				return CheckResponse(VerifyResponse(pchrLastReply_, TRUE));
 		return 0;
 	} /* else */
 } /* HardwareReset */
@@ -213,12 +216,12 @@ int CommandHandling::HardWareReset(bool Wireless) {
  *****************************************************************/
 int CommandHandling::SetSystemComParms(int BaudRate, int DataBits, int Parity,
 		int StopBits, int Hardware) {
-	memset(Command_, 0, sizeof(Command_));
-	sprintf(Command_, "COMM %d%d%d%d%d", BaudRate, DataBits, Parity, StopBits,
-			Hardware);
-	if (SendMessage(Command_, TRUE))
+	memset(pchrCommand_, 0, sizeof(pchrCommand_));
+	sprintf(pchrCommand_, "COMM %d%d%d%d%d", BaudRate, DataBits, Parity,
+			StopBits, Hardware);
+	if (SendMessage(pchrCommand_, TRUE))
 		if (GetResponse())
-			return CheckResponse(VerifyResponse(LastReply_, TRUE));
+			return CheckResponse(VerifyResponse(pchrLastReply_, TRUE));
 
 	return 0;
 } /* SetSystemComParms */
@@ -245,7 +248,7 @@ int CommandHandling::SetCompCommParms(int Baud, int DataBits, int Parity,
 	unsigned Format;
 
 	/* Check COM port */
-	if (COMPort_ == NULL) {
+	if (dtCOMPort_ == NULL) {
 		return 0;
 	}/* if */
 
@@ -281,7 +284,8 @@ int CommandHandling::SetCompCommParms(int Baud, int DataBits, int Parity,
 
 	Format = (DataBits * 6) + (Parity * 2) + (Stop);
 
-	if (COMPort_->SerialSetBaud(Baud, Format, FlowControl ? true : false, 256))
+	if (dtCOMPort_->SerialSetBaud(Baud, Format, FlowControl ? true : false,
+			256))
 		return 1;
 
 	return 0;
@@ -301,12 +305,12 @@ int CommandHandling::SetCompCommParms(int Baud, int DataBits, int Parity,
  it to beep.
  *****************************************************************/
 int CommandHandling::BeepSystem(int Beeps) {
-	memset(Command_, 0, sizeof(Command_));
-	sprintf(Command_, "BEEP %d", Beeps);
+	memset(pchrCommand_, 0, sizeof(pchrCommand_));
+	sprintf(pchrCommand_, "BEEP %d", Beeps);
 
-	if (SendMessage(Command_, TRUE)) {
+	if (SendMessage(pchrCommand_, TRUE)) {
 		if (GetResponse())
-			return CheckResponse(VerifyResponse(LastReply_, TRUE));
+			return CheckResponse(VerifyResponse(pchrLastReply_, TRUE));
 	} /* if */
 
 	return 0;
@@ -329,45 +333,45 @@ int CommandHandling::InitializeSystem() {
 	FILE *pfOut = NULL;
 
 	/* get the log file option settings */
-	strcpy(LogFile_, "");
-	ClearLogFile_ = false;
-	ReadINIParam_array("Logging Options", "Log File Name", LogFile_);
-	ReadINIParam<bool>("Logging Options", "Clear File", ClearLogFile_);
+	strcpy(pchrLogFile_, "");
+	bClearLogFile_ = false;
+	ReadINIParam_array("Logging Options", "Log File Name", pchrLogFile_);
+	ReadINIParam<bool>("Logging Options", "Clear File", bClearLogFile_);
 
-	if (LogToFile_ && ClearLogFile_) {
-		if (LogFile_[0] != 0) {
-			pfOut = fopen(LogFile_, "w+t");
+	if (bLogToFile_ && bClearLogFile_) {
+		if (pchrLogFile_[0] != 0) {
+			pfOut = fopen(pchrLogFile_, "w+t");
 			if (pfOut == NULL) {
-				LogToFile_ = false;
-				IniFile_.SetKeyValue("Logging Options", "Log To File", "0");
-				IniFile_.Save(ConfigurationFile_);
+				bLogToFile_ = false;
+				dtIniFile_.SetKeyValue("Logging Options", "Log To File", "0");
+				dtIniFile_.Save(strConfigurationFile_);
 				ROS_ERROR("Failed to open log file");
 				return 0;
 			}/* if */
 			fclose(pfOut);
 		} else {
-			LogToFile_ = false;
-			IniFile_.SetKeyValue("Logging Options", "Log To File", "0");
-			ClearLogFile_ = false;
-			IniFile_.SetKeyValue("Logging Options", "Clear File", "0");
-			IniFile_.Save(ConfigurationFile_);
+			bLogToFile_ = false;
+			dtIniFile_.SetKeyValue("Logging Options", "Log To File", "0");
+			bClearLogFile_ = false;
+			dtIniFile_.SetKeyValue("Logging Options", "Clear File", "0");
+			dtIniFile_.Save(strConfigurationFile_);
 		}/* else */
 	}/* if */
 
 	/* clear the handle information */
 	for (int i = 0; i < NO_HANDLES; i++) {
-		memset(HandleInformation_[i].PhysicalPort, 0, 5);
-		HandleInformation_[i].HandleInfo.Initialized = false;
-		HandleInformation_[i].HandleInfo.Enabled = false;
+		memset(pdtHandleInformation_[i].pchrPhysicalPort, 0, 5);
+		pdtHandleInformation_[i].dtHandleInfo.nInitialized = false;
+		pdtHandleInformation_[i].dtHandleInfo.nEnabled = false;
 	} /* for */
 
 	/* send the message */
-	memset(Command_, 0, sizeof(Command_));
-	sprintf(Command_, "INIT ");
+	memset(pchrCommand_, 0, sizeof(pchrCommand_));
+	sprintf(pchrCommand_, "INIT ");
 
-	if (SendMessage(Command_, TRUE)) {
+	if (SendMessage(pchrCommand_, TRUE)) {
 		if (GetResponse())
-			return CheckResponse(VerifyResponse(LastReply_, TRUE));
+			return CheckResponse(VerifyResponse(pchrLastReply_, TRUE));
 	} /* if */
 
 	return 0;
@@ -392,20 +396,20 @@ int CommandHandling::SetFiringRate() {
 	/*
 	 * Polaris Accedo and Vicra only support default rate of 20Hz (FiringRate = 0).
 	 */
-	if (((SystemInformation_.TypeofSystem == ACCEDO_SYSTEM)
-			|| (SystemInformation_.TypeofSystem == VICRA_SYSTEM))
+	if (((dtSystemInformation_.nTypeofSystem == ACCEDO_SYSTEM)
+			|| (dtSystemInformation_.nTypeofSystem == VICRA_SYSTEM))
 			&& (FiringRate != 0)) {
 		FiringRate = 0;
-		IniFile_.SetKeyValue("POLARIS Options", "Activation Rate", "0");
-		IniFile_.Save(ConfigurationFile_);
+		dtIniFile_.SetKeyValue("POLARIS Options", "Activation Rate", "0");
+		dtIniFile_.Save(strConfigurationFile_);
 	}/* if */
 
-	memset(Command_, 0, sizeof(Command_));
-	sprintf(Command_, "IRATE %d", FiringRate);
+	memset(pchrCommand_, 0, sizeof(pchrCommand_));
+	sprintf(pchrCommand_, "IRATE %d", FiringRate);
 
-	if (SendMessage(Command_, TRUE)) {
+	if (SendMessage(pchrCommand_, TRUE)) {
 		if (GetResponse())
-			return CheckResponse(VerifyResponse(LastReply_, TRUE));
+			return CheckResponse(VerifyResponse(pchrLastReply_, TRUE));
 	} /* if */
 
 	return 0;
@@ -428,193 +432,200 @@ int CommandHandling::GetSystemInfo() {
 	int HexResponse = 0, i = 0;
 
 	/* version Information */
-	memset(Command_, 0, sizeof(Command_));
-	sprintf(Command_, "VER 4");
+	memset(pchrCommand_, 0, sizeof(pchrCommand_));
+	sprintf(pchrCommand_, "VER 4");
 
-	if (SendMessage(Command_, TRUE)) {
+	if (SendMessage(pchrCommand_, TRUE)) {
 		if (!GetResponse()) {
 			return 0;
 		}/* if */
 
-		if (!CheckResponse(VerifyResponse(LastReply_, TRUE))) {
+		if (!CheckResponse(VerifyResponse(pchrLastReply_, TRUE))) {
 			return 0;
 		}/* if */
 
-		if (!strncmp(LastReply_, "POLARIS", 7)
-				|| !strncmp(LastReply_, "polaris", 7)
-				|| !strncmp(LastReply_, "Polaris", 7)) {
-			if (strstr(LastReply_, "ACCEDO")) {
-				SystemInformation_.TypeofSystem = ACCEDO_SYSTEM;
-			} else if (strstr(LastReply_, "VICRA")
-					|| strstr(LastReply_, "vicra")
-					|| strstr(LastReply_, "Vicra")) {
-				SystemInformation_.TypeofSystem = VICRA_SYSTEM;
-			} else if (strstr(LastReply_, "SPECTRA")
-					|| strstr(LastReply_, "spectra")
-					|| strstr(LastReply_, "Spectra")) {
-				SystemInformation_.TypeofSystem = SPECTRA_SYSTEM;
+		if (!strncmp(pchrLastReply_, "POLARIS", 7)
+				|| !strncmp(pchrLastReply_, "polaris", 7)
+				|| !strncmp(pchrLastReply_, "Polaris", 7)) {
+			if (strstr(pchrLastReply_, "ACCEDO")) {
+				dtSystemInformation_.nTypeofSystem = ACCEDO_SYSTEM;
+			} else if (strstr(pchrLastReply_, "VICRA")
+					|| strstr(pchrLastReply_, "vicra")
+					|| strstr(pchrLastReply_, "Vicra")) {
+				dtSystemInformation_.nTypeofSystem = VICRA_SYSTEM;
+			} else if (strstr(pchrLastReply_, "SPECTRA")
+					|| strstr(pchrLastReply_, "spectra")
+					|| strstr(pchrLastReply_, "Spectra")) {
+				dtSystemInformation_.nTypeofSystem = SPECTRA_SYSTEM;
 			} else {
-				SystemInformation_.TypeofSystem = POLARIS_SYSTEM;
+				dtSystemInformation_.nTypeofSystem = POLARIS_SYSTEM;
 			}/* else */
-		} else if (!strncmp(LastReply_, "AURORA", 6)
-				|| !strncmp(LastReply_, "aurora", 6)
-				|| !strncmp(LastReply_, "Aurora", 6)) {
-			SystemInformation_.TypeofSystem = AURORA_SYSTEM;
+		} else if (!strncmp(pchrLastReply_, "AURORA", 6)
+				|| !strncmp(pchrLastReply_, "aurora", 6)
+				|| !strncmp(pchrLastReply_, "Aurora", 6)) {
+			dtSystemInformation_.nTypeofSystem = AURORA_SYSTEM;
 		} else {
 			return 0;
 		}/* else */
-
-		ROS_INFO("%s %s", SystemInformation_.VersionInfo, LastReply_);
-		SystemInformation_.VersionInfo[strlen(SystemInformation_.VersionInfo)
-				- 5] = 0;
+		//Print out system information
+		ROS_INFO("%s %s", dtSystemInformation_.pchrVersionInfo, pchrLastReply_);
+		dtSystemInformation_.pchrVersionInfo[strlen(
+				dtSystemInformation_.pchrVersionInfo) - 5] = 0;
 	} else {
 		return 0;
 	}
 
-	if (SystemInformation_.TypeofSystem != AURORA_SYSTEM) {
-		memset(Command_, 0, sizeof(Command_));
-		sprintf(Command_, "SFLIST 00");
-		if (SendMessage(Command_, TRUE)) {
+	if (dtSystemInformation_.nTypeofSystem != AURORA_SYSTEM) {
+		memset(pchrCommand_, 0, sizeof(pchrCommand_));
+		sprintf(pchrCommand_, "SFLIST 00");
+		if (SendMessage(pchrCommand_, TRUE)) {
 			if (!GetResponse())
 				return 0;
-			if (!CheckResponse(VerifyResponse(LastReply_, TRUE)))
+			if (!CheckResponse(VerifyResponse(pchrLastReply_, TRUE)))
 				return 0;
 			/* supported features summary list */
-			HexResponse = ASCIIToHex(LastReply_, 8);
-			SystemInformation_.ActivePortsAvail = (0x01 & HexResponse ? 1 : 0);
-			SystemInformation_.PassivePortsAvail = (0x02 & HexResponse ? 1 : 0);
-			SystemInformation_.MultiVolumeParms = (0x04 & HexResponse ? 1 : 0);
-			SystemInformation_.TIPSensing = (0x08 & HexResponse ? 1 : 0);
-			SystemInformation_.ActiveWirelessAvail =
-					(0x10 & HexResponse ? 1 : 0);
-			SystemInformation_.MagneticPortsAvail = (
+			HexResponse = ASCIIToHex(pchrLastReply_, 8);
+			dtSystemInformation_.nActivePortsAvail =
+					(0x01 & HexResponse ? 1 : 0);
+			dtSystemInformation_.nPassivePortsAvail = (
+					0x02 & HexResponse ? 1 : 0);
+			dtSystemInformation_.nMultiVolumeParms =
+					(0x04 & HexResponse ? 1 : 0);
+			dtSystemInformation_.nTIPSensing = (0x08 & HexResponse ? 1 : 0);
+			dtSystemInformation_.nActiveWirelessAvail = (
+					0x10 & HexResponse ? 1 : 0);
+			dtSystemInformation_.nMagneticPortsAvail = (
 					0x8000 & HexResponse ? 1 : 0);
-			SystemInformation_.FieldGeneratorAvail = (
+			dtSystemInformation_.nFieldGeneratorAvail = (
 					0x40000 & HexResponse ? 1 : 0);
 		} else {
 			return 0;
 		}
 
-		sprintf(Command_, "SFLIST 01");
-		if (SendMessage(Command_, TRUE)) {
+		sprintf(pchrCommand_, "SFLIST 01");
+		if (SendMessage(pchrCommand_, TRUE)) {
 			if (!GetResponse())
 				return 0;
-			if (!CheckResponse(VerifyResponse(LastReply_, TRUE)))
+			if (!CheckResponse(VerifyResponse(pchrLastReply_, TRUE)))
 				return 0;
 			/* number of active ports */
-			SystemInformation_.NoActivePorts = ASCIIToHex(&LastReply_[0], 1);
+			dtSystemInformation_.nNoActivePorts = ASCIIToHex(&pchrLastReply_[0],
+					1);
 		} else {
 			return 0;
 		}
 
-		memset(Command_, 0, sizeof(Command_));
-		sprintf(Command_, "SFLIST 02");
-		if (SendMessage(Command_, TRUE)) {
+		memset(pchrCommand_, 0, sizeof(pchrCommand_));
+		sprintf(pchrCommand_, "SFLIST 02");
+		if (SendMessage(pchrCommand_, TRUE)) {
 			if (!GetResponse())
 				return 0;
-			if (!CheckResponse(VerifyResponse(LastReply_, TRUE)))
+			if (!CheckResponse(VerifyResponse(pchrLastReply_, TRUE)))
 				return 0;
 			/* number of passive ports */
-			SystemInformation_.NoPassivePorts = ASCIIToHex(&LastReply_[0], 1);
+			dtSystemInformation_.nNoPassivePorts = ASCIIToHex(
+					&pchrLastReply_[0], 1);
 		} else {
 			return 0;
 		}
 
-		memset(Command_, 0, sizeof(Command_));
-		sprintf(Command_, "SFLIST 04");
-		if (SendMessage(Command_, TRUE)) {
+		memset(pchrCommand_, 0, sizeof(pchrCommand_));
+		sprintf(pchrCommand_, "SFLIST 04");
+		if (SendMessage(pchrCommand_, TRUE)) {
 			if (!GetResponse())
 				return 0;
-			if (!CheckResponse(VerifyResponse(LastReply_, TRUE)))
+			if (!CheckResponse(VerifyResponse(pchrLastReply_, TRUE)))
 				return 0;
 			/* number of active tool ports supporting TIP detection */
-			SystemInformation_.NoActTIPPorts = ASCIIToHex(&LastReply_[0], 1);
+			dtSystemInformation_.nNoActTIPPorts = ASCIIToHex(&pchrLastReply_[0],
+					1);
 		} else {
 			return 0;
 		}
 
-		memset(Command_, 0, sizeof(Command_));
-		sprintf(Command_, "SFLIST 05");
-		if (SendMessage(Command_, TRUE)) {
+		memset(pchrCommand_, 0, sizeof(pchrCommand_));
+		sprintf(pchrCommand_, "SFLIST 05");
+		if (SendMessage(pchrCommand_, TRUE)) {
 			if (!GetResponse())
 				return 0;
-			if (!CheckResponse(VerifyResponse(LastReply_, TRUE)))
+			if (!CheckResponse(VerifyResponse(pchrLastReply_, TRUE)))
 				return 0;
 			/* number of active wireless ports */
-			SystemInformation_.NoActWirelessPorts = ASCIIToHex(&LastReply_[0],
-					1);
+			dtSystemInformation_.nNoActWirelessPorts = ASCIIToHex(
+					&pchrLastReply_[0], 1);
 		} else {
 			return 0;
 		}
 
 	} /* if */
 	else {
-		memset(Command_, 0, sizeof(Command_));
-		sprintf(Command_, "SFLIST 10");
-		if (SendMessage(Command_, TRUE)) {
+		memset(pchrCommand_, 0, sizeof(pchrCommand_));
+		sprintf(pchrCommand_, "SFLIST 10");
+		if (SendMessage(pchrCommand_, TRUE)) {
 			if (!GetResponse())
 				return 0;
-			if (!CheckResponse(VerifyResponse(LastReply_, TRUE)))
+			if (!CheckResponse(VerifyResponse(pchrLastReply_, TRUE)))
 				return 0;
 			/* number of magnetic ports */
 			//TODO: ? 2?
-			SystemInformation_.NoMagneticPorts = ASCIIToHex(&LastReply_[0], 2);
+			dtSystemInformation_.nNoMagneticPorts = ASCIIToHex(
+					&pchrLastReply_[0], 2);
 		} else {
 			return 0;
 		}
 
-		memset(Command_, 0, sizeof(Command_));
-		sprintf(Command_, "SFLIST 12");
-		if (SendMessage(Command_, TRUE)) {
+		memset(pchrCommand_, 0, sizeof(pchrCommand_));
+		sprintf(pchrCommand_, "SFLIST 12");
+		if (SendMessage(pchrCommand_, TRUE)) {
 			if (!GetResponse())
 				return 0;
-			if (!CheckResponse(VerifyResponse(LastReply_, TRUE)))
+			if (!CheckResponse(VerifyResponse(pchrLastReply_, TRUE)))
 				return 0;
 			/* number of FGs */
-			SystemInformation_.NoFGCards = ASCIIToHex(&LastReply_[0], 1);
-			SystemInformation_.NoFGs = ASCIIToHex(&LastReply_[1], 1);
+			dtSystemInformation_.nNoFGCards = ASCIIToHex(&pchrLastReply_[0], 1);
+			dtSystemInformation_.nNoFGs = ASCIIToHex(&pchrLastReply_[1], 1);
 		} else {
 			return 0;
 		}
 
 		/* Field Generator Version Information */
-		memset(Command_, 0, sizeof(Command_));
-		sprintf(Command_, "VER 7");
+		memset(pchrCommand_, 0, sizeof(pchrCommand_));
+		sprintf(pchrCommand_, "VER 7");
 
-		if (SendMessage(Command_, TRUE)) {
+		if (SendMessage(pchrCommand_, TRUE)) {
 			if (!GetResponse()) {
 				return 0;
 			}/* if */
 
-			if (!CheckResponse(VerifyResponse(LastReply_, TRUE))) {
+			if (!CheckResponse(VerifyResponse(pchrLastReply_, TRUE))) {
 				return 0;
 			}/* if */
 
-			strcat(SystemInformation_.VersionInfo, "\n");
-			strcat(SystemInformation_.VersionInfo, LastReply_);
-			SystemInformation_.VersionInfo[strlen(
-					SystemInformation_.VersionInfo) - 5] = 0;
+			strcat(dtSystemInformation_.pchrVersionInfo, "\n");
+			strcat(dtSystemInformation_.pchrVersionInfo, pchrLastReply_);
+			dtSystemInformation_.pchrVersionInfo[strlen(
+					dtSystemInformation_.pchrVersionInfo) - 5] = 0;
 		} else {
 			return 0;
 		}
 
 		/* SIU Version Information */
-		memset(Command_, 0, sizeof(Command_));
-		sprintf(Command_, "VER 8");
+		memset(pchrCommand_, 0, sizeof(pchrCommand_));
+		sprintf(pchrCommand_, "VER 8");
 
-		if (SendMessage(Command_, TRUE)) {
+		if (SendMessage(pchrCommand_, TRUE)) {
 			if (!GetResponse()) {
 				return 0;
 			}/* if */
 
-			if (!CheckResponse(VerifyResponse(LastReply_, TRUE))) {
+			if (!CheckResponse(VerifyResponse(pchrLastReply_, TRUE))) {
 				return 0;
 			}/* if */
 
-			strcat(SystemInformation_.VersionInfo, "\n");
-			strcat(SystemInformation_.VersionInfo, LastReply_);
-			SystemInformation_.VersionInfo[strlen(
-					SystemInformation_.VersionInfo) - 5] = 0;
+			strcat(dtSystemInformation_.pchrVersionInfo, "\n");
+			strcat(dtSystemInformation_.pchrVersionInfo, pchrLastReply_);
+			dtSystemInformation_.pchrVersionInfo[strlen(
+					dtSystemInformation_.pchrVersionInfo) - 5] = 0;
 		} else {
 			return 0;
 		}
@@ -641,12 +652,12 @@ int CommandHandling::InitializeAllPorts() {
 			szHandleList[MAX_REPLY_MSG], szErrorMessage[98];
 
 	// passive
-	for (i = 0; i < SystemInformation_.NoPassivePorts; i++) {
+	for (i = 0; i < dtSystemInformation_.nNoPassivePorts; i++) {
 		/* load the ROM if one is specified */
 		sprintf(pszPortID, "Wireless Tool %02d", i + 1);
 		strcpy(pszROMFileName, "");
-		ReadINIParam_array("POLARIS SROM Image Files",
-				std::string(pszPortID), pszROMFileName);
+		ReadINIParam_array("POLARIS SROM Image Files", std::string(pszPortID),
+				pszROMFileName);
 		if (*pszROMFileName) {
 			LoadVirtualSROM(pszROMFileName, pszPortID, TRUE);
 		} /* if */
@@ -655,37 +666,37 @@ int CommandHandling::InitializeAllPorts() {
 	do {
 		n = 0;
 		/* get the handles that need to be initialized */
-		memset(Command_, 0, sizeof(Command_));
-		sprintf(Command_, "PHSR 02");
+		memset(pchrCommand_, 0, sizeof(pchrCommand_));
+		sprintf(pchrCommand_, "PHSR 02");
 
-		if (!SendMessage(Command_, TRUE))
+		if (!SendMessage(pchrCommand_, TRUE))
 			return 0;
 
 		if (!GetResponse())
 			return 0;
 
-		if (!CheckResponse(VerifyResponse(LastReply_, TRUE)))
+		if (!CheckResponse(VerifyResponse(pchrLastReply_, TRUE)))
 			return 0;
 
-		sprintf(szHandleList, "%s", LastReply_);
-		nNoHandles = ASCIIToHex(&LastReply_[n], 2);
+		sprintf(szHandleList, "%s", pchrLastReply_);
+		nNoHandles = ASCIIToHex(&pchrLastReply_[n], 2);
 		n += 2;
 
 		if (nNoHandles > 0) {
 			// active
 			nPhysicalPorts = (
-					SystemInformation_.NoActivePorts > 0 ?
-							SystemInformation_.NoActivePorts :
-					SystemInformation_.NoMagneticPorts > 0 ?
-							SystemInformation_.NoMagneticPorts : 0);
+					dtSystemInformation_.nNoActivePorts > 0 ?
+							dtSystemInformation_.nNoActivePorts :
+					dtSystemInformation_.nNoMagneticPorts > 0 ?
+							dtSystemInformation_.nNoMagneticPorts : 0);
 
-			if (SystemInformation_.NoActivePorts == 4)
+			if (dtSystemInformation_.nNoActivePorts == 4)
 				nPhysicalPorts = 12;
 
 			sprintf(pszINISection,
-					SystemInformation_.NoActivePorts > 0 ?
+					dtSystemInformation_.nNoActivePorts > 0 ?
 							"POLARIS SROM Image Files" :
-					SystemInformation_.NoMagneticPorts > 0 ?
+					dtSystemInformation_.nNoMagneticPorts > 0 ?
 							"AURORA SROM Image Files" : "");
 
 			for (i = 0; i < nPhysicalPorts; i++) {
@@ -720,13 +731,13 @@ int CommandHandling::InitializeAllPorts() {
 				if (!GetPortInformation(nHandle))
 					return 0;
 
-				if (!HandleInformation_[nHandle].HandleInfo.Initialized) {
+				if (!pdtHandleInformation_[nHandle].dtHandleInfo.nInitialized) {
 					if (!InitializeHandle(nHandle)) {
 						/* Inform user which port fails on PINIT */
 						sprintf(szErrorMessage,
 								"Port %s could not be initialized.\n"
 										"Check your SROM image file settings.",
-								HandleInformation_[nHandle].PhysicalPort);
+								pdtHandleInformation_[nHandle].pchrPhysicalPort);
 						ROS_ERROR("PINIT ERROR: %s", szErrorMessage);
 
 						return 0;
@@ -753,17 +764,17 @@ int CommandHandling::InitializeAllPorts() {
  the PINIT command.
  *****************************************************************/
 int CommandHandling::InitializeHandle(int nHandle) {
-	memset(Command_, 0, sizeof(Command_));
-	sprintf(Command_, "PINIT %02X", nHandle);
-	if (!SendMessage(Command_, TRUE))
+	memset(pchrCommand_, 0, sizeof(pchrCommand_));
+	sprintf(pchrCommand_, "PINIT %02X", nHandle);
+	if (!SendMessage(pchrCommand_, TRUE))
 		return 0;
 	if (!GetResponse())
 		return 0;
 
-	if (!CheckResponse(VerifyResponse(LastReply_, TRUE))) {
+	if (!CheckResponse(VerifyResponse(pchrLastReply_, TRUE))) {
 		return 0;
 	} /* if */
-	HandleInformation_[nHandle].HandleInfo.Initialized = TRUE;
+	pdtHandleInformation_[nHandle].dtHandleInfo.nInitialized = TRUE;
 
 	return 1;
 } /* InitializeHandle */
@@ -784,35 +795,35 @@ int CommandHandling::EnableAllPorts() {
 	int nNoHandles = 0, nPortHandle = 0, n = 0;
 	char szHandleList[MAX_REPLY_MSG];
 
-	PortsEnabled_ = 0;
+	nPortsEnabled_ = 0;
 	/* get all the ports that need to be enabled */
-	memset(Command_, 0, sizeof(Command_));
-	sprintf(Command_, "PHSR 03");
+	memset(pchrCommand_, 0, sizeof(pchrCommand_));
+	sprintf(pchrCommand_, "PHSR 03");
 
-	if (SendMessage(Command_, TRUE)) {
+	if (SendMessage(pchrCommand_, TRUE)) {
 		if (!GetResponse())
 			return 0;
 
-		if (!CheckResponse(VerifyResponse(LastReply_, TRUE)))
+		if (!CheckResponse(VerifyResponse(pchrLastReply_, TRUE)))
 			return 0;
 
-		sprintf(szHandleList, "%s", LastReply_);
+		sprintf(szHandleList, "%s", pchrLastReply_);
 		nNoHandles = ASCIIToHex(&szHandleList[n], 2);
 		n += 2;
 
 		for (int i = 0; i < nNoHandles; i++) {
 			nPortHandle = ASCIIToHex(&szHandleList[n], 2);
-			memset(Command_, 0, sizeof(Command_));
-			sprintf(Command_, "PENA %02X%c", nPortHandle, 'D');
+			memset(pchrCommand_, 0, sizeof(pchrCommand_));
+			sprintf(pchrCommand_, "PENA %02X%c", nPortHandle, 'D');
 			n += 5;
-			if (!SendMessage(Command_, TRUE))
+			if (!SendMessage(pchrCommand_, TRUE))
 				return 0;
 			if (!GetResponse())
 				return 0;
-			if (!CheckResponse(VerifyResponse(LastReply_, TRUE)))
+			if (!CheckResponse(VerifyResponse(pchrLastReply_, TRUE)))
 				return 0;
 			GetPortInformation(nPortHandle);
-			PortsEnabled_++;
+			nPortsEnabled_++;
 		} /* for */
 		return 1;
 	} /* if */
@@ -832,13 +843,13 @@ int CommandHandling::EnableAllPorts() {
  to be enabled using the PENA command.
  *****************************************************************/
 int CommandHandling::EnableOnePorts(int nPortHandle) {
-	memset(Command_, 0, sizeof(Command_));
-	sprintf(Command_, "PENA %02X%c", nPortHandle, 'D');
-	if (!SendMessage(Command_, TRUE))
+	memset(pchrCommand_, 0, sizeof(pchrCommand_));
+	sprintf(pchrCommand_, "PENA %02X%c", nPortHandle, 'D');
+	if (!SendMessage(pchrCommand_, TRUE))
 		return 0;
 	if (!GetResponse())
 		return 0;
-	if (!CheckResponse(VerifyResponse(LastReply_, TRUE)))
+	if (!CheckResponse(VerifyResponse(pchrLastReply_, TRUE)))
 		return 0;
 	GetPortInformation(nPortHandle);
 	return 1;
@@ -857,13 +868,13 @@ int CommandHandling::EnableOnePorts(int nPortHandle) {
  using the PDIS call.
  *****************************************************************/
 int CommandHandling::DisablePort(int nPortHandle) {
-	memset(Command_, 0, sizeof(Command_));
-	sprintf(Command_, "PDIS %02X", nPortHandle);
+	memset(pchrCommand_, 0, sizeof(pchrCommand_));
+	sprintf(pchrCommand_, "PDIS %02X", nPortHandle);
 
-	if (SendMessage(Command_, TRUE)) {
+	if (SendMessage(pchrCommand_, TRUE)) {
 		if (!GetResponse())
 			return 0;
-		if (CheckResponse(VerifyResponse(LastReply_, TRUE))) {
+		if (CheckResponse(VerifyResponse(pchrLastReply_, TRUE))) {
 			GetPortInformation(nPortHandle);
 			return 1;
 		} /* if */
@@ -923,34 +934,35 @@ int CommandHandling::LoadVirtualSROM(char * pszFileName, char * pPhysicalPortID,
 
 	if (bPassive) {
 		for (i = 0; i < NO_HANDLES; i++) {
-			if (!strncmp(HandleInformation_[i].PhysicalPort, pPhysicalPortID,
-					16))
+			if (!strncmp(pdtHandleInformation_[i].pchrPhysicalPort,
+					pPhysicalPortID, 16))
 				return 0;
 		}
 		/* if passive we need a port handle */
-		memset(Command_, 0, sizeof(Command_));
-		sprintf(Command_, "PHRQ ********01****");
-		if (!SendMessage(Command_, TRUE))
+		memset(pchrCommand_, 0, sizeof(pchrCommand_));
+		sprintf(pchrCommand_, "PHRQ ********01****");
+		if (!SendMessage(pchrCommand_, TRUE))
 			return 0;
 
 		if (!GetResponse())
 			return 0;
-		if (!CheckResponse(VerifyResponse(LastReply_, TRUE)))
+		if (!CheckResponse(VerifyResponse(pchrLastReply_, TRUE)))
 			return 0;
-		nHandle = ASCIIToHex(&LastReply_[n], 2);
-		if (HandleInformation_[nHandle].HandleInfo.Initialized == 1)
+		nHandle = ASCIIToHex(&pchrLastReply_[n], 2);
+		if (pdtHandleInformation_[nHandle].dtHandleInfo.nInitialized == 1)
 			return 0;
 
-		if (SystemInformation_.TypeofSystem == VICRA_SYSTEM
-				|| SystemInformation_.TypeofSystem == SPECTRA_SYSTEM)
-			sprintf(HandleInformation_[nHandle].PhysicalPort, "%s",
+		if (dtSystemInformation_.nTypeofSystem == VICRA_SYSTEM
+				|| dtSystemInformation_.nTypeofSystem == SPECTRA_SYSTEM)
+			sprintf(pdtHandleInformation_[nHandle].pchrPhysicalPort, "%s",
 					pPhysicalPortID);
 	}/* if */
 	else {
 		/* if active a handle has already been assigned */
 		nHandle = GetHandleForPort(pPhysicalPortID);
 		if (nHandle == 0
-				|| HandleInformation_[nHandle].HandleInfo.Initialized == 1)
+				|| pdtHandleInformation_[nHandle].dtHandleInfo.nInitialized
+						== 1)
 			return 0;
 	}/* else */
 
@@ -969,15 +981,15 @@ int CommandHandling::LoadVirtualSROM(char * pszFileName, char * pPhysicalPortID,
 		 * write the data to the tool description section of
 		 * the virtual SROM on a per port basis
 		 */
-		memset(Command_, 0, sizeof(Command_));
-		sprintf(Command_, "PVWR:%02X%04X", nHandle, nCnt);
+		memset(pchrCommand_, 0, sizeof(pchrCommand_));
+		sprintf(pchrCommand_, "PVWR:%02X%04X", nHandle, nCnt);
 
 		for (i = 0; i < 64; i++, nCnt++) {
 			/* (plus eleven for the PVWR:XX0000 ) */
-			sprintf(Command_ + 11 + 2 * i, "%02X", gruchBuff[nCnt]);
+			sprintf(pchrCommand_ + 11 + 2 * i, "%02X", gruchBuff[nCnt]);
 		} /* for */
-		int n = strlen(Command_);
-		if (!SendMessage(Command_, TRUE))
+		int n = strlen(pchrCommand_);
+		if (!SendMessage(pchrCommand_, TRUE))
 			goto cleanup;
 
 		if (!GetResponse()) {
@@ -985,7 +997,7 @@ int CommandHandling::LoadVirtualSROM(char * pszFileName, char * pPhysicalPortID,
 			ROS_ERROR("SROM Image Error: %s", cMessage);
 			goto cleanup;
 		} /* if */
-		if (!CheckResponse(VerifyResponse(LastReply_, TRUE))) {
+		if (!CheckResponse(VerifyResponse(pchrLastReply_, TRUE))) {
 			goto cleanup;
 		} /* if */
 	} /* for */
@@ -1016,11 +1028,11 @@ int CommandHandling::LoadTTCFG(char * pszPortID) {
 	if (nPortHandle == 0)
 		return 0;
 
-	memset(Command_, 0, sizeof(Command_));
-	sprintf(Command_, "TTCFG %02X", nPortHandle);
-	if (SendMessage(Command_, TRUE)) {
+	memset(pchrCommand_, 0, sizeof(pchrCommand_));
+	sprintf(pchrCommand_, "TTCFG %02X", nPortHandle);
+	if (SendMessage(pchrCommand_, TRUE)) {
 		if (GetResponse())
-			return (CheckResponse(VerifyResponse(LastReply_, TRUE)));
+			return (CheckResponse(VerifyResponse(pchrLastReply_, TRUE)));
 	} /* if */
 	return 0;
 } /* LoadTTCFG */
@@ -1041,16 +1053,16 @@ int CommandHandling::GetHandleForPort(char * pszPortID) {
 	int nPortHandle = 0, nNoHandles = 0, n = 0;
 	char szHandleList[MAX_REPLY_MSG];
 
-	memset(Command_, 0, sizeof(Command_));
-	sprintf(Command_, "PHSR 00");
+	memset(pchrCommand_, 0, sizeof(pchrCommand_));
+	sprintf(pchrCommand_, "PHSR 00");
 
-	if (SendMessage(Command_, TRUE)) {
+	if (SendMessage(pchrCommand_, TRUE)) {
 		if (GetResponse())
-			if (!CheckResponse(VerifyResponse(LastReply_, TRUE)))
+			if (!CheckResponse(VerifyResponse(pchrLastReply_, TRUE)))
 				return 0;
 	} /* if */
 
-	sprintf(szHandleList, "%s", LastReply_);
+	sprintf(szHandleList, "%s", pchrLastReply_);
 	nNoHandles = ASCIIToHex(&szHandleList[n], 2);
 	n += 2;
 
@@ -1060,8 +1072,8 @@ int CommandHandling::GetHandleForPort(char * pszPortID) {
 		n += 5;
 		GetPortInformation(nPortHandle);
 		/* if the physical location match pszPortID, return the handle */
-		if (!strncmp(HandleInformation_[nPortHandle].PhysicalPort, pszPortID,
-				2))
+		if (!strncmp(pdtHandleInformation_[nPortHandle].pchrPhysicalPort,
+				pszPortID, 2))
 			return nPortHandle;
 	} /* for */
 
@@ -1085,33 +1097,33 @@ int CommandHandling::FreePortHandles() {
 	char szHandleList[MAX_REPLY_MSG];
 
 	/* get all the handles that need freeing */
-	memset(Command_, 0, sizeof(Command_));
-	sprintf(Command_, "PHSR 01");
+	memset(pchrCommand_, 0, sizeof(pchrCommand_));
+	sprintf(pchrCommand_, "PHSR 01");
 
-	if (SendMessage(Command_, TRUE)) {
+	if (SendMessage(pchrCommand_, TRUE)) {
 		if (!GetResponse())
 			return 0;
-		if (!CheckResponse(VerifyResponse(LastReply_, TRUE)))
+		if (!CheckResponse(VerifyResponse(pchrLastReply_, TRUE)))
 			return 0;
 
-		sprintf(szHandleList, "%s", LastReply_);
+		sprintf(szHandleList, "%s", pchrLastReply_);
 		nNoHandles = ASCIIToHex(&szHandleList[n], 2);
 		n += 2;
 		for (int i = 0; i < nNoHandles; i++) {
 			nHandle = ASCIIToHex(&szHandleList[n], 2);
-			memset(Command_, 0, sizeof(Command_));
-			sprintf(Command_, "PHF %02X", nHandle);
+			memset(pchrCommand_, 0, sizeof(pchrCommand_));
+			sprintf(pchrCommand_, "PHF %02X", nHandle);
 			n += 5;
-			if (!SendMessage(Command_, TRUE))
+			if (!SendMessage(pchrCommand_, TRUE))
 				return 0;
 			if (!GetResponse())
 				return 0;
-			if (!CheckResponse(VerifyResponse(LastReply_, TRUE)))
+			if (!CheckResponse(VerifyResponse(pchrLastReply_, TRUE)))
 				return 0;
-			HandleInformation_[nHandle].HandleInfo.Initialized = false;
-			HandleInformation_[nHandle].HandleInfo.Enabled = false;
+			pdtHandleInformation_[nHandle].dtHandleInfo.nInitialized = false;
+			pdtHandleInformation_[nHandle].dtHandleInfo.nEnabled = false;
 			/* EC-03-0071 */
-			memset(HandleInformation_[nHandle].PhysicalPort, 0, 5);
+			memset(pdtHandleInformation_[nHandle].pchrPhysicalPort, 0, 5);
 		} /* for */
 		return 1;
 	} /* if */
@@ -1135,89 +1147,94 @@ int CommandHandling::GetPortInformation(int nPortHandle) {
 	unsigned int uASCIIConv = 0;
 	char *pszPortInformation = NULL;
 
-	memset(Command_, 0, sizeof(Command_));
-	if (SystemInformation_.TypeofSystem == VICRA_SYSTEM
-			|| SystemInformation_.TypeofSystem == SPECTRA_SYSTEM)
-		sprintf(Command_, "PHINF %02X0005", nPortHandle);
+	memset(pchrCommand_, 0, sizeof(pchrCommand_));
+	if (dtSystemInformation_.nTypeofSystem == VICRA_SYSTEM
+			|| dtSystemInformation_.nTypeofSystem == SPECTRA_SYSTEM)
+		sprintf(pchrCommand_, "PHINF %02X0005", nPortHandle);
 	else
-		sprintf(Command_, "PHINF %02X0025", nPortHandle);
+		sprintf(pchrCommand_, "PHINF %02X0025", nPortHandle);
 
-	if (SendMessage(Command_, TRUE)) {
+	if (SendMessage(pchrCommand_, TRUE)) {
 		if (GetResponse()) {
-			if (!CheckResponse(VerifyResponse(LastReply_, TRUE)))
+			if (!CheckResponse(VerifyResponse(pchrLastReply_, TRUE)))
 				return 0;
 
-			pszPortInformation = LastReply_;
+			pszPortInformation = pchrLastReply_;
 
-			strncpy(HandleInformation_[nPortHandle].ToolType,
+			strncpy(pdtHandleInformation_[nPortHandle].pchrToolType,
 					pszPortInformation, 8);
-			HandleInformation_[nPortHandle].ToolType[8] = '\0';
+			pdtHandleInformation_[nPortHandle].pchrToolType[8] = '\0';
 			pszPortInformation += 8;
-			strncpy(HandleInformation_[nPortHandle].Manufact,
+			strncpy(pdtHandleInformation_[nPortHandle].pchrManufact,
 					pszPortInformation, 12);
-			HandleInformation_[nPortHandle].Manufact[12] = '\0';
+			pdtHandleInformation_[nPortHandle].pchrManufact[12] = '\0';
 			pszPortInformation += 12;
-			strncpy(HandleInformation_[nPortHandle].Rev, pszPortInformation, 3);
-			HandleInformation_[nPortHandle].Rev[3] = '\0';
+			strncpy(pdtHandleInformation_[nPortHandle].pchrRev,
+					pszPortInformation, 3);
+			pdtHandleInformation_[nPortHandle].pchrRev[3] = '\0';
 			pszPortInformation += 3;
-			strncpy(HandleInformation_[nPortHandle].SerialNo,
+			strncpy(pdtHandleInformation_[nPortHandle].pchrSerialNo,
 					pszPortInformation, 8);
-			HandleInformation_[nPortHandle].SerialNo[8] = '\0';
+			pdtHandleInformation_[nPortHandle].pchrSerialNo[8] = '\0';
 			pszPortInformation += 8;
 			uASCIIConv = ASCIIToHex(pszPortInformation, 2);
 			pszPortInformation += 2;
-			HandleInformation_[nPortHandle].HandleInfo.ToolInPort = (
+			pdtHandleInformation_[nPortHandle].dtHandleInfo.nToolInPort = (
 					uASCIIConv & 0x01 ? 1 : 0);
-			HandleInformation_[nPortHandle].HandleInfo.GPIO1 = (
+			pdtHandleInformation_[nPortHandle].dtHandleInfo.nGPIO1 = (
 					uASCIIConv & 0x02 ? 1 : 0);
-			HandleInformation_[nPortHandle].HandleInfo.GPIO2 = (
+			pdtHandleInformation_[nPortHandle].dtHandleInfo.nGPIO2 = (
 					uASCIIConv & 0x04 ? 1 : 0);
-			HandleInformation_[nPortHandle].HandleInfo.GPIO3 = (
+			pdtHandleInformation_[nPortHandle].dtHandleInfo.nGPIO3 = (
 					uASCIIConv & 0x08 ? 1 : 0);
-			HandleInformation_[nPortHandle].HandleInfo.Initialized = (
+			pdtHandleInformation_[nPortHandle].dtHandleInfo.nInitialized = (
 					uASCIIConv & 0x10 ? 1 : 0);
-			HandleInformation_[nPortHandle].HandleInfo.Enabled = (
+			pdtHandleInformation_[nPortHandle].dtHandleInfo.nEnabled = (
 					uASCIIConv & 0x20 ? 1 : 0);
-			HandleInformation_[nPortHandle].HandleInfo.TIPCurrentSensing = (
-					uASCIIConv & 0x80 ? 1 : 0);
+			pdtHandleInformation_[nPortHandle].dtHandleInfo.TIPCurrentSensing =
+					(uASCIIConv & 0x80 ? 1 : 0);
 
 			/* parse the part number 0x0004 */
-			strncpy(HandleInformation_[nPortHandle].PartNumber,
+			strncpy(pdtHandleInformation_[nPortHandle].pchrPartNumber,
 					pszPortInformation, 20);
-			HandleInformation_[nPortHandle].PartNumber[20] = '\0';
+			pdtHandleInformation_[nPortHandle].pchrPartNumber[20] = '\0';
 			pszPortInformation += 20;
 
-			if (SystemInformation_.TypeofSystem != VICRA_SYSTEM
-					&& SystemInformation_.TypeofSystem != SPECTRA_SYSTEM) {
+			if (dtSystemInformation_.nTypeofSystem != VICRA_SYSTEM
+					&& dtSystemInformation_.nTypeofSystem != SPECTRA_SYSTEM) {
 				pszPortInformation += 10;
-				sprintf(HandleInformation_[nPortHandle].PhysicalPort, "%d",
-						nPortHandle);
-				strncpy(HandleInformation_[nPortHandle].PhysicalPort,
+				sprintf(pdtHandleInformation_[nPortHandle].pchrPhysicalPort,
+						"%d", nPortHandle);
+				strncpy(pdtHandleInformation_[nPortHandle].pchrPhysicalPort,
 						pszPortInformation, 2);
 				/* EC-03-0071
-				 HandleInformation_[nPortHandle].PhysicalPort[2] = '\0';
+				 HandleInformation_[nPortHandle].pchrPhysicalPort[2] = '\0';
 				 */
 				pszPortInformation += 2;
-				strncpy(HandleInformation_[nPortHandle].Channel,
+				strncpy(pdtHandleInformation_[nPortHandle].pchrChannel,
 						pszPortInformation, 2);
-				HandleInformation_[nPortHandle].Channel[2] = '\0';
-				if (!strncmp(HandleInformation_[nPortHandle].Channel, "01",
-						2)) {
+				pdtHandleInformation_[nPortHandle].pchrChannel[2] = '\0';
+				if (!strncmp(pdtHandleInformation_[nPortHandle].pchrChannel,
+						"01", 2)) {
 					/* EC-03-0071
-					 strncat(HandleInformation_[nPortHandle].PhysicalPort, "-b", 2 );
+					 strncat(HandleInformation_[nPortHandle].pchrPhysicalPort, "-b", 2 );
 					 */
-					strncpy(&HandleInformation_[nPortHandle].PhysicalPort[2],
+					strncpy(
+							&pdtHandleInformation_[nPortHandle].pchrPhysicalPort[2],
 							"-b", 2);
 					for (int i = 0; i < NO_HANDLES; i++) {
-						if (strncmp(HandleInformation_[i].PhysicalPort,
-								HandleInformation_[nPortHandle].PhysicalPort, 4)
-								&& !strncmp(HandleInformation_[i].PhysicalPort,
-										HandleInformation_[nPortHandle].PhysicalPort,
+						if (strncmp(pdtHandleInformation_[i].pchrPhysicalPort,
+								pdtHandleInformation_[nPortHandle].pchrPhysicalPort,
+								4)
+								&& !strncmp(
+										pdtHandleInformation_[i].pchrPhysicalPort,
+										pdtHandleInformation_[nPortHandle].pchrPhysicalPort,
 										2))
 							/* EC-03-0071
-							 strncat(HandleInformation_[i].PhysicalPort, "-a", 2 );
+							 strncat(HandleInformation_[i].pchrPhysicalPort, "-a", 2 );
 							 */
-							strncpy(&HandleInformation_[i].PhysicalPort[2],
+							strncpy(
+									&pdtHandleInformation_[i].pchrPhysicalPort[2],
 									"-a", 2);
 					} /* for */
 				} /* if */
@@ -1242,16 +1259,16 @@ int CommandHandling::GetPortInformation(int nPortHandle) {
  the TSTART command to do this.
  *****************************************************************/
 int CommandHandling::StartTracking() {
-	DisplayErrorsWhileTracking_ = true;
-	ReadINIParam<bool>("Reporting Options",
-			"Report While Tracking", DisplayErrorsWhileTracking_);
+	bDisplayErrorsWhileTracking_ = true;
+	ReadINIParam<bool>("Reporting Options", "Report While Tracking",
+			bDisplayErrorsWhileTracking_);
 
-	memset(Command_, 0, sizeof(Command_));
-	sprintf(Command_, "TSTART ");
+	memset(pchrCommand_, 0, sizeof(pchrCommand_));
+	sprintf(pchrCommand_, "TSTART ");
 
-	if (SendMessage(Command_, TRUE)) {
+	if (SendMessage(pchrCommand_, TRUE)) {
 		GetResponse();
-		return CheckResponse(VerifyResponse(LastReply_, TRUE));
+		return CheckResponse(VerifyResponse(pchrLastReply_, TRUE));
 	} /* if */
 
 	return 0;
@@ -1280,24 +1297,24 @@ int CommandHandling::GetTXTransforms(bool bReturn0x0800Option) {
 	/* report in volume only or out of volume as well */
 	nReplyMode = bReturn0x0800Option ? 0x0801 : 0x0001;
 
-	memset(Command_, 0, sizeof(Command_));
-	sprintf(Command_, "TX %04X", nReplyMode);
+	memset(pchrCommand_, 0, sizeof(pchrCommand_));
+	sprintf(pchrCommand_, "TX %04X", nReplyMode);
 
-	if (SendMessage(Command_, TRUE)) {
+	if (SendMessage(pchrCommand_, TRUE)) {
 		if (!GetResponse()) {
 			return 0;
 		}/* if */
 
-		if (DisplayErrorsWhileTracking_) {
-			if (!CheckResponse(VerifyResponse(LastReply_, TRUE)))
+		if (bDisplayErrorsWhileTracking_) {
+			if (!CheckResponse(VerifyResponse(pchrLastReply_, TRUE)))
 				return 0;
 		} else {
-			if (!VerifyResponse(LastReply_, false))
+			if (!VerifyResponse(pchrLastReply_, false))
 				return 0;
 		}/* else */
 
 		/* TX Parsing Routines */
-		pszTransformInfo = LastReply_;
+		pszTransformInfo = pchrLastReply_;
 
 		nNoHandles = ASCIIToHex(pszTransformInfo, 2);
 		pszTransformInfo += 2;
@@ -1316,51 +1333,54 @@ int CommandHandling::GetTXTransforms(bool bReturn0x0800Option) {
 					|| !strncmp(pszTransformInfo, "UNOCCUPIED", 10)) {
 				if (!strncmp(pszTransformInfo, "UNOCCUPIED", 10)) {
 
-					HandleInformation_[nHandle].Xfrms.Flags =
+					pdtHandleInformation_[nHandle].dtXfrms.ulFlags =
 					TRANSFORM_UNOCCUPIED;
 					pszTransformInfo += 10;
 					bDisabled = TRUE;
 				} /* if */
 				else if (!strncmp(pszTransformInfo, "DISABLED", 8)) {
-					HandleInformation_[nHandle].Xfrms.Flags =
+					pdtHandleInformation_[nHandle].dtXfrms.ulFlags =
 					TRANSFORM_DISABLED;
 					pszTransformInfo += 8;
 					bDisabled = TRUE;
 				} /* else if */
 				else {
-					HandleInformation_[nHandle].Xfrms.Flags = TRANSFORM_MISSING;
+					pdtHandleInformation_[nHandle].dtXfrms.ulFlags =
+					TRANSFORM_MISSING;
 					pszTransformInfo += 7;
 				} /* else */
-				HandleInformation_[nHandle].Xfrms.rotation.q0 =
-						HandleInformation_[nHandle].Xfrms.rotation.qx =
-								HandleInformation_[nHandle].Xfrms.rotation.qy =
-										HandleInformation_[nHandle].Xfrms.rotation.qz =
-												HandleInformation_[nHandle].Xfrms.translation.x =
-														HandleInformation_[nHandle].Xfrms.translation.y =
-																HandleInformation_[nHandle].Xfrms.translation.z =
-																		HandleInformation_[nHandle].Xfrms.Error =
+				pdtHandleInformation_[nHandle].dtXfrms.dtRotation.fQ0 =
+						pdtHandleInformation_[nHandle].dtXfrms.dtRotation.fQx =
+								pdtHandleInformation_[nHandle].dtXfrms.dtRotation.fQy =
+										pdtHandleInformation_[nHandle].dtXfrms.dtRotation.fQz =
+												pdtHandleInformation_[nHandle].dtXfrms.dtTranslation.fTx =
+														pdtHandleInformation_[nHandle].dtXfrms.dtTranslation.fTy =
+																pdtHandleInformation_[nHandle].dtXfrms.dtTranslation.fTz =
+																		pdtHandleInformation_[nHandle].dtXfrms.fError =
 																				BAD_FLOAT;
 			} /* if */
 			else {
-				HandleInformation_[nHandle].Xfrms.Flags = TRANSFORM_VALID;
+				pdtHandleInformation_[nHandle].dtXfrms.ulFlags =
+						TRANSFORM_VALID;
 
 				if (!ExtractValue(pszTransformInfo, 6, 10000.,
-						&HandleInformation_[nHandle].Xfrms.rotation.q0)
+						&pdtHandleInformation_[nHandle].dtXfrms.dtRotation.fQ0)
 						|| !ExtractValue(pszTransformInfo + 6, 6, 10000.,
-								&HandleInformation_[nHandle].Xfrms.rotation.qx)
+								&pdtHandleInformation_[nHandle].dtXfrms.dtRotation.fQx)
 						|| !ExtractValue(pszTransformInfo + 12, 6, 10000.,
-								&HandleInformation_[nHandle].Xfrms.rotation.qy)
+								&pdtHandleInformation_[nHandle].dtXfrms.dtRotation.fQy)
 						|| !ExtractValue(pszTransformInfo + 18, 6, 10000.,
-								&HandleInformation_[nHandle].Xfrms.rotation.qz)
+								&pdtHandleInformation_[nHandle].dtXfrms.dtRotation.fQz)
 						|| !ExtractValue(pszTransformInfo + 24, 7, 100.,
-								&HandleInformation_[nHandle].Xfrms.translation.x)
+								&pdtHandleInformation_[nHandle].dtXfrms.dtTranslation.fTx)
 						|| !ExtractValue(pszTransformInfo + 31, 7, 100.,
-								&HandleInformation_[nHandle].Xfrms.translation.y)
+								&pdtHandleInformation_[nHandle].dtXfrms.dtTranslation.fTy)
 						|| !ExtractValue(pszTransformInfo + 38, 7, 100.,
-								&HandleInformation_[nHandle].Xfrms.translation.z)
+								&pdtHandleInformation_[nHandle].dtXfrms.dtTranslation.fTz)
 						|| !ExtractValue(pszTransformInfo + 45, 6, 10000.,
-								&HandleInformation_[nHandle].Xfrms.Error)) {
-					HandleInformation_[nHandle].Xfrms.Flags = TRANSFORM_MISSING;
+								&pdtHandleInformation_[nHandle].dtXfrms.fError)) {
+					pdtHandleInformation_[nHandle].dtXfrms.ulFlags =
+					TRANSFORM_MISSING;
 					return 0;
 				} /* if */
 				else {
@@ -1371,56 +1391,56 @@ int CommandHandling::GetTXTransforms(bool bReturn0x0800Option) {
 			if (!bDisabled) {
 				unHandleStatus = ASCIIToHex(pszTransformInfo, 8);
 				pszTransformInfo += 8;
-				HandleInformation_[nHandle].HandleInfo.ToolInPort = (
+				pdtHandleInformation_[nHandle].dtHandleInfo.nToolInPort = (
 						unHandleStatus & 0x01 ? 1 : 0);
-				HandleInformation_[nHandle].HandleInfo.GPIO1 = (
+				pdtHandleInformation_[nHandle].dtHandleInfo.nGPIO1 = (
 						unHandleStatus & 0x02 ? 1 : 0);
-				HandleInformation_[nHandle].HandleInfo.GPIO2 = (
+				pdtHandleInformation_[nHandle].dtHandleInfo.nGPIO2 = (
 						unHandleStatus & 0x04 ? 1 : 0);
-				HandleInformation_[nHandle].HandleInfo.GPIO3 = (
+				pdtHandleInformation_[nHandle].dtHandleInfo.nGPIO3 = (
 						unHandleStatus & 0x08 ? 1 : 0);
-				HandleInformation_[nHandle].HandleInfo.Initialized = (
+				pdtHandleInformation_[nHandle].dtHandleInfo.nInitialized = (
 						unHandleStatus & 0x10 ? 1 : 0);
-				HandleInformation_[nHandle].HandleInfo.Enabled = (
+				pdtHandleInformation_[nHandle].dtHandleInfo.nEnabled = (
 						unHandleStatus & 0x20 ? 1 : 0);
-				HandleInformation_[nHandle].HandleInfo.OutOfVolume = (
+				pdtHandleInformation_[nHandle].dtHandleInfo.nOutOfVolume = (
 						unHandleStatus & 0x40 ? 1 : 0);
-				HandleInformation_[nHandle].HandleInfo.PartiallyOutOfVolume = (
-						unHandleStatus & 0x80 ? 1 : 0);
-				HandleInformation_[nHandle].HandleInfo.DisturbanceDet = (
+				pdtHandleInformation_[nHandle].dtHandleInfo.nPartiallyOutOfVolume =
+						(unHandleStatus & 0x80 ? 1 : 0);
+				pdtHandleInformation_[nHandle].dtHandleInfo.nDisturbanceDet = (
 						unHandleStatus & 0x200 ? 1 : 0);
-				HandleInformation_[nHandle].HandleInfo.SignalTooSmall = (
+				pdtHandleInformation_[nHandle].dtHandleInfo.nSignalTooSmall = (
 						unHandleStatus & 0x400 ? 1 : 0);
-				HandleInformation_[nHandle].HandleInfo.SignalTooBig = (
+				pdtHandleInformation_[nHandle].dtHandleInfo.nSignalTooBig = (
 						unHandleStatus & 0x800 ? 1 : 0);
-				HandleInformation_[nHandle].HandleInfo.ProcessingException = (
-						unHandleStatus & 0x1000 ? 1 : 0);
-				HandleInformation_[nHandle].HandleInfo.HardwareFailure = (
+				pdtHandleInformation_[nHandle].dtHandleInfo.nProcessingException =
+						(unHandleStatus & 0x1000 ? 1 : 0);
+				pdtHandleInformation_[nHandle].dtHandleInfo.nHardwareFailure = (
 						unHandleStatus & 0x2000 ? 1 : 0);
 
 				/*get frame number...*/
-				HandleInformation_[nHandle].Xfrms.FrameNumber = ASCIIToHex(
-						pszTransformInfo, 8);
+				pdtHandleInformation_[nHandle].dtXfrms.ulFrameNumber =
+						ASCIIToHex(pszTransformInfo, 8);
 				pszTransformInfo += 8;
 			} /* if */
 			pszTransformInfo++; /*for the carriage return*/
 		} /* for */
 
 		unSystemStatus = ASCIIToHex(pszTransformInfo, 4);
-		SystemInformation_.CommunicationSyncError = (
+		dtSystemInformation_.nCommunicationSyncError = (
 				unSystemStatus & 0x01 ? 1 : 0);
-		SystemInformation_.TooMuchInterference =
-				(unSystemStatus & 0x02 ? 1 : 0);
-		SystemInformation_.SystemCRCError = (unSystemStatus & 0x04 ? 1 : 0);
-		SystemInformation_.RecoverableException =
-				(unSystemStatus & 0x08 ? 1 : 0);
-		SystemInformation_.HardwareFailure = (unSystemStatus & 0x10 ? 1 : 0);
-		SystemInformation_.HardwareChange = (unSystemStatus & 0x20 ? 1 : 0);
-		SystemInformation_.PortOccupied = (unSystemStatus & 0x40 ? 1 : 0);
-		SystemInformation_.PortUnoccupied = (unSystemStatus & 0x80 ? 1 : 0);
-		SystemInformation_.DiagnosticsPending =
-				(unSystemStatus & 0x100 ? 1 : 0);
-		SystemInformation_.TemperatureOutOfRange = (
+		dtSystemInformation_.nTooMuchInterference = (
+				unSystemStatus & 0x02 ? 1 : 0);
+		dtSystemInformation_.nSystemCRCError = (unSystemStatus & 0x04 ? 1 : 0);
+		dtSystemInformation_.nRecoverableException = (
+				unSystemStatus & 0x08 ? 1 : 0);
+		dtSystemInformation_.nHardwareFailure = (unSystemStatus & 0x10 ? 1 : 0);
+		dtSystemInformation_.nHardwareChange = (unSystemStatus & 0x20 ? 1 : 0);
+		dtSystemInformation_.nPortOccupied = (unSystemStatus & 0x40 ? 1 : 0);
+		dtSystemInformation_.nPortUnoccupied = (unSystemStatus & 0x80 ? 1 : 0);
+		dtSystemInformation_.nDiagnosticsPending = (
+				unSystemStatus & 0x100 ? 1 : 0);
+		dtSystemInformation_.nTemperatureOutOfRange = (
 				unSystemStatus & 0x200 ? 1 : 0);
 
 	} /* if */
@@ -1459,24 +1479,24 @@ int CommandHandling::GetBXTransforms(bool bReturn0x0800Option) {
 	/* set reply mode depending on bReturnOOV */
 	nReplyMode = bReturn0x0800Option ? 0x0801 : 0x0001;
 
-	memset(Command_, 0, sizeof(Command_));
-	sprintf(Command_, "BX %04X", nReplyMode);
+	memset(pchrCommand_, 0, sizeof(pchrCommand_));
+	sprintf(pchrCommand_, "BX %04X", nReplyMode);
 
-	if (SendMessage(Command_, TRUE)) {
+	if (SendMessage(pchrCommand_, TRUE)) {
 		if (!GetBinaryResponse()) {
 			return 0;
 		}/* if */
 
-		if (DisplayErrorsWhileTracking_) {
-			if (!CheckResponse(VerifyResponse(LastReply_, TRUE)))
+		if (bDisplayErrorsWhileTracking_) {
+			if (!CheckResponse(VerifyResponse(pchrLastReply_, TRUE)))
 				return 0;
 		} else {
-			if (!VerifyResponse(LastReply_, false))
+			if (!VerifyResponse(pchrLastReply_, false))
 				return 0;
 		}/* else */
 
-		pszTransformInfo = LastReply_;
-		uCalcCRC = SystemGetCRC(LastReply_, 4);
+		pszTransformInfo = pchrLastReply_;
+		uCalcCRC = SystemGetCRC(pchrLastReply_, 4);
 
 		/* check for preamble ( A5C4 ) */
 		while (((pszTransformInfo[0] & 0xff) != 0xc4)) {
@@ -1496,7 +1516,7 @@ int CommandHandling::GetBXTransforms(bool bReturn0x0800Option) {
 		nSpot += 2;
 
 		if (uCalcCRC != uHeaderCRC) {
-			if (DisplayErrorsWhileTracking_)
+			if (bDisplayErrorsWhileTracking_)
 				CheckResponse( REPLY_BADCRC); /* display the Bad CRC error message */
 			return REPLY_BADCRC;
 		} /* if */
@@ -1514,36 +1534,37 @@ int CommandHandling::GetBXTransforms(bool bReturn0x0800Option) {
 			if (uTransStatus == 1) /* one means that the transformation was returned */
 			{
 				/* parse out the individual components by converting binary to floats */
-				HandleInformation_[nHandle].Xfrms.rotation.q0 = GetFloat(
-						&pszTransformInfo[nSpot]);
+				pdtHandleInformation_[nHandle].dtXfrms.dtRotation.fQ0 =
+						GetFloat(&pszTransformInfo[nSpot]);
 				nSpot += 4;
-				HandleInformation_[nHandle].Xfrms.rotation.qx = GetFloat(
-						&pszTransformInfo[nSpot]);
+				pdtHandleInformation_[nHandle].dtXfrms.dtRotation.fQx =
+						GetFloat(&pszTransformInfo[nSpot]);
 				nSpot += 4;
-				HandleInformation_[nHandle].Xfrms.rotation.qy = GetFloat(
-						&pszTransformInfo[nSpot]);
+				pdtHandleInformation_[nHandle].dtXfrms.dtRotation.fQy =
+						GetFloat(&pszTransformInfo[nSpot]);
 				nSpot += 4;
-				HandleInformation_[nHandle].Xfrms.rotation.qz = GetFloat(
-						&pszTransformInfo[nSpot]);
+				pdtHandleInformation_[nHandle].dtXfrms.dtRotation.fQz =
+						GetFloat(&pszTransformInfo[nSpot]);
 				nSpot += 4;
-				HandleInformation_[nHandle].Xfrms.translation.x = GetFloat(
-						&pszTransformInfo[nSpot]);
+				pdtHandleInformation_[nHandle].dtXfrms.dtTranslation.fTx =
+						GetFloat(&pszTransformInfo[nSpot]);
 				nSpot += 4;
-				HandleInformation_[nHandle].Xfrms.translation.y = GetFloat(
-						&pszTransformInfo[nSpot]);
+				pdtHandleInformation_[nHandle].dtXfrms.dtTranslation.fTy =
+						GetFloat(&pszTransformInfo[nSpot]);
 				nSpot += 4;
-				HandleInformation_[nHandle].Xfrms.translation.z = GetFloat(
-						&pszTransformInfo[nSpot]);
+				pdtHandleInformation_[nHandle].dtXfrms.dtTranslation.fTz =
+						GetFloat(&pszTransformInfo[nSpot]);
 				nSpot += 4;
-				HandleInformation_[nHandle].Xfrms.Error = GetFloat(
+				pdtHandleInformation_[nHandle].dtXfrms.fError = GetFloat(
 						&pszTransformInfo[nSpot]);
 				nSpot += 4;
 				unHandleStatus = GetHex4(&pszTransformInfo[nSpot]);
 				nSpot += 4;
-				HandleInformation_[nHandle].Xfrms.FrameNumber = GetHex4(
+				pdtHandleInformation_[nHandle].dtXfrms.ulFrameNumber = GetHex4(
 						&pszTransformInfo[nSpot]);
 				nSpot += 4;
-				HandleInformation_[nHandle].Xfrms.Flags = TRANSFORM_VALID;
+				pdtHandleInformation_[nHandle].dtXfrms.ulFlags =
+						TRANSFORM_VALID;
 			} /* if */
 
 			if (uTransStatus == 2 || uTransStatus == 4) /* 2 means the tool is missing and */
@@ -1556,52 +1577,53 @@ int CommandHandling::GetBXTransforms(bool bReturn0x0800Option) {
 				if (uTransStatus == 2) {
 					unHandleStatus = GetHex4(&pszTransformInfo[nSpot]);
 					nSpot += 4;
-					HandleInformation_[nHandle].Xfrms.FrameNumber = GetHex4(
-							&pszTransformInfo[nSpot]);
+					pdtHandleInformation_[nHandle].dtXfrms.ulFrameNumber =
+							GetHex4(&pszTransformInfo[nSpot]);
 					nSpot += 4;
-					HandleInformation_[nHandle].Xfrms.Flags = TRANSFORM_MISSING;
+					pdtHandleInformation_[nHandle].dtXfrms.ulFlags =
+					TRANSFORM_MISSING;
 				} /* if */
 				else
-					HandleInformation_[nHandle].Xfrms.Flags =
+					pdtHandleInformation_[nHandle].dtXfrms.ulFlags =
 					TRANSFORM_DISABLED;
 
-				HandleInformation_[nHandle].Xfrms.rotation.q0 =
-						HandleInformation_[nHandle].Xfrms.rotation.qx =
-								HandleInformation_[nHandle].Xfrms.rotation.qy =
-										HandleInformation_[nHandle].Xfrms.rotation.qz =
-												HandleInformation_[nHandle].Xfrms.translation.x =
-														HandleInformation_[nHandle].Xfrms.translation.y =
-																HandleInformation_[nHandle].Xfrms.translation.z =
-																		HandleInformation_[nHandle].Xfrms.Error =
+				pdtHandleInformation_[nHandle].dtXfrms.dtRotation.fQ0 =
+						pdtHandleInformation_[nHandle].dtXfrms.dtRotation.fQx =
+								pdtHandleInformation_[nHandle].dtXfrms.dtRotation.fQy =
+										pdtHandleInformation_[nHandle].dtXfrms.dtRotation.fQz =
+												pdtHandleInformation_[nHandle].dtXfrms.dtTranslation.fTx =
+														pdtHandleInformation_[nHandle].dtXfrms.dtTranslation.fTy =
+																pdtHandleInformation_[nHandle].dtXfrms.dtTranslation.fTz =
+																		pdtHandleInformation_[nHandle].dtXfrms.fError =
 																				BAD_FLOAT;
 			}/* if */
 
 			if (uTransStatus == 1 || uTransStatus == 2) {
-				HandleInformation_[nHandle].HandleInfo.ToolInPort = (
+				pdtHandleInformation_[nHandle].dtHandleInfo.nToolInPort = (
 						unHandleStatus & 0x01 ? 1 : 0);
-				HandleInformation_[nHandle].HandleInfo.GPIO1 = (
+				pdtHandleInformation_[nHandle].dtHandleInfo.nGPIO1 = (
 						unHandleStatus & 0x02 ? 1 : 0);
-				HandleInformation_[nHandle].HandleInfo.GPIO2 = (
+				pdtHandleInformation_[nHandle].dtHandleInfo.nGPIO2 = (
 						unHandleStatus & 0x04 ? 1 : 0);
-				HandleInformation_[nHandle].HandleInfo.GPIO3 = (
+				pdtHandleInformation_[nHandle].dtHandleInfo.nGPIO3 = (
 						unHandleStatus & 0x08 ? 1 : 0);
-				HandleInformation_[nHandle].HandleInfo.Initialized = (
+				pdtHandleInformation_[nHandle].dtHandleInfo.nInitialized = (
 						unHandleStatus & 0x10 ? 1 : 0);
-				HandleInformation_[nHandle].HandleInfo.Enabled = (
+				pdtHandleInformation_[nHandle].dtHandleInfo.nEnabled = (
 						unHandleStatus & 0x20 ? 1 : 0);
-				HandleInformation_[nHandle].HandleInfo.OutOfVolume = (
+				pdtHandleInformation_[nHandle].dtHandleInfo.nOutOfVolume = (
 						unHandleStatus & 0x40 ? 1 : 0);
-				HandleInformation_[nHandle].HandleInfo.PartiallyOutOfVolume = (
-						unHandleStatus & 0x80 ? 1 : 0);
-				HandleInformation_[nHandle].HandleInfo.DisturbanceDet = (
+				pdtHandleInformation_[nHandle].dtHandleInfo.nPartiallyOutOfVolume =
+						(unHandleStatus & 0x80 ? 1 : 0);
+				pdtHandleInformation_[nHandle].dtHandleInfo.nDisturbanceDet = (
 						unHandleStatus & 0x200 ? 1 : 0);
-				HandleInformation_[nHandle].HandleInfo.SignalTooSmall = (
+				pdtHandleInformation_[nHandle].dtHandleInfo.nSignalTooSmall = (
 						unHandleStatus & 0x400 ? 1 : 0);
-				HandleInformation_[nHandle].HandleInfo.SignalTooBig = (
+				pdtHandleInformation_[nHandle].dtHandleInfo.nSignalTooBig = (
 						unHandleStatus & 0x800 ? 1 : 0);
-				HandleInformation_[nHandle].HandleInfo.ProcessingException = (
-						unHandleStatus & 0x1000 ? 1 : 0);
-				HandleInformation_[nHandle].HandleInfo.HardwareFailure = (
+				pdtHandleInformation_[nHandle].dtHandleInfo.nProcessingException =
+						(unHandleStatus & 0x1000 ? 1 : 0);
+				pdtHandleInformation_[nHandle].dtHandleInfo.nHardwareFailure = (
 						unHandleStatus & 0x2000 ? 1 : 0);
 			}/* if */
 		} /* for */
@@ -1609,20 +1631,20 @@ int CommandHandling::GetBXTransforms(bool bReturn0x0800Option) {
 		unSystemStatus = GetHex2(&pszTransformInfo[nSpot]);
 		nSpot += 2;
 		uBodyCRC = GetHex2(&pszTransformInfo[nSpot]);
-		SystemInformation_.CommunicationSyncError = (
+		dtSystemInformation_.nCommunicationSyncError = (
 				unSystemStatus & 0x01 ? 1 : 0);
-		SystemInformation_.TooMuchInterference =
-				(unSystemStatus & 0x02 ? 1 : 0);
-		SystemInformation_.SystemCRCError = (unSystemStatus & 0x04 ? 1 : 0);
-		SystemInformation_.RecoverableException =
-				(unSystemStatus & 0x08 ? 1 : 0);
-		SystemInformation_.HardwareFailure = (unSystemStatus & 0x10 ? 1 : 0);
-		SystemInformation_.HardwareChange = (unSystemStatus & 0x20 ? 1 : 0);
-		SystemInformation_.PortOccupied = (unSystemStatus & 0x40 ? 1 : 0);
-		SystemInformation_.PortUnoccupied = (unSystemStatus & 0x80 ? 1 : 0);
-		SystemInformation_.DiagnosticsPending =
-				(unSystemStatus & 0x100 ? 1 : 0);
-		SystemInformation_.TemperatureOutOfRange = (
+		dtSystemInformation_.nTooMuchInterference = (
+				unSystemStatus & 0x02 ? 1 : 0);
+		dtSystemInformation_.nSystemCRCError = (unSystemStatus & 0x04 ? 1 : 0);
+		dtSystemInformation_.nRecoverableException = (
+				unSystemStatus & 0x08 ? 1 : 0);
+		dtSystemInformation_.nHardwareFailure = (unSystemStatus & 0x10 ? 1 : 0);
+		dtSystemInformation_.nHardwareChange = (unSystemStatus & 0x20 ? 1 : 0);
+		dtSystemInformation_.nPortOccupied = (unSystemStatus & 0x40 ? 1 : 0);
+		dtSystemInformation_.nPortUnoccupied = (unSystemStatus & 0x80 ? 1 : 0);
+		dtSystemInformation_.nDiagnosticsPending = (
+				unSystemStatus & 0x100 ? 1 : 0);
+		dtSystemInformation_.nTemperatureOutOfRange = (
 				unSystemStatus & 0x200 ? 1 : 0);
 
 		uCalcCRC = SystemGetCRC(pszTransformInfo += 6, nSpot - 6);
@@ -1657,42 +1679,43 @@ void CommandHandling::ApplyXfrms() {
 	QuatTransformation dtRefQuatXfrm, dtRefQuatXfrmInv, dtPortQuatXfrm,
 			dtNewQuatXfrm;
 
-	if (RefHandle_ == -1) //if no reference handle do nothing
+	if (nRefHandle_ == -1) //if no reference handle do nothing
 		return;
 
 	for (int nHandle = 0; nHandle < NO_HANDLES; nHandle++) {
-		if (nHandle != RefHandle_ &&	// don't apply the reference to itself
-				HandleInformation_[nHandle].HandleInfo.Enabled) // only apply if the handle is enabled
+		if (nHandle != nRefHandle_ &&	// don't apply the reference to itself
+				pdtHandleInformation_[nHandle].dtHandleInfo.nEnabled) // only apply if the handle is enabled
 				{
-			if (HandleInformation_[RefHandle_].Xfrms.translation.x
+			if (pdtHandleInformation_[nRefHandle_].dtXfrms.dtTranslation.fTx
 					<= MAX_NEGATIVE) {
-				HandleInformation_[nHandle].Xfrms.translation.x =
-						HandleInformation_[nHandle].Xfrms.translation.y =
-								HandleInformation_[nHandle].Xfrms.translation.z =
-										HandleInformation_[nHandle].Xfrms.rotation.q0 =
-												HandleInformation_[nHandle].Xfrms.rotation.qx =
-														HandleInformation_[nHandle].Xfrms.rotation.qy =
-																HandleInformation_[nHandle].Xfrms.rotation.qz =
+				pdtHandleInformation_[nHandle].dtXfrms.dtTranslation.fTx =
+						pdtHandleInformation_[nHandle].dtXfrms.dtTranslation.fTy =
+								pdtHandleInformation_[nHandle].dtXfrms.dtTranslation.fTz =
+										pdtHandleInformation_[nHandle].dtXfrms.dtRotation.fQ0 =
+												pdtHandleInformation_[nHandle].dtXfrms.dtRotation.fQx =
+														pdtHandleInformation_[nHandle].dtXfrms.dtRotation.fQy =
+																pdtHandleInformation_[nHandle].dtXfrms.dtRotation.fQz =
 																BAD_FLOAT;
-				HandleInformation_[nHandle].Xfrms.Flags = TRANSFORM_MISSING;
+				pdtHandleInformation_[nHandle].dtXfrms.ulFlags =
+						TRANSFORM_MISSING;
 			}/* if */
 			else {
-				dtRefQuatXfrm.rotation =
-						HandleInformation_[RefHandle_].Xfrms.rotation;
-				dtRefQuatXfrm.translation =
-						HandleInformation_[RefHandle_].Xfrms.translation;
+				dtRefQuatXfrm.dtRotation =
+						pdtHandleInformation_[nRefHandle_].dtXfrms.dtRotation;
+				dtRefQuatXfrm.dtTranslation =
+						pdtHandleInformation_[nRefHandle_].dtXfrms.dtTranslation;
 				QuatInverseXfrm(&dtRefQuatXfrm, &dtRefQuatXfrmInv);
 
-				dtPortQuatXfrm.rotation =
-						HandleInformation_[nHandle].Xfrms.rotation;
-				dtPortQuatXfrm.translation =
-						HandleInformation_[nHandle].Xfrms.translation;
+				dtPortQuatXfrm.dtRotation =
+						pdtHandleInformation_[nHandle].dtXfrms.dtRotation;
+				dtPortQuatXfrm.dtTranslation =
+						pdtHandleInformation_[nHandle].dtXfrms.dtTranslation;
 				QuatCombineXfrms(&dtPortQuatXfrm, &dtRefQuatXfrmInv,
 						&dtNewQuatXfrm);
-				HandleInformation_[nHandle].Xfrms.rotation =
-						dtNewQuatXfrm.rotation;
-				HandleInformation_[nHandle].Xfrms.translation =
-						dtNewQuatXfrm.translation;
+				pdtHandleInformation_[nHandle].dtXfrms.dtRotation =
+						dtNewQuatXfrm.dtRotation;
+				pdtHandleInformation_[nHandle].dtXfrms.dtTranslation =
+						dtNewQuatXfrm.dtTranslation;
 			}/* else */
 		} /* if */
 	} /* for */
@@ -1711,12 +1734,12 @@ void CommandHandling::ApplyXfrms() {
  the TSTOP call.
  *****************************************************************/
 int CommandHandling::StopTracking() {
-	memset(Command_, 0, sizeof(Command_));
-	sprintf(Command_, "TSTOP ");
+	memset(pchrCommand_, 0, sizeof(pchrCommand_));
+	sprintf(pchrCommand_, "TSTOP ");
 
-	if (SendMessage(Command_, TRUE)) {
+	if (SendMessage(pchrCommand_, TRUE)) {
 		GetResponse();
-		return CheckResponse(VerifyResponse(LastReply_, TRUE));
+		return CheckResponse(VerifyResponse(pchrLastReply_, TRUE));
 	} /* if */
 
 	return 0;
@@ -1738,24 +1761,24 @@ int CommandHandling::GetAlerts(bool bNewAlerts) {
 	unsigned int unAlertsStatus = 0;
 	char *pszAlertsInfo = NULL;
 
-	memset(Command_, 0, sizeof(Command_));
+	memset(pchrCommand_, 0, sizeof(pchrCommand_));
 	if (bNewAlerts)
-		sprintf(Command_, "GET Info.Status.New Alerts");
+		sprintf(pchrCommand_, "GET Info.Status.New Alerts");
 	else
-		sprintf(Command_, "GET Info.Status.Alerts");
+		sprintf(pchrCommand_, "GET Info.Status.Alerts");
 
-	if (SendMessage(Command_, TRUE)) {
+	if (SendMessage(pchrCommand_, TRUE)) {
 		if (!GetResponse()) {
 			return 0;
 		}/* if */
 
-		if (!CheckResponse(VerifyResponse(LastReply_, TRUE)))
+		if (!CheckResponse(VerifyResponse(pchrLastReply_, TRUE)))
 			return 0;
 
 		/* Parsing Timeouts */
 
-		LastReply_[strlen(LastReply_) - 5] = '\0'; // 4 for CRC and 1 for <CR>
-		pszAlertsInfo = LastReply_;
+		pchrLastReply_[strlen(pchrLastReply_) - 5] = '\0'; // 4 for CRC and 1 for <CR>
+		pszAlertsInfo = pchrLastReply_;
 
 		while (*pszAlertsInfo != '=')
 			pszAlertsInfo++;
@@ -1765,40 +1788,42 @@ int CommandHandling::GetAlerts(bool bNewAlerts) {
 		//convert the ascii to integer format
 		unAlertsStatus = atoi(pszAlertsInfo);
 
-		NewAlerts_.FatalParamterFault = (
+		dtNewAlerts_.nFatalParamterFault = (
 				unAlertsStatus & ALERT_FATAL_PARAM_FAULT ? 1 : 0);
-		NewAlerts_.SensorParameterFault = (
+		dtNewAlerts_.nSensorParameterFault = (
 				unAlertsStatus & ALERT_SENSOR_PARAM_FAULT ? 1 : 0);
-		NewAlerts_.MainVoltageFault = (
+		dtNewAlerts_.nMainVoltageFault = (
 				unAlertsStatus & ALERT_MAIN_VOLTAGE_FAULT ? 1 : 0);
-		NewAlerts_.SensorVoltageFault = (
+		dtNewAlerts_.nSensorVoltageFault = (
 				unAlertsStatus & ALERT_SENSOR_VOLTAGE_FAULT ? 1 : 0);
-		NewAlerts_.IlluminatorVoltageFault = (
+		dtNewAlerts_.nIlluminatorVoltageFault = (
 				unAlertsStatus & ALERT_ILLUM_VOLTAGE_FAULT ? 1 : 0);
-		NewAlerts_.IlluminatorCurrentFault = (
+		dtNewAlerts_.nIlluminatorCurrentFault = (
 				unAlertsStatus & ALERT_ILLUM_CURRENT_FAULT ? 1 : 0);
-		NewAlerts_.LeftSensorTempFault = (
+		dtNewAlerts_.nLeftSensorTempFault = (
 				unAlertsStatus & ALERT_LEFT_SENSOR_TEMP ? 1 : 0);
-		NewAlerts_.RightSensorTempFault = (
+		dtNewAlerts_.nRightSensorTempFault = (
 				unAlertsStatus & ALERT_RIGHT_SENSOR_TEMP ? 1 : 0);
-		NewAlerts_.MainBoardTempFault = (
+		dtNewAlerts_.nMainBoardTempFault = (
 				unAlertsStatus & ALERT_MAIN_BOARD_TEMP ? 1 : 0);
-		NewAlerts_.BatteryFaultAlarm = (
+		dtNewAlerts_.nBatteryFaultAlarm = (
 				unAlertsStatus & ALERT_BATTERY_FAULT ? 1 : 0);
-		NewAlerts_.BumpDetectedAlarm = (
+		dtNewAlerts_.nBumpDetectedAlarm = (
 				unAlertsStatus & ALERT_BUMP_DETECTED ? 1 : 0);
-		NewAlerts_.CableFaultAlarm =
-				(unAlertsStatus & ALERT_CABLE_FAULT ? 1 : 0);
-		NewAlerts_.FirmwareIncompatible = (
+		dtNewAlerts_.nCableFaultAlarm = (
+				unAlertsStatus & ALERT_CABLE_FAULT ? 1 : 0);
+		dtNewAlerts_.nFirmwareIncompatible = (
 				unAlertsStatus & ALERT_FIRMWARE_INCOMPAT ? 1 : 0);
-		NewAlerts_.NonFatalParamFault = (
+		dtNewAlerts_.nNonFatalParamFault = (
 				unAlertsStatus & ALERT_NON_FATAL_PARAM_FAULT ? 1 : 0);
-		NewAlerts_.InternalFlashFull = (
+		dtNewAlerts_.nInternalFlashFull = (
 				unAlertsStatus & ALERT_INTERNAL_FLASH_FULL ? 1 : 0);
-		NewAlerts_.LaserBatteryFaultAlarm = (
+		dtNewAlerts_.nLaserBatteryFaultAlarm = (
 				unAlertsStatus & ALERT_LASER_BATTERY_FAULT ? 1 : 0);
-		NewAlerts_.TempTooHigh = (unAlertsStatus & ALERT_TEMP_TOO_HIGH ? 1 : 0);
-		NewAlerts_.TempTooLow = (unAlertsStatus & ALERT_TEMP_TOO_LOW ? 1 : 0);
+		dtNewAlerts_.nTempTooHigh = (
+				unAlertsStatus & ALERT_TEMP_TOO_HIGH ? 1 : 0);
+		dtNewAlerts_.nTempTooLow =
+				(unAlertsStatus & ALERT_TEMP_TOO_LOW ? 1 : 0);
 
 		return 1;
 	} else {
@@ -1826,20 +1851,20 @@ int CommandHandling::LookupTimeout(char *szCommand) {
 	 * not work for the communication speed selected. For this reason
 	 * we will use the Default Timeout Value.
 	 */
-	if (SystemInformation_.TypeofSystem == AURORA_SYSTEM)
-		return DefaultTimeout_;
+	if (dtSystemInformation_.nTypeofSystem == AURORA_SYSTEM)
+		return nDefaultTimeout_;
 
 	//int nPos = sCommand.indexOf(" :");
 	int nPos = sCommand.find_first_of(" :");
 	if (nPos > 0)
 		sCommand = sCommand.substr(0, nPos - 1);
 	else
-		return DefaultTimeout_;
+		return nDefaultTimeout_;
 
-	std::map<std::string, int>::const_iterator pos = TimeoutValues_.find(
+	std::map<std::string, int>::const_iterator pos = mpTimeoutValues_.find(
 			sCommand);
-	if (pos == TimeoutValues_.end()) {
-		return DefaultTimeout_;
+	if (pos == mpTimeoutValues_.end()) {
+		return nDefaultTimeout_;
 	} else {
 		nTimeoutValue = pos->second;
 	}
@@ -1859,22 +1884,22 @@ int CommandHandling::CreateTimeoutTable() {
 	char *pszTimeoutInfo = NULL;
 	char szTimeoutString[] = "Info.Timeout.\0";
 
-	TimeoutValues_.clear();
-	memset(Command_, 0, sizeof(Command_));
-	sprintf(Command_, "GET Info.Timeout.*");
-	if (SendMessage(Command_, TRUE)) {
+	mpTimeoutValues_.clear();
+	memset(pchrCommand_, 0, sizeof(pchrCommand_));
+	sprintf(pchrCommand_, "GET Info.Timeout.*");
+	if (SendMessage(pchrCommand_, TRUE)) {
 		if (!GetResponse()) {
 			return 0;
 		}/* if */
 
-		if (!VerifyResponse(LastReply_, TRUE))
+		if (!VerifyResponse(pchrLastReply_, TRUE))
 			return 0;
 
 		/* Parsing Timeouts */
-		LastReply_[strlen(LastReply_) - 5] = LINE_FEED; // 4 for CRC and 1 for <CR>
-		LastReply_[strlen(LastReply_) - 4] = 0;
+		pchrLastReply_[strlen(pchrLastReply_) - 5] = LINE_FEED; // 4 for CRC and 1 for <CR>
+		pchrLastReply_[strlen(pchrLastReply_) - 4] = 0;
 
-		pszTimeoutInfo = LastReply_;
+		pszTimeoutInfo = pchrLastReply_;
 
 		char *chValue, *chNext;
 		while (strchr(pszTimeoutInfo, '=')) {
@@ -1885,7 +1910,7 @@ int CommandHandling::CreateTimeoutTable() {
 			*chNext++ = 0;
 
 			int a = atoi(chValue);
-			TimeoutValues_[std::string(pszTimeoutInfo)] = a;
+			mpTimeoutValues_[std::string(pszTimeoutInfo)] = a;
 
 			pszTimeoutInfo = chNext;
 		}
@@ -1918,11 +1943,11 @@ int CommandHandling::SendMessage(char *Command_, bool bAddCRC) {
 	bool bComplete = false;
 
 	/* Check COM port */
-	if (COMPort_ == NULL) {
+	if (dtCOMPort_ == NULL) {
 		return bComplete;
 	}/* if */
 
-	Timeout_ = LookupTimeout(Command_);
+	nTimeout_ = LookupTimeout(Command_);
 
 	/* build the command, by adding a carraige return to it and crc if specified */
 	if (!BuildCommand(Command_, bAddCRC))
@@ -1931,9 +1956,9 @@ int CommandHandling::SendMessage(char *Command_, bool bAddCRC) {
 	if (strlen(Command_) >= (MAX_COMMAND_MSG)) {
 		return bComplete;
 	} /* if */
-
+	ROS_INFO("Sending Command: %s", Command_);
 	for (i = 0; i < strlen(Command_); i++) {
-		if (COMPort_->SerialPutChar(Command_[i]) <= 0) {
+		if (dtCOMPort_->SerialPutChar(Command_[i]) <= 0) {
 			bComplete = false;
 			break;
 		} /* if */
@@ -1944,7 +1969,7 @@ int CommandHandling::SendMessage(char *Command_, bool bAddCRC) {
 	} /* for */
 
 	/*flush the COM Port...this sends out any info still sitting in the buffer*/
-	COMPort_->SerialFlush();
+	dtCOMPort_->SerialFlush();
 	LogToFile(0, Command_);
 
 	return bComplete;
@@ -1976,107 +2001,141 @@ int CommandHandling::GetResponse() {
 	bool bDone = false;
 	int nCount = 0, nRet = 0, nRetry = 0;
 
-	memset(LastReply_, 0, sizeof(LastReply_));
-
+	memset(pchrLastReply_, 0, sizeof(pchrLastReply_));
 	/*
 	 * Get the start time that the call was initialized.
 	 */
 	time(&starttime);
 
+	boost::shared_ptr<QSerialPort> serial = this->dtCOMPort_->pdtSerialPort_;
+
 	do {
-		/* Check COM port */
-		if (COMPort_ == NULL) {
-			return false;
-		}/* if */
+		if (serial->waitForReadyRead(nTimeout_ * 1000)) {
+			// read response
+			QByteArray requestData = serial->readAll();
+			while (serial->waitForReadyRead(10))
+				requestData += serial->readAll();
+			ROS_INFO("Response: %s", requestData.data());
+			strcpy(pchrLastReply_, requestData.data());
+			bDone = true;
+		} else {
+			nRetry++;
+			if (nRetry > 3) {
+				memset(pchrLastReply_, 0, sizeof(pchrLastReply_));
+				// Resending the last command
+				SendMessage(pchrCommand_, false); /* Command already has CRC */
+			} else {
+				dtSubWindowCOMPortTimeOut_.exec();
+				nRet = dtSubWindowCOMPortTimeOut_.nReturnValue_;
+				memset(pchrLastReply_, 0, sizeof(pchrLastReply_));
 
-		while ((COMPort_->SerialCharsAvailable() > 0) && (!bDone)) {
-			chChar = COMPort_->SerialGetChar();
-			/* if carriage return, we are done */
-			if (chChar == '\r') {
-				LastReply_[nCount] = CARRIAGE_RETURN;
-				LastReply_[nCount + 1] = '\0';
-				bDone = TRUE;
-			} /* if */
-			else {
-				LastReply_[nCount] = chChar;
-				nCount++;
-			} /* else */
-		} /* while */
-
-		if (!bDone) {
-			/*
-			 * Get the current time and compare with start time
-			 * if longer "timeout" assume no response and timeout
-			 */
-			time(&currenttime);
-
-			if (difftime(currenttime, starttime) >= Timeout_) {
 				/*
-				 * If a COM port timeout is noted, we will try to
-				 * send the command again, up to 3 times.
+				 * if the user chooses to retry sending the command
+				 * handle that here.
 				 */
-				nCount = 0;
-				if (nRetry < 3) {
-					nRetry++;
-					memset(LastReply_, 0, sizeof(LastReply_));
-
-					/*
-					 * Do not clear the Command_ at this point, since
-					 * we are re-sending the same command.
-					 */
-					SendMessage(Command_, false); /* Command already has CRC */
-
-					/* Reset the start time. */
-					time(&starttime);
+				if (nRet == ERROR_TIMEOUT_CONT) {
+					if (strlen(pchrCommand_) > 0) {
+						nRetry = 1;
+						memset(pchrLastReply_, 0, sizeof(pchrLastReply_));
+						/*
+						 * Do not clear the Command_ at this point, since
+						 * we are re-sending the same command.
+						 */
+						SendMessage(pchrCommand_, false); /* Command already has CRC */
+						/* Reset the start time. */
+					} else {
+						dtCOMPort_->SerialBreak();
+					} /* else */
 				} else {
-					/*
-					 * If a COM port timeout is noted again, the communication
-					 * error seems not recoverable and we will stop sending
-					 * the command and spawns a dialog. The dialog allows
-					 * the user to retry the current command, restart the application
-					 * or close the application. You could eliminate this dialog and
-					 * return false from this area and handle the false return
-					 * directly.
-					 */
-					SubWindow_COMPortTimeOut_.exec();
-					nRet = SubWindow_COMPortTimeOut_.ReturnValue_;
-					memset( LastReply_, 0, sizeof(LastReply_) );
-
-					/*
-					 * if the user chooses to retry sending the command
-					 * handle that here.
-					 */
-					if ( nRet == ERROR_TIMEOUT_CONT )
-					{
-						if ( strlen(Command_) > 0 )
-						{
-							nRetry = 1;
-							memset( LastReply_, 0, sizeof(LastReply_) );
-							/*
-							 * Do not clear the Command_ at this point, since
-							 * we are re-sending the same command.
-							 */
-							SendMessage( Command_, false ); /* Command already has CRC */
-							/* Reset the start time. */
-							time( &starttime );
-						}
-						else
-						{
-							COMPort_->SerialBreak();
-						} /* else */
-					}
-					else
-					{
-						ROS_ERROR("Time out when getting response ");
-						return false;
-					}/* else */
+					ROS_ERROR("CommandHandling: Get response failed");
+					return false;
 				}/* else */
-			}/* if */
-		} /* if */
+			}
+		}
 	} while (!bDone);
 
-	LogToFile(1, LastReply_);
-
+	return true;
+	//do {
+	/* Check COM port */
+	//	if (dtCOMPort_ == NULL) {
+	//		return false;
+	//	}/* if */
+	//	while ((dtCOMPort_->SerialCharsAvailable() > 0) && (!bDone)) {
+	//		chChar = dtCOMPort_->SerialGetChar();
+	/* if carriage return, we are done */
+	//		if (chChar == '\r') {
+	//			pchrLastReply_[nCount] = CARRIAGE_RETURN;
+	//			pchrLastReply_[nCount + 1] = '\0';
+	//			bDone = TRUE;
+	//		} /* if */
+	//		else {
+	//			pchrLastReply_[nCount] = chChar;
+	//			nCount++;
+	//		} /* else */
+	//	} /* while */
+	//	if (!bDone) {
+	/*
+	 * Get the current time and compare with start time
+	 * if longer "timeout" assume no response and timeout
+	 */
+	//	time(&currenttime);
+	//	if (difftime(currenttime, starttime) >= nTimeout_) {
+	/*
+	 * If a COM port timeout is noted, we will try to
+	 * send the command again, up to 3 times.
+	 */
+	//		nCount = 0;
+	//		if (nRetry < 3) {
+	//			nRetry++;
+	//			memset(pchrLastReply_, 0, sizeof(pchrLastReply_));
+	/*
+	 * Do not clear the Command_ at this point, since
+	 * we are re-sending the same command.
+	 */
+	//		SendMessage(pchrCommand_, false); /* Command already has CRC */
+	/* Reset the start time. */
+	//		time(&starttime);
+	//	} else {
+	/*
+	 * If a COM port timeout is noted again, the communication
+	 * error seems not recoverable and we will stop sending
+	 * the command and spawns a dialog. The dialog allows
+	 * the user to retry the current command, restart the application
+	 * or close the application. You could eliminate this dialog and
+	 * return false from this area and handle the false return
+	 * directly.
+	 */
+	//		dtSubWindowCOMPortTimeOut_.exec();
+	//		nRet = dtSubWindowCOMPortTimeOut_.nReturnValue_;
+	//		memset(pchrLastReply_, 0, sizeof(pchrLastReply_));
+	/*
+	 * if the user chooses to retry sending the command
+	 * handle that here.
+	 */
+	//		if (nRet == ERROR_TIMEOUT_CONT) {
+	//			if (strlen(pchrCommand_) > 0) {
+	//				nRetry = 1;
+	//				memset(pchrLastReply_, 0, sizeof(pchrLastReply_));
+	/*
+	 * Do not clear the Command_ at this point, since
+	 * we are re-sending the same command.
+	 */
+	//					SendMessage(pchrCommand_, false); /* Command already has CRC */
+	/* Reset the start time. */
+	//				time(&starttime);
+	//			} else {
+	//				dtCOMPort_->SerialBreak();
+	//			} /* else */
+	//			} else {
+	//				ROS_ERROR("Time out when getting response ");
+	//				return false;
+	//			}/* else */
+	//		}/* else */
+	//	}/* if */
+	//} /* if */
+	//} while (!bDone);
+//
+	//LogToFile(1, pchrLastReply_);
 	return 1;
 } /* GetResponse */
 
@@ -2107,7 +2166,7 @@ int CommandHandling::GetBinaryResponse() {
 	int nTotalBinaryLength = -1, //initialize it to a number smaller than nCount
 			nCount = 0, nRet = 0, nRetry = 0;
 
-	memset(LastReply_, 0, sizeof(LastReply_));
+	memset(pchrLastReply_, 0, sizeof(pchrLastReply_));
 
 	/*
 	 * Get the start time that the call was initialized.
@@ -2116,21 +2175,21 @@ int CommandHandling::GetBinaryResponse() {
 
 	do {
 		/* Check COM port */
-		if (COMPort_ == NULL) {
+		if (dtCOMPort_ == NULL) {
 			return false;
 		}/* if */
 
-		while ((COMPort_->SerialCharsAvailable() > 0) && (!bDone)) {
-			chChar = COMPort_->SerialGetChar();
+		while ((dtCOMPort_->SerialCharsAvailable() > 0) && (!bDone)) {
+			chChar = dtCOMPort_->SerialGetChar();
 
-			LastReply_[nCount] = chChar;
+			pchrLastReply_[nCount] = chChar;
 
 			/*
 			 * Get the total length of the buffer
 			 */
 			if (nCount == 3) {
 				/* + 7 to account for header information */
-				nTotalBinaryLength = GetHex2(&LastReply_[2]) + 7 + 1;
+				nTotalBinaryLength = GetHex2(&pchrLastReply_[2]) + 7 + 1;
 			}/* if */
 
 			nCount++;
@@ -2147,7 +2206,7 @@ int CommandHandling::GetBinaryResponse() {
 			 */
 			time(&currenttime);
 
-			if (difftime(currenttime, starttime) >= Timeout_) {
+			if (difftime(currenttime, starttime) >= nTimeout_) {
 				/*
 				 * If a COM port timeout is noted, we will try to
 				 * send the command again, up to 3 times.
@@ -2155,13 +2214,13 @@ int CommandHandling::GetBinaryResponse() {
 				nCount = 0;
 				if (nRetry < 3) {
 					nRetry++;
-					memset(LastReply_, 0, sizeof(LastReply_));
+					memset(pchrLastReply_, 0, sizeof(pchrLastReply_));
 
 					/*
 					 * Do not clear the Command_ at this point, since
 					 * we are re-sending the same command.
 					 */
-					SendMessage(Command_, false); /* Command already has CRC */
+					SendMessage(pchrCommand_, false); /* Command already has CRC */
 
 					/* Reset the start time. */
 					time(&starttime);
@@ -2175,35 +2234,29 @@ int CommandHandling::GetBinaryResponse() {
 					 * return false from this area and handle the false return
 					 * directly.
 					 */
-					SubWindow_COMPortTimeOut_.exec();
-					nRet = SubWindow_COMPortTimeOut_.ReturnValue_;
-					memset( LastReply_, 0, sizeof(LastReply_) );
+					dtSubWindowCOMPortTimeOut_.exec();
+					nRet = dtSubWindowCOMPortTimeOut_.nReturnValue_;
+					memset(pchrLastReply_, 0, sizeof(pchrLastReply_));
 
 					/*
 					 * if the user chooses to retry sending the command
 					 * handle that here.
 					 */
-					if ( nRet == ERROR_TIMEOUT_CONT )
-					{
-						if ( strlen(Command_) > 0 )
-						{
+					if (nRet == ERROR_TIMEOUT_CONT) {
+						if (strlen(pchrCommand_) > 0) {
 							nRetry = 1;
-							memset( LastReply_, 0, sizeof(LastReply_) );
+							memset(pchrLastReply_, 0, sizeof(pchrLastReply_));
 							/*
 							 * Do not clear the Command_ at this point, since
 							 * we are re-sending the same command.
 							 */
-							SendMessage( Command_, false ); /* Command already has CRC */
+							SendMessage(pchrCommand_, false); /* Command already has CRC */
 							/* Reset the start time. */
-							time( &starttime );
-						}
-						else
-						{
-							COMPort_->SerialBreak();
+							time(&starttime);
+						} else {
+							dtCOMPort_->SerialBreak();
 						} /* else */
-					}
-					else
-					{
+					} else {
 						ROS_ERROR("Time out when getting binary response ");
 						return false;
 					}/* else */
@@ -2212,7 +2265,7 @@ int CommandHandling::GetBinaryResponse() {
 		} /* if */
 	} while (!bDone);
 
-	LogToFile(1, LastReply_);
+	LogToFile(1, pchrLastReply_);
 	return bDone;
 
 } /* GetBinaryResponse */
@@ -2322,8 +2375,8 @@ void CommandHandling::ErrorMessage() {
 	bool bBeepOnError = false;
 	int nNoErrorBeeps = 1;
 	/* get the error response and display it */
-	GetErrorResponse(LastReply_, pchErrorMessage);
-	strncpy(pchErrorNumber, LastReply_, 7);
+	GetErrorResponse(pchrLastReply_, pchErrorMessage);
+	strncpy(pchErrorNumber, pchrLastReply_, 7);
 	pchErrorNumber[7] = '\0';
 
 	ReadINIParam<bool>("Beeping Options", "Beep On Error", bBeepOnError);
@@ -2353,8 +2406,8 @@ void CommandHandling::WarningMessage() {
 	int nNoWarningBeeps = 1;
 	std::string temp_string;
 
-	GetErrorResponse(LastReply_, pchWarningMessage);
-	strncpy(pchWarningNumber, LastReply_, 9);
+	GetErrorResponse(pchrLastReply_, pchWarningMessage);
+	strncpy(pchWarningNumber, pchrLastReply_, 9);
 	pchWarningNumber[9] = '\0';
 
 	ReadINIParam<bool>("Beeping Options", "Beep On Warning", bBeepOnWarning);
@@ -2388,23 +2441,23 @@ void CommandHandling::LogToFile(int nDirection, char *psz) {
 	time_t ltime;
 	char *pszTimeStamp = NULL, szMessage[256];
 
-	if (!LogToFile_)
+	if (!bLogToFile_)
 		return;
 
-	pfOut = fopen(LogFile_, "a+t");
+	pfOut = fopen(pchrLogFile_, "a+t");
 	if (pfOut == NULL) {
 		sprintf(szMessage, "The log file (%s) could not be opened.\n"
 				"COM Port logging will be turned off.\n\n"
 				"To reactivate this feature, please do so under\n"
-				"the Options menu.", LogFile_);
-		LogToFile_ = false;
-		IniFile_.SetKeyValue("Logging Options", "Log To File", "0");
-		IniFile_.Save(ConfigurationFile_);
+				"the Options menu.", pchrLogFile_);
+		bLogToFile_ = false;
+		dtIniFile_.SetKeyValue("Logging Options", "Log To File", "0");
+		dtIniFile_.Save(strConfigurationFile_);
 		ROS_ERROR("Log File Error: %s", szMessage);
 		return;
 	}
 
-	if (DateTimeStampFile_) {
+	if (bDateTimeStampFile_) {
 		time(&ltime);
 		pszTimeStamp = ctime(&ltime);
 		//pszTimeStamp = strftime(pszTimeStamp);
@@ -2463,7 +2516,7 @@ void CommandHandling::GetErrorResponse(char * pszReply, char * pszErrorMsg) {
 	if (!strncasecmp(pszReply, "ERROR", 5)) {
 		pszReply += 5;
 		sprintf(chErrorToSearchFor, "0x%c%c", pszReply[0], pszReply[1]);
-		temp_string = ErrorIniFile_.GetKeyValue("Error Messages",
+		temp_string = dtErrorIniFile_.GetKeyValue("Error Messages",
 				chErrorToSearchFor);
 		if (temp_string.empty()) {
 			strcpy(chReturnedMsg, "Unknown Error");
@@ -2474,7 +2527,7 @@ void CommandHandling::GetErrorResponse(char * pszReply, char * pszErrorMsg) {
 	else if (!strncasecmp(pszReply, "WARNING", 7)) {
 		pszReply += 7;
 		sprintf(chErrorToSearchFor, "0x%c%c", pszReply[0], pszReply[1]);
-		temp_string = ErrorIniFile_.GetKeyValue("Warning Messages",
+		temp_string = dtErrorIniFile_.GetKeyValue("Warning Messages",
 				chErrorToSearchFor);
 		if (temp_string.empty()) {
 			strcpy(chReturnedMsg,
@@ -2825,7 +2878,7 @@ unsigned int CommandHandling::SystemGetCRC(char *psz, int nLength) {
 void CommandHandling::ReadINIParam_array(std::string Section, std::string Key,
 		char* array) {
 	std::string temp_string;
-	temp_string = IniFile_.GetKeyValue(Section, Key);
+	temp_string = dtIniFile_.GetKeyValue(Section, Key);
 	strcpy(array, temp_string.c_str());
 }
 

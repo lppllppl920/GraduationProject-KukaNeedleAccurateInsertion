@@ -21,7 +21,7 @@ public:
 	template<class T> void ReadINIParam(std::string Section, std::string Key,
 			T& Value) {
 		std::string temp_string;
-		temp_string = IniFile_.GetKeyValue(Section, Key);
+		temp_string = dtIniFile_.GetKeyValue(Section, Key);
 		if (!temp_string.empty()) {
 			Value = boost::lexical_cast<T>(temp_string);
 		}
@@ -35,15 +35,13 @@ public slots:
 	void Cancel_signal();
 
 public:
-	bool Hardware_;
-	bool Wireless_;
-	bool Reset_;
-	int COMPort_;
-	std::string LogFile_;
-	std::string ConfigurationFile_;
-
-private:
-	CIniFile IniFile_;
+	bool bHardware_;
+	bool bWireless_;
+	bool bReset_;
+	int nCOMPort_;
+	std::string strLogFile_;
+	std::string strConfigurationFile_;
+	CIniFile dtIniFile_;
 };
 
 #endif /* ROBOT_DRIVER_INTERFACE_SRC_NDI_COMPORTSETTINGS_H_ */

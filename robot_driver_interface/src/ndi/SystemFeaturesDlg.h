@@ -26,12 +26,12 @@ public:
 			int nNoFieldGenerators, int nNoFieldGeneratorCards,
 			int nTypeofSystem);
 
-	int NoActivePorts_;
-	int NoActiveWireless_;
-	int NoPassivePorts_;
-	int NoTIPDetectionPorts_;
-	int TypeOfSystem_;
-	std::string VersionInfo_;
+	int nNoActivePorts_;
+	int nNoActiveWireless_;
+	int nNoPassivePorts_;
+	int nNoTIPDetectionPorts_;
+	int nTypeOfSystem_;
+	std::string strVersionInfo_;
 };
 
 #endif /* ROBOT_DRIVER_INTERFACE_SRC_NDI_SYSTEMFEATURESDLG_H_ */

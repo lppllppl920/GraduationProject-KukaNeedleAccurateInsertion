@@ -60,87 +60,89 @@
  *****************************************************************/
 /* POSITION 3D Structure */
 typedef struct Position3dStruct {
-	float x;
-	float y;
-	float z;
+	float fTx;
+	float fTy;
+	float fTz;
 } Position3d;
 
 /* QUATERNION Structure */
 typedef struct QuatRotationStruct {
-	float q0;
-	float qx;
-	float qy;
-	float qz;
+	float fQ0;
+	float fQx;
+	float fQy;
+	float fQz;
 } QuatRotation;
 
 typedef struct QuatTransformationStruct {
-	QuatRotation rotation;
-	Position3d translation;
+	QuatRotation dtRotation;
+	Position3d dtTranslation;
 } QuatTransformation;
 
 typedef float RotationMatrix[3][3];
 
 typedef struct Rotation {
 
-	float Roll, /* rotation about the object's z-axis (Euler angle) */
-	Pitch, /* rotation about the object's y-axis (Euler angle) */
-	Yaw; /* rotation about the object's x-axis (Euler angle) */
+	float fRoll, /* rotation about the object's z-axis (Euler angle) */
+	fPitch, /* rotation about the object's y-axis (Euler angle) */
+	fYaw; /* rotation about the object's x-axis (Euler angle) */
 } Rotation;
 
 /* Transformation Information Structure */
 typedef struct {
-	unsigned long Flags, FrameNumber;
-	QuatRotation rotation;
-	Position3d translation;
-	float Error;
+	unsigned long ulFlags, ulFrameNumber;
+	QuatRotation dtRotation;
+	Position3d dtTranslation;
+	float fError;
 } TransformInformation;
 
 /* Handle Status Structure */
 typedef struct {
-	int ToolInPort, GPIO1, GPIO2, GPIO3, Initialized, Enabled, OutOfVolume,
-			PartiallyOutOfVolume, DisturbanceDet, SignalTooSmall, SignalTooBig,
-			ProcessingException, HardwareFailure, TIPCurrentSensing;
+	int nToolInPort, nGPIO1, nGPIO2, nGPIO3, nInitialized, nEnabled,
+			nOutOfVolume, nPartiallyOutOfVolume, nDisturbanceDet,
+			nSignalTooSmall, nSignalTooBig, nProcessingException,
+			nHardwareFailure, TIPCurrentSensing;
 } HandleStatus;
 
 /* Handle Information Structure */
 typedef struct {
-	char PhysicalPort[20], ToolType[9], Manufact[13], SerialNo[9], Rev[4],
-			Channel[3], PartNumber[21];
-	TransformInformation Xfrms;
-	HandleStatus HandleInfo;
+	char pchrPhysicalPort[20], pchrToolType[9], pchrManufact[13],
+			pchrSerialNo[9], pchrRev[4], pchrChannel[3], pchrPartNumber[21];
+	TransformInformation dtXfrms;
+	HandleStatus dtHandleInfo;
 } HandleInformation;
 
 /*System Information Structure*/
 typedef struct {
-	int TypeofSystem;
-	char VersionInfo[1024];
-	int ActivePortsAvail, PassivePortsAvail, MultiVolumeParms, TIPSensing,
-			ActiveWirelessAvail, MagneticPortsAvail, FieldGeneratorAvail;
+	int nTypeofSystem;
+	char pchrVersionInfo[1024];
+	int nActivePortsAvail, nPassivePortsAvail, nMultiVolumeParms, nTIPSensing,
+			nActiveWirelessAvail, nMagneticPortsAvail, nFieldGeneratorAvail;
 	/* POLARIS ONLY FIELDS */
-	int NoActivePorts, NoPassivePorts, NoActTIPPorts, NoActWirelessPorts;
+	int nNoActivePorts, nNoPassivePorts, nNoActTIPPorts, nNoActWirelessPorts;
 	/* AURORA ONLY FIELDS */
-	int NoMagneticPorts, NoFGCards, NoFGs;
+	int nNoMagneticPorts, nNoFGCards, nNoFGs;
 	/* TRACKING INFORMATION */
-	int CommunicationSyncError;
-	int TooMuchInterference;
-	int SystemCRCError;
-	int RecoverableException;
-	int HardwareFailure;
-	int HardwareChange;
-	int PortOccupied;
-	int PortUnoccupied;
-	int DiagnosticsPending;
-	int TemperatureOutOfRange;
+	int nCommunicationSyncError;
+	int nTooMuchInterference;
+	int nSystemCRCError;
+	int nRecoverableException;
+	int nHardwareFailure;
+	int nHardwareChange;
+	int nPortOccupied;
+	int nPortUnoccupied;
+	int nDiagnosticsPending;
+	int nTemperatureOutOfRange;
 } SystemInformation;
 
 /*System Information Structure*/
 typedef struct {
-	int FatalParamterFault, SensorParameterFault, MainVoltageFault,
-			SensorVoltageFault, IlluminatorVoltageFault,
-			IlluminatorCurrentFault, LeftSensorTempFault, RightSensorTempFault,
-			MainBoardTempFault, BatteryFaultAlarm, BumpDetectedAlarm,
-			CableFaultAlarm, FirmwareIncompatible, NonFatalParamFault,
-			InternalFlashFull, LaserBatteryFaultAlarm, TempTooHigh, TempTooLow;
+	int nFatalParamterFault, nSensorParameterFault, nMainVoltageFault,
+			nSensorVoltageFault, nIlluminatorVoltageFault,
+			nIlluminatorCurrentFault, nLeftSensorTempFault,
+			nRightSensorTempFault, nMainBoardTempFault, nBatteryFaultAlarm,
+			nBumpDetectedAlarm, nCableFaultAlarm, nFirmwareIncompatible,
+			nNonFatalParamFault, nInternalFlashFull, nLaserBatteryFaultAlarm,
+			nTempTooHigh, nTempTooLow;
 } DiagNewAlertFlags;
 
 #define ALERT_FATAL_PARAM_FAULT		0x00000001

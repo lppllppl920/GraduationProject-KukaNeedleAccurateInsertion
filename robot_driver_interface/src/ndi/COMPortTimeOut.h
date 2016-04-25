@@ -15,7 +15,7 @@
 #include "ndi/APIStructures.h"
 #include "inifile.h"
 
-class COMPortTimeOut:public QDialog, private Ui::SubWindow_COMPortTimeOut {
+class COMPortTimeOut: public QDialog, private Ui::SubWindow_COMPortTimeOut {
 Q_OBJECT
 public:
 	COMPortTimeOut(QDialog* parent = 0);
@@ -27,7 +27,7 @@ public slots:
 	void Restart();
 
 public:
-	int ReturnValue_;
+	int nReturnValue_;
 };
 
 #endif /* ROBOT_DRIVER_INTERFACE_SRC_NDI_COMPORTTIMEOUT_H_ */

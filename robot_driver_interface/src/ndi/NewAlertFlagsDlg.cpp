@@ -17,25 +17,25 @@ NewAlertFlagsDlg::~NewAlertFlagsDlg() {
 }
 
 void NewAlertFlagsDlg::Init() {
-	label->setEnabled(NewAlerts_.FatalParamterFault);
-	label_3->setEnabled(NewAlerts_.SensorParameterFault);
-	label_5->setEnabled(NewAlerts_.MainVoltageFault);
-	label_7->setEnabled(NewAlerts_.SensorVoltageFault);
-	label_9->setEnabled(NewAlerts_.IlluminatorVoltageFault);
-	label_11->setEnabled(NewAlerts_.IlluminatorCurrentFault);
-	label_13->setEnabled(NewAlerts_.LeftSensorTempFault);
-	label_15->setEnabled(NewAlerts_.RightSensorTempFault);
-	label_17->setEnabled(NewAlerts_.MainBoardTempFault);
+	label->setEnabled(dtNewAlerts_.nFatalParamterFault);
+	label_3->setEnabled(dtNewAlerts_.nSensorParameterFault);
+	label_5->setEnabled(dtNewAlerts_.nMainVoltageFault);
+	label_7->setEnabled(dtNewAlerts_.nSensorVoltageFault);
+	label_9->setEnabled(dtNewAlerts_.nIlluminatorVoltageFault);
+	label_11->setEnabled(dtNewAlerts_.nIlluminatorCurrentFault);
+	label_13->setEnabled(dtNewAlerts_.nLeftSensorTempFault);
+	label_15->setEnabled(dtNewAlerts_.nRightSensorTempFault);
+	label_17->setEnabled(dtNewAlerts_.nMainBoardTempFault);
 
-	label_2->setEnabled(NewAlerts_.BatteryFaultAlarm);
-	label_4->setEnabled(NewAlerts_.BumpDetectedAlarm);
-	label_6->setEnabled(NewAlerts_.CableFaultAlarm);
-	label_8->setEnabled(NewAlerts_.FirmwareIncompatible);
-	label_10->setEnabled(NewAlerts_.InternalFlashFull);
-	label_12->setEnabled(NewAlerts_.LaserBatteryFaultAlarm);
-	label_14->setEnabled(NewAlerts_.NonFatalParamFault);
-	label_16->setEnabled(NewAlerts_.TempTooHigh);
-	label_18->setEnabled(NewAlerts_.TempTooLow);
+	label_2->setEnabled(dtNewAlerts_.nBatteryFaultAlarm);
+	label_4->setEnabled(dtNewAlerts_.nBumpDetectedAlarm);
+	label_6->setEnabled(dtNewAlerts_.nCableFaultAlarm);
+	label_8->setEnabled(dtNewAlerts_.nFirmwareIncompatible);
+	label_10->setEnabled(dtNewAlerts_.nInternalFlashFull);
+	label_12->setEnabled(dtNewAlerts_.nLaserBatteryFaultAlarm);
+	label_14->setEnabled(dtNewAlerts_.nNonFatalParamFault);
+	label_16->setEnabled(dtNewAlerts_.nTempTooHigh);
+	label_18->setEnabled(dtNewAlerts_.nTempTooLow);
 }
 
 void NewAlertFlagsDlg::OK() {

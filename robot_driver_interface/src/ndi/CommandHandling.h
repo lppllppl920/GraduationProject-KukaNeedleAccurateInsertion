@@ -53,7 +53,7 @@ public:
 	template<class T> void ReadINIParam(std::string Section, std::string Key,
 			T& Value) {
 		std::string temp_string;
-		temp_string = IniFile_.GetKeyValue(Section, Key);
+		temp_string = dtIniFile_.GetKeyValue(Section, Key);
 		if (!temp_string.empty()) {
 			Value = boost::lexical_cast<T>(temp_string);
 		}
@@ -63,20 +63,20 @@ public:
 	/*****************************************************************
 	 Variables
 	 *****************************************************************/
-	bool LogToFile_, /* log to file */
-	DateTimeStampFile_; /* include date and time stamp in log file */
-	char LogFile_[_MAX_PATH]; /* log file name */
+	bool bLogToFile_, /* log to file */
+	bDateTimeStampFile_; /* include date and time stamp in log file */
+	char pchrLogFile_[_MAX_PATH]; /* log file name */
 
-	SystemInformation SystemInformation_; /* System Information variable - structure */
+	SystemInformation dtSystemInformation_; /* System Information variable - structure */
 
-	HandleInformation HandleInformation_[NO_HANDLES]; /* Handle Information varaible - structure */
-	int RefHandle_; /* the handle for the tool acting as the reference tool */
-	DiagNewAlertFlags NewAlerts_; /* alert information */
-	std::map<std::string, int> TimeoutValues_;
-	CIniFile IniFile_;
-	CIniFile ErrorIniFile_;
-	std::string ConfigurationFile_;
-	COMPortTimeOut SubWindow_COMPortTimeOut_;
+	HandleInformation pdtHandleInformation_[NO_HANDLES]; /* Handle Information varaible - structure */
+	int nRefHandle_; /* the handle for the tool acting as the reference tool */
+	DiagNewAlertFlags dtNewAlerts_; /* alert information */
+	std::map<std::string, int> mpTimeoutValues_;
+	CIniFile dtIniFile_;
+	CIniFile dtErrorIniFile_;
+	std::string strConfigurationFile_;
+	COMPortTimeOut dtSubWindowCOMPortTimeOut_;
 protected:
 	/*****************************************************************
 	 Routine Definitions
@@ -104,15 +104,15 @@ protected:
 	/*****************************************************************
 	 Variables
 	 *****************************************************************/
-	Comm32Port *COMPort_; /* pointer to the Comm32 class */
+	Comm32Port *dtCOMPort_; /* pointer to the Comm32 class */
 
-	char LastReply_[MAX_REPLY_MSG], /* Last reply received from the system */
-	Command_[MAX_COMMAND_MSG]; /* command to send to the system */
-	bool ClearLogFile_, /* clear log file on intialization */
-	DisplayErrorsWhileTracking_; /* display the error while tracking */
-	int Timeout_, DefaultTimeout_; /* timeout value in seconds */
-	bool ComPortOpen_[NUM_COM_PORTS]; /* array of com ports - if true they are open */
-	int PortsEnabled_; /* the number of port enable by nEnableAllPorts */
+	char pchrLastReply_[MAX_REPLY_MSG], /* Last reply received from the system */
+	pchrCommand_[MAX_COMMAND_MSG]; /* command to send to the system */
+	bool bClearLogFile_, /* clear log file on intialization */
+	bDisplayErrorsWhileTracking_; /* display the error while tracking */
+	int nTimeout_, nDefaultTimeout_; /* timeout value in seconds */
+	bool pbComPortOpen_[NUM_COM_PORTS]; /* array of com ports - if true they are open */
+	int nPortsEnabled_; /* the number of port enable by nEnableAllPorts */
 };
 
 #endif /* ROBOT_DRIVER_INTERFACE_SRC_NDI_COMMANDHANDLING_H_ */

@@ -22,24 +22,24 @@ public:
 	template<class T> void ReadINIParam(std::string Section, std::string Key,
 			T& Value) {
 		std::string temp_string;
-		temp_string = IniFile_.GetKeyValue(Section, Key);
+		temp_string = dtIniFile_.GetKeyValue(Section, Key);
 		if (!temp_string.empty()) {
 			Value = boost::lexical_cast<T>(temp_string);
 		}
 		return;
 	}
 public:
-	bool BeepOnError_;
-	bool BeepOnWarning_;
-	bool ClearLogFile_;
-	bool DateTimeStampFile_;
-	bool LogToFile_;
-	int NoErrorBeeps_;
-	int NoWarningBeeps_;
-	bool ReportWhileTracking_;
-	std::string LogFile_;
-	std::string ConfigurationFile_;
-	CIniFile IniFile_;
+	bool bBeepOnError_;
+	bool bBeepOnWarning_;
+	bool bClearLogFile_;
+	bool bDateTimeStampFile_;
+	bool bLogToFile_;
+	int nNoErrorBeeps_;
+	int nNoWarningBeeps_;
+	bool bReportWhileTracking_;
+	std::string strLogFile_;
+	std::string strConfigurationFile_;
+	CIniFile dtIniFile_;
 
 public slots:
 	void Init();

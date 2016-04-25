@@ -11,7 +11,6 @@
 #ifndef ROBOT_DRIVER_INTERFACE_SRC_INTERFACE_H_
 #define ROBOT_DRIVER_INTERFACE_SRC_INTERFACE_H_
 
-
 #include <boost/lexical_cast.hpp>
 #include <boost/make_shared.hpp>
 
@@ -25,7 +24,6 @@
 #include "ndi/ROMFileDlg.h"
 #include "ndi/COMPortTimeOut.h"
 #include "controller.h"
-
 
 using namespace visualization_msgs;
 using namespace interactive_markers;
@@ -110,7 +108,6 @@ public slots:
 	void settingsComPortSettings_OK();
 	void optionsIlluminatorfiringrate_OK();
 
-
 signals:
 // Send trajectory to controller object
 	void sendTrajectory(const TrajectoryGoal& feedback);
@@ -119,42 +116,42 @@ signals:
 	void endEffectorPos(const InteractiveMarkerFeedbackConstPtr &feedback);
 
 private:
-	boost::shared_ptr<ros::NodeHandle> node_handle_;
+	boost::shared_ptr<ros::NodeHandle> pdtNodeHandle_;
 
-	Controller controller_;
+	Controller dtController_;
 
 // Subscriber for motion trajectory
-	ros::Subscriber motion_trajectory_subsriber_;
+	ros::Subscriber dtMotionTrajectorySubsriber_;
 
 // Display trajectory
-	ros::Publisher display_publisher_;
-	moveit_msgs::DisplayTrajectory display_trajectory_;
+	ros::Publisher dtDisplayPublisher_;
+	moveit_msgs::DisplayTrajectory dtDisplayTrajectory_;
 
 // Joints state publisher and subscriber
-	ros::Publisher joint_state_publisher_;
-	sensor_msgs::JointState joint_state_;
-	int joint_state_publish_count_;
+	ros::Publisher dtJointStatePublisher_;
+	sensor_msgs::JointState dtJointState_;
+	int nJointStatePublishCount_;
 
 // Interactive Marker related
-	ros::Subscriber interactive_marker_subsriber_;
-	interactive_markers::MenuHandler menu_handler_;
-	std::vector<interactive_markers::MenuHandler::EntryHandle> menu_entry_;
-	boost::shared_ptr<interactive_markers::InteractiveMarkerServer> interactive_marker_server_;
+	ros::Subscriber dtInteractiveMarkerSubsriber_;
+	interactive_markers::MenuHandler dtMenuHandler_;
+	std::vector<interactive_markers::MenuHandler::EntryHandle> vecdtMenuEntry_;
+	boost::shared_ptr<interactive_markers::InteractiveMarkerServer> pdtInteractiveMarkerServer_;
 	float marker_pos_;
 
 // Pointer to Plannar object
-	boost::shared_ptr<Plannar> plannar_ptr_;
+	boost::shared_ptr<Plannar> pdtPlannar_;
 
 // Publisher for planning scene
-	ros::Publisher planning_scene_diff_publisher_;
-	int collision_operation_counter_;
+	ros::Publisher dtPlanningSceneDiffPublisher_;
+	int nCollisionOperationCount_;
 
 // counter for displaying robot state
-	int joint_state_display_counter_;
-	int joint_state_callback_counter_;
+	int nJointStateDisplayCount_;
+	int nJointStateCallbackCount_;
 
 // latest joint state
-	Axis last_Axis_;
+	Axis dtLastAxis_;
 // enum for rotating around a specific axis
 	enum {
 		X = 0, Y = 1, Z = 2, Custom = 3
@@ -162,39 +159,37 @@ private:
 
 // NDI related
 
-	boost::shared_ptr<CommandHandling> CommandHandling_; /* point to the command handling class */
+	boost::shared_ptr<CommandHandling> pdtCommandHandling_; /* point to the command handling class */
 
-	std::string FrameNumber_;
-	std::string SystemMode_;
-	std::string ManufID_;
-	std::string SerialNo_;
-	std::string ToolRev_;
-	std::string ToolType_;
-	std::string PartNumber_;
+	std::string strFrameNumber_;
+	std::string strSystemMode_;
+	std::string strManufID_;
+	std::string strSerialNo_;
+	std::string strToolRev_;
+	std::string strToolType_;
+	std::string strPartNumber_;
 
-	bool Interference_;
-	bool Use0x0800Option_;
-	bool UseEulerAngles_;
-	bool PortEnabled_;
-	bool PortInitialized_;
-	bool ResetHardware_; /* reset hardware variable */
-	bool Wireless_; /* uses the wireless compatible settings */
-	bool SystemInitialized_; /* is the system initialized */
-	bool PortsActivated_; /* are ports activated */
-	int COMPort_; /* the current com port number */
-	int TrackingMode_;
+	bool bInterference_;
+	bool bUse0x0800Option_;
+	bool bUseEulerAngles_;
+	bool bPortEnabled_;
+	bool bPortInitialized_;
+	bool bResetHardware_; /* reset hardware variable */
+	bool bWireless_; /* uses the wireless compatible settings */
+	bool bSystemInitialized_; /* is the system initialized */
+	bool bPortsActivated_; /* are ports activated */
+	int nCOMPort_; /* the current com port number */
+	int nTrackingMode_;
 
-	bool
-		StopTracking_, /* flag that tells the thread to stop tracking */
-		IsTracking_;   /* flag that specifies if we are tracking */
+	bool bStopTracking_, /* flag that tells the thread to stop tracking */
+	bIsTracking_; /* flag that specifies if we are tracking */
 
-	COMPortSettings SubWindow_COMPortSettings_;
-	NewAlertFlagsDlg SubWindow_NewAlertFlags_;
-	SystemFeaturesDlg SubWindow_SystemFeatures_;
-	ProgramOptions SubWindow_ProgramOptions_;
-	IlluminatorFiringRate SubWindow_IlluminatorFiringRate_;
-	ROMFileDlg SubWindow_ROMFile_;
-
+	COMPortSettings dtSubWindowCOMPortSettings_;
+	NewAlertFlagsDlg dtSubWindowNewAlertFlags_;
+	SystemFeaturesDlg dtSubWindowSystemFeatures_;
+	ProgramOptions dtSubWindowProgramOptions_;
+	IlluminatorFiringRate dtSubWindowIlluminatorFiringRate_;
+	ROMFileDlg dtSubWindowROMFile_;
 
 };
 

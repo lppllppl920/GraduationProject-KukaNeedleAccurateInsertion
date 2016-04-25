@@ -9,13 +9,13 @@
 
 Comm32Port::Comm32Port() {
 	// TODO Auto-generated constructor stub
-	server_break_delay_ = 100; /* 100 milliseconds */
-	num_bytes_ = 0;
-	flow_control_ = true;
-	index_buffer_ = 0;
-	serial_port_ = boost::make_shared<QSerialPort>();
+	ulSerialBreakDelay_ = 100; /* 100 milliseconds */
+	nNumBytes_ = 0;
+	bFlowControl_ = true;
+	nIndexBuffer_ = 0;
+	pdtSerialPort_ = boost::make_shared<QSerialPort>();
 
-	memset(input_buffer_, '\0', sizeof(input_buffer_));
+	memset(pchrInputBuffer_, '\0', sizeof(pchrInputBuffer_));
 }
 
 Comm32Port::~Comm32Port() {
@@ -23,9 +23,8 @@ Comm32Port::~Comm32Port() {
 }
 
 void Comm32Port::SerialClose() {
-	if (serial_port_->isOpen()) {
-		serial_port_->close();
-		serial_port_ = NULL;
+	if (pdtSerialPort_->isOpen()) {
+		pdtSerialPort_->close();
 		ROS_INFO("Serial port closed successfully");
 	} else {
 		ROS_INFO("Serial port not found");
@@ -39,86 +38,85 @@ int Comm32Port::SerialOpen(unsigned port, unsigned long baud_rate,
 	std::vector<QString> port_name(19);
 	for (int i = 0; i < 19; i++) {
 		port_name[i] = QString("/dev/ttyUSB") + QString::number(i, 10);
-		ROS_INFO("%s", port_name[i].toStdString().c_str());
 	}
 
-	server_break_delay_ = server_break_delay;
+	ulSerialBreakDelay_ = server_break_delay;
 	// Port name and baud rate
-	serial_port_->setPortName(port_name[port]);
+	pdtSerialPort_->setPortName(port_name[port]);
 	ROS_INFO("%s", port_name[port].toStdString().c_str());
-	serial_port_->setBaudRate(baud_rate);
+	pdtSerialPort_->setBaudRate(baud_rate);
 
 	// Communication protocol
 	if (format == (unsigned) COMM_8N1) {
-		serial_port_->setParity(QSerialPort::Parity::NoParity);
-		serial_port_->setStopBits(QSerialPort::StopBits::OneStop);
-		serial_port_->setDataBits(QSerialPort::DataBits::Data8);
+		pdtSerialPort_->setParity(QSerialPort::Parity::NoParity);
+		pdtSerialPort_->setStopBits(QSerialPort::StopBits::OneStop);
+		pdtSerialPort_->setDataBits(QSerialPort::DataBits::Data8);
 	} /* if */
 
 	else if (format == (unsigned) COMM_8N2) {
-		serial_port_->setParity(QSerialPort::Parity::NoParity);
-		serial_port_->setStopBits(QSerialPort::StopBits::TwoStop);
-		serial_port_->setDataBits(QSerialPort::DataBits::Data8);
+		pdtSerialPort_->setParity(QSerialPort::Parity::NoParity);
+		pdtSerialPort_->setStopBits(QSerialPort::StopBits::TwoStop);
+		pdtSerialPort_->setDataBits(QSerialPort::DataBits::Data8);
 	} /* else if */
 
 	else if (format == (unsigned) COMM_8O1) {
-		serial_port_->setParity(QSerialPort::Parity::OddParity);
-		serial_port_->setStopBits(QSerialPort::StopBits::OneStop);
-		serial_port_->setDataBits(QSerialPort::DataBits::Data8);
+		pdtSerialPort_->setParity(QSerialPort::Parity::OddParity);
+		pdtSerialPort_->setStopBits(QSerialPort::StopBits::OneStop);
+		pdtSerialPort_->setDataBits(QSerialPort::DataBits::Data8);
 	} /* else if */
 
 	else if (format == (unsigned) COMM_8O2) {
-		serial_port_->setParity(QSerialPort::Parity::OddParity);
-		serial_port_->setStopBits(QSerialPort::StopBits::TwoStop);
-		serial_port_->setDataBits(QSerialPort::DataBits::Data8);
+		pdtSerialPort_->setParity(QSerialPort::Parity::OddParity);
+		pdtSerialPort_->setStopBits(QSerialPort::StopBits::TwoStop);
+		pdtSerialPort_->setDataBits(QSerialPort::DataBits::Data8);
 	} /* else if */
 
 	else if (format == (unsigned) COMM_8E1) {
-		serial_port_->setParity(QSerialPort::Parity::EvenParity);
-		serial_port_->setStopBits(QSerialPort::StopBits::OneStop);
-		serial_port_->setDataBits(QSerialPort::DataBits::Data8);
+		pdtSerialPort_->setParity(QSerialPort::Parity::EvenParity);
+		pdtSerialPort_->setStopBits(QSerialPort::StopBits::OneStop);
+		pdtSerialPort_->setDataBits(QSerialPort::DataBits::Data8);
 	} /* else if */
 
 	else if (format == (unsigned) COMM_8E2) {
-		serial_port_->setParity(QSerialPort::Parity::EvenParity);
-		serial_port_->setStopBits(QSerialPort::StopBits::TwoStop);
-		serial_port_->setDataBits(QSerialPort::DataBits::Data8);
+		pdtSerialPort_->setParity(QSerialPort::Parity::EvenParity);
+		pdtSerialPort_->setStopBits(QSerialPort::StopBits::TwoStop);
+		pdtSerialPort_->setDataBits(QSerialPort::DataBits::Data8);
 	} /* else if */
 
 	else if (format == (unsigned) COMM_7N1) {
-		serial_port_->setParity(QSerialPort::Parity::NoParity);
-		serial_port_->setStopBits(QSerialPort::StopBits::OneStop);
-		serial_port_->setDataBits(QSerialPort::DataBits::Data7);
+		pdtSerialPort_->setParity(QSerialPort::Parity::NoParity);
+		pdtSerialPort_->setStopBits(QSerialPort::StopBits::OneStop);
+		pdtSerialPort_->setDataBits(QSerialPort::DataBits::Data7);
 	} /* else if */
 
 	else if (format == (unsigned) COMM_7N2) {
-		serial_port_->setParity(QSerialPort::Parity::NoParity);
-		serial_port_->setStopBits(QSerialPort::StopBits::TwoStop);
-		serial_port_->setDataBits(QSerialPort::DataBits::Data7);
+		pdtSerialPort_->setParity(QSerialPort::Parity::NoParity);
+		pdtSerialPort_->setStopBits(QSerialPort::StopBits::TwoStop);
+		pdtSerialPort_->setDataBits(QSerialPort::DataBits::Data7);
 	} /* else if */
 
 	else if (format == (unsigned) COMM_7O1) {
-		serial_port_->setParity(QSerialPort::Parity::OddParity);
-		serial_port_->setStopBits(QSerialPort::StopBits::OneStop);
-		serial_port_->setDataBits(QSerialPort::DataBits::Data7);
+		pdtSerialPort_->setParity(QSerialPort::Parity::OddParity);
+		pdtSerialPort_->setStopBits(QSerialPort::StopBits::OneStop);
+		pdtSerialPort_->setDataBits(QSerialPort::DataBits::Data7);
 	} /* else if */
 
 	else if (format == (unsigned) COMM_7O2) {
-		serial_port_->setParity(QSerialPort::Parity::OddParity);
-		serial_port_->setStopBits(QSerialPort::StopBits::TwoStop);
-		serial_port_->setDataBits(QSerialPort::DataBits::Data7);
+		pdtSerialPort_->setParity(QSerialPort::Parity::OddParity);
+		pdtSerialPort_->setStopBits(QSerialPort::StopBits::TwoStop);
+		pdtSerialPort_->setDataBits(QSerialPort::DataBits::Data7);
 	} /* else if */
 
 	else if (format == (unsigned) COMM_7E1) {
-		serial_port_->setParity(QSerialPort::Parity::EvenParity);
-		serial_port_->setStopBits(QSerialPort::StopBits::OneStop);
-		serial_port_->setDataBits(QSerialPort::DataBits::Data7);
+		pdtSerialPort_->setParity(QSerialPort::Parity::EvenParity);
+		pdtSerialPort_->setStopBits(QSerialPort::StopBits::OneStop);
+		pdtSerialPort_->setDataBits(QSerialPort::DataBits::Data7);
 	} /* else if */
 
 	else if (format == (unsigned) COMM_7E2) {
-		serial_port_->setParity(QSerialPort::Parity::EvenParity);
-		serial_port_->setStopBits(QSerialPort::StopBits::TwoStop);
-		serial_port_->setDataBits(QSerialPort::DataBits::Data7);
+		pdtSerialPort_->setParity(QSerialPort::Parity::EvenParity);
+		pdtSerialPort_->setStopBits(QSerialPort::StopBits::TwoStop);
+		pdtSerialPort_->setDataBits(QSerialPort::DataBits::Data7);
 	} /* else if */
 
 	else {
@@ -128,13 +126,14 @@ int Comm32Port::SerialOpen(unsigned port, unsigned long baud_rate,
 
 	// Flow control
 	if (flow_control) {
-		serial_port_->setFlowControl(QSerialPort::FlowControl::SoftwareControl);
+		pdtSerialPort_->setFlowControl(
+				QSerialPort::FlowControl::SoftwareControl);
 	} else {
-		serial_port_->setFlowControl(QSerialPort::FlowControl::NoFlowControl);
+		pdtSerialPort_->setFlowControl(QSerialPort::FlowControl::NoFlowControl);
 	}
 
 	// Open serial port
-	if (serial_port_->open(QIODevice::ReadWrite)) {
+	if (pdtSerialPort_->open(QIODevice::ReadWrite)) {
 		ROS_INFO("Comm32Port: SerialOpen: Serial port opened successfully");
 		return 1;
 
@@ -148,85 +147,85 @@ int Comm32Port::SerialOpen(unsigned port, unsigned long baud_rate,
 int Comm32Port::SerialSetBaud(unsigned long baud_rate, unsigned format,
 		bool flow_control, unsigned long server_break_delay) {
 	// Serial port should be initialized first
-	if (!serial_port_->isOpen()) {
+	if (!pdtSerialPort_->isOpen()) {
 		return -1;
 	}
 
-	server_break_delay_ = server_break_delay;
+	ulSerialBreakDelay_ = server_break_delay;
 	// Baud rate
-	serial_port_->setBaudRate(baud_rate);
+	pdtSerialPort_->setBaudRate(baud_rate);
 
 	// Communication protocol
 	if (format == (unsigned) COMM_8N1) {
-		serial_port_->setParity(QSerialPort::Parity::NoParity);
-		serial_port_->setStopBits(QSerialPort::StopBits::OneStop);
-		serial_port_->setDataBits(QSerialPort::DataBits::Data8);
+		pdtSerialPort_->setParity(QSerialPort::Parity::NoParity);
+		pdtSerialPort_->setStopBits(QSerialPort::StopBits::OneStop);
+		pdtSerialPort_->setDataBits(QSerialPort::DataBits::Data8);
 	} /* if */
 
 	else if (format == (unsigned) COMM_8N2) {
-		serial_port_->setParity(QSerialPort::Parity::NoParity);
-		serial_port_->setStopBits(QSerialPort::StopBits::TwoStop);
-		serial_port_->setDataBits(QSerialPort::DataBits::Data8);
+		pdtSerialPort_->setParity(QSerialPort::Parity::NoParity);
+		pdtSerialPort_->setStopBits(QSerialPort::StopBits::TwoStop);
+		pdtSerialPort_->setDataBits(QSerialPort::DataBits::Data8);
 	} /* else if */
 
 	else if (format == (unsigned) COMM_8O1) {
-		serial_port_->setParity(QSerialPort::Parity::OddParity);
-		serial_port_->setStopBits(QSerialPort::StopBits::OneStop);
-		serial_port_->setDataBits(QSerialPort::DataBits::Data8);
+		pdtSerialPort_->setParity(QSerialPort::Parity::OddParity);
+		pdtSerialPort_->setStopBits(QSerialPort::StopBits::OneStop);
+		pdtSerialPort_->setDataBits(QSerialPort::DataBits::Data8);
 	} /* else if */
 
 	else if (format == (unsigned) COMM_8O2) {
-		serial_port_->setParity(QSerialPort::Parity::OddParity);
-		serial_port_->setStopBits(QSerialPort::StopBits::TwoStop);
-		serial_port_->setDataBits(QSerialPort::DataBits::Data8);
+		pdtSerialPort_->setParity(QSerialPort::Parity::OddParity);
+		pdtSerialPort_->setStopBits(QSerialPort::StopBits::TwoStop);
+		pdtSerialPort_->setDataBits(QSerialPort::DataBits::Data8);
 	} /* else if */
 
 	else if (format == (unsigned) COMM_8E1) {
-		serial_port_->setParity(QSerialPort::Parity::EvenParity);
-		serial_port_->setStopBits(QSerialPort::StopBits::OneStop);
-		serial_port_->setDataBits(QSerialPort::DataBits::Data8);
+		pdtSerialPort_->setParity(QSerialPort::Parity::EvenParity);
+		pdtSerialPort_->setStopBits(QSerialPort::StopBits::OneStop);
+		pdtSerialPort_->setDataBits(QSerialPort::DataBits::Data8);
 	} /* else if */
 
 	else if (format == (unsigned) COMM_8E2) {
-		serial_port_->setParity(QSerialPort::Parity::EvenParity);
-		serial_port_->setStopBits(QSerialPort::StopBits::TwoStop);
-		serial_port_->setDataBits(QSerialPort::DataBits::Data8);
+		pdtSerialPort_->setParity(QSerialPort::Parity::EvenParity);
+		pdtSerialPort_->setStopBits(QSerialPort::StopBits::TwoStop);
+		pdtSerialPort_->setDataBits(QSerialPort::DataBits::Data8);
 	} /* else if */
 
 	else if (format == (unsigned) COMM_7N1) {
-		serial_port_->setParity(QSerialPort::Parity::NoParity);
-		serial_port_->setStopBits(QSerialPort::StopBits::OneStop);
-		serial_port_->setDataBits(QSerialPort::DataBits::Data7);
+		pdtSerialPort_->setParity(QSerialPort::Parity::NoParity);
+		pdtSerialPort_->setStopBits(QSerialPort::StopBits::OneStop);
+		pdtSerialPort_->setDataBits(QSerialPort::DataBits::Data7);
 	} /* else if */
 
 	else if (format == (unsigned) COMM_7N2) {
-		serial_port_->setParity(QSerialPort::Parity::NoParity);
-		serial_port_->setStopBits(QSerialPort::StopBits::TwoStop);
-		serial_port_->setDataBits(QSerialPort::DataBits::Data7);
+		pdtSerialPort_->setParity(QSerialPort::Parity::NoParity);
+		pdtSerialPort_->setStopBits(QSerialPort::StopBits::TwoStop);
+		pdtSerialPort_->setDataBits(QSerialPort::DataBits::Data7);
 	} /* else if */
 
 	else if (format == (unsigned) COMM_7O1) {
-		serial_port_->setParity(QSerialPort::Parity::OddParity);
-		serial_port_->setStopBits(QSerialPort::StopBits::OneStop);
-		serial_port_->setDataBits(QSerialPort::DataBits::Data7);
+		pdtSerialPort_->setParity(QSerialPort::Parity::OddParity);
+		pdtSerialPort_->setStopBits(QSerialPort::StopBits::OneStop);
+		pdtSerialPort_->setDataBits(QSerialPort::DataBits::Data7);
 	} /* else if */
 
 	else if (format == (unsigned) COMM_7O2) {
-		serial_port_->setParity(QSerialPort::Parity::OddParity);
-		serial_port_->setStopBits(QSerialPort::StopBits::TwoStop);
-		serial_port_->setDataBits(QSerialPort::DataBits::Data7);
+		pdtSerialPort_->setParity(QSerialPort::Parity::OddParity);
+		pdtSerialPort_->setStopBits(QSerialPort::StopBits::TwoStop);
+		pdtSerialPort_->setDataBits(QSerialPort::DataBits::Data7);
 	} /* else if */
 
 	else if (format == (unsigned) COMM_7E1) {
-		serial_port_->setParity(QSerialPort::Parity::EvenParity);
-		serial_port_->setStopBits(QSerialPort::StopBits::OneStop);
-		serial_port_->setDataBits(QSerialPort::DataBits::Data7);
+		pdtSerialPort_->setParity(QSerialPort::Parity::EvenParity);
+		pdtSerialPort_->setStopBits(QSerialPort::StopBits::OneStop);
+		pdtSerialPort_->setDataBits(QSerialPort::DataBits::Data7);
 	} /* else if */
 
 	else if (format == (unsigned) COMM_7E2) {
-		serial_port_->setParity(QSerialPort::Parity::EvenParity);
-		serial_port_->setStopBits(QSerialPort::StopBits::TwoStop);
-		serial_port_->setDataBits(QSerialPort::DataBits::Data7);
+		pdtSerialPort_->setParity(QSerialPort::Parity::EvenParity);
+		pdtSerialPort_->setStopBits(QSerialPort::StopBits::TwoStop);
+		pdtSerialPort_->setDataBits(QSerialPort::DataBits::Data7);
 	} /* else if */
 
 	else {
@@ -236,9 +235,10 @@ int Comm32Port::SerialSetBaud(unsigned long baud_rate, unsigned format,
 
 	// Flow control
 	if (flow_control) {
-		serial_port_->setFlowControl(QSerialPort::FlowControl::SoftwareControl);
+		pdtSerialPort_->setFlowControl(
+				QSerialPort::FlowControl::SoftwareControl);
 	} else {
-		serial_port_->setFlowControl(QSerialPort::FlowControl::NoFlowControl);
+		pdtSerialPort_->setFlowControl(QSerialPort::FlowControl::NoFlowControl);
 	}
 
 	return 1;
@@ -247,29 +247,34 @@ int Comm32Port::SerialSetBaud(unsigned long baud_rate, unsigned format,
 
 int Comm32Port::SerialBreak() {
 
-	if (serial_port_->setBreakEnabled(true)) {
-		ROS_INFO("Serial port break");
-	} else {
-		ROS_ERROR("Serial port cannot break");
-		return -1;
+	//if (pdtSerialPort_->setBreakEnabled(true)) {
+	//	ROS_INFO("Serial port break");
+	//} else {
+	//	ROS_ERROR("Serial port cannot break");
+	//	return -1;
+	//}
+	if (!pdtSerialPort_->sendBreak(ulSerialBreakDelay_)) {
+		ROS_INFO("Comm32Port: Serial break failed");
+		return 0;
 	}
 
-	boost::this_thread::sleep(
-			boost::posix_time::milliseconds(server_break_delay_));
+	return 1;
+	//boost::this_thread::sleep(
+	//		boost::posix_time::milliseconds(ulSerialBreakDelay_));
 
-	if (serial_port_->setBreakEnabled(false)) {
-		ROS_INFO("Serial port restart transmission");
-		return 1;
-	} else {
-		ROS_ERROR("Serial port cannot restart");
-		return -1;
-	}
+	/*if (pdtSerialPort_->setBreakEnabled(false)) {
+	 ROS_INFO("Serial port restart");
+	 return 1;
+	 } else {
+	 ROS_ERROR("Serial port cannot restart");
+	 return -1;
+	 } */
+
 }
 
 int Comm32Port::SerialFlush() {
 
-	if (serial_port_->flush()) {
-		ROS_INFO("Comm32Port: SerialFlush: Serial port flush succeed");
+	if (pdtSerialPort_->flush()) {
 		return 1;
 	} else {
 		ROS_ERROR("Comm32Port: SerialFlush: Serial port cannot flush");
@@ -279,8 +284,7 @@ int Comm32Port::SerialFlush() {
 
 int Comm32Port::SerialPutChar(char chr) {
 
-	if (serial_port_->putChar(chr)) {
-		ROS_INFO("Serial port write char successfully");
+	if (pdtSerialPort_->putChar(chr)) {
 		return 1;
 	} else {
 		ROS_ERROR("Serial port cannot write char to specified device");
@@ -290,7 +294,7 @@ int Comm32Port::SerialPutChar(char chr) {
 
 int Comm32Port::SerialErrorStatus() {
 
-	int error_type = serial_port_->error();
+	int error_type = pdtSerialPort_->error();
 
 	switch (error_type) {
 	case QSerialPort::SerialPortError::NotOpenError: {
@@ -358,21 +362,21 @@ int Comm32Port::SerialErrorStatus() {
 }
 
 int Comm32Port::SerialPutString(char* string, long long int length) {
-	return serial_port_->write(string, length);
+	return pdtSerialPort_->write(string, length);
 }
 
 int Comm32Port::SerialGetChar() {
 	int return_char;
 
-	if (!num_bytes_) {
-		num_bytes_ = serial_port_->read(input_buffer_, READ_BUFFER_SIZE);
-		index_buffer_ = 0;
+	if (!nNumBytes_) {
+		nNumBytes_ = pdtSerialPort_->read(pchrInputBuffer_, READ_BUFFER_SIZE);
+		nIndexBuffer_ = 0;
 	}
 
-	if (num_bytes_) {
-		return_char = input_buffer_[index_buffer_];
-		index_buffer_++;
-		num_bytes_--;
+	if (nNumBytes_) {
+		return_char = pchrInputBuffer_[nIndexBuffer_];
+		nIndexBuffer_++;
+		nNumBytes_--;
 	}
 
 	return return_char;
@@ -380,14 +384,14 @@ int Comm32Port::SerialGetChar() {
 
 int Comm32Port::SerialCharsAvailable() {
 
-	if (num_bytes_) {
-		num_bytes_ = serial_port_->read(input_buffer_, READ_BUFFER_SIZE);
-		index_buffer_ = 0;
+	if (!nNumBytes_) {
+		nNumBytes_ = pdtSerialPort_->read(pchrInputBuffer_, READ_BUFFER_SIZE);
+		nIndexBuffer_ = 0;
 	}
-	return num_bytes_;
+	return nNumBytes_;
 }
 
 int Comm32Port::SerialGetString(char* string, long long int max_length) {
-	return serial_port_->read(string, max_length);
+	return pdtSerialPort_->read(string, max_length);
 }
 
