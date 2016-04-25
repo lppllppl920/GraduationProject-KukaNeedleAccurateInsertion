@@ -1,0 +1,213 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>SubWindow_ProgramOptions</class>
+ <widget class="QWidget" name="SubWindow_ProgramOptions">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>532</width>
+    <height>427</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Program Options</string>
+  </property>
+  <widget class="QGroupBox" name="groupBox_LoggingToaFile">
+   <property name="geometry">
+    <rect>
+     <x>20</x>
+     <y>10</y>
+     <width>491</width>
+     <height>151</height>
+    </rect>
+   </property>
+   <property name="title">
+    <string>Logging To a File</string>
+   </property>
+   <widget class="QWidget" name="gridLayoutWidget">
+    <property name="geometry">
+     <rect>
+      <x>9</x>
+      <y>30</y>
+      <width>481</width>
+      <height>121</height>
+     </rect>
+    </property>
+    <layout class="QGridLayout" name="gridLayout">
+     <item row="1" column="1">
+      <widget class="QLineEdit" name="lineEdit_File"/>
+     </item>
+     <item row="1" column="2">
+      <widget class="QPushButton" name="pushButton_browse">
+       <property name="text">
+        <string>...</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="0" colspan="3" alignment="Qt::AlignHCenter">
+      <widget class="QCheckBox" name="checkBox_LogCOMPortToFile">
+       <property name="text">
+        <string>Log COM port communication to a file</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="0">
+      <widget class="QLabel" name="label_File">
+       <property name="text">
+        <string>File                     </string>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="0" colspan="3" alignment="Qt::AlignHCenter">
+      <widget class="QCheckBox" name="checkBox_IncludeTimeStamp">
+       <property name="text">
+        <string>Include time stamp</string>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="0" colspan="3" alignment="Qt::AlignHCenter">
+      <widget class="QCheckBox" name="checkBox_ClearFileonSystemInitialization">
+       <property name="text">
+        <string>Clear file on system initialization</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </widget>
+  </widget>
+  <widget class="QGroupBox" name="groupBox_BeepOptions">
+   <property name="geometry">
+    <rect>
+     <x>19</x>
+     <y>180</y>
+     <width>491</width>
+     <height>91</height>
+    </rect>
+   </property>
+   <property name="title">
+    <string>Beep Options</string>
+   </property>
+   <widget class="QWidget" name="gridLayoutWidget_2">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>20</y>
+      <width>481</width>
+      <height>62</height>
+     </rect>
+    </property>
+    <layout class="QGridLayout" name="gridLayout_2">
+     <item row="1" column="0">
+      <widget class="QCheckBox" name="checkBox_BeepSystemOnWARNING">
+       <property name="text">
+        <string>Beep system on WARNING return</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="1">
+      <widget class="QLabel" name="label_Noof">
+       <property name="text">
+        <string>No. of</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="2">
+      <widget class="QLineEdit" name="lineEdit_BeepWARNINGNum"/>
+     </item>
+     <item row="1" column="1">
+      <widget class="QLabel" name="label_Noof_2">
+       <property name="text">
+        <string>No. of</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="2">
+      <widget class="QLineEdit" name="lineEdit_BeepERRORNum"/>
+     </item>
+     <item row="0" column="0">
+      <widget class="QCheckBox" name="checkBox_BeepSystemOnERROR">
+       <property name="text">
+        <string>Beep system on ERROR return</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="3">
+      <widget class="QLabel" name="label_Num">
+       <property name="text">
+        <string>(1-9)</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="3">
+      <widget class="QLabel" name="label_Num_2">
+       <property name="text">
+        <string>(1-9)</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </widget>
+  </widget>
+  <widget class="QGroupBox" name="groupBox_Messaging">
+   <property name="geometry">
+    <rect>
+     <x>20</x>
+     <y>280</y>
+     <width>491</width>
+     <height>80</height>
+    </rect>
+   </property>
+   <property name="title">
+    <string>Messaging</string>
+   </property>
+   <widget class="QCheckBox" name="checkBox_DisplayError">
+    <property name="geometry">
+     <rect>
+      <x>40</x>
+      <y>30</y>
+      <width>421</width>
+      <height>41</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Display error messages while in tracking mode
+System needs to restart tracking for setting to take effect</string>
+    </property>
+   </widget>
+  </widget>
+  <widget class="QPushButton" name="pushButton_OK">
+   <property name="geometry">
+    <rect>
+     <x>130</x>
+     <y>390</y>
+     <width>98</width>
+     <height>27</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>OK</string>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="pushButton_Cancel">
+   <property name="geometry">
+    <rect>
+     <x>280</x>
+     <y>390</y>
+     <width>98</width>
+     <height>27</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Cancel</string>
+   </property>
+  </widget>
+  <zorder>groupBox_Messaging</zorder>
+  <zorder>groupBox_LoggingToaFile</zorder>
+  <zorder>groupBox_BeepOptions</zorder>
+  <zorder>pushButton_OK</zorder>
+  <zorder>pushButton_Cancel</zorder>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>
