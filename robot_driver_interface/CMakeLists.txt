@@ -20,13 +20,37 @@ add_definitions(${QT_DEFINITIONS})
 include_directories( src )
 include_directories( src/common )
 include_directories( src/gui )
+include_directories( src/ndi )
 
 qt4_wrap_ui(UISrcs src/gui/robotInterface.ui)
 qt4_wrap_cpp(UIMOCSrcs src/gui/ui_robotInterface.h)
+qt4_wrap_ui(UISUB1Srcs src/gui/robotInterface_COMPortSettings.ui)
+qt4_wrap_cpp(UISUB1MOCSrcs src/gui/ui_robotInterface_COMPortSettings.h)
+qt4_wrap_ui(UISUB2Srcs src/gui/robotInterface_NewAlertFlags.ui)
+qt4_wrap_cpp(UISUB2MOCSrcs src/gui/ui_robotInterface_NewAlertFlags.h)
+qt4_wrap_ui(UISUB3Srcs src/gui/robotInterface_SystemFeatures.ui)
+qt4_wrap_cpp(UISUB3MOCSrcs src/gui/ui_robotInterface_SystemFeatures.h)
+qt4_wrap_ui(UISUB4Srcs src/gui/robotInterface_ProgramOptions.ui)
+qt4_wrap_cpp(UISUB4MOCSrcs src/gui/ui_robotInterface_ProgramOptions.h)
+qt4_wrap_ui(UISUB5Srcs src/gui/robotInterface_IlluminatorFiringRate.ui)
+qt4_wrap_cpp(UISUB5MOCSrcs src/gui/ui_robotInterface_IlluminatorFiringRate.h)
+qt4_wrap_ui(UISUB6Srcs src/gui/robotInterface_ROMFile.ui)
+qt4_wrap_cpp(UISUB6MOCSrcs src/gui/ui_robotInterface_ROMFile.h)
+qt4_wrap_ui(UISUB6Srcs src/gui/robotInterface_COMPortTimeOut.ui)
+qt4_wrap_cpp(UISUB6MOCSrcs src/gui/ui_robotInterface_COMPortTimeOut.h)
+
 qt4_wrap_cpp(THREADMOCSrcs src/common/tcpthread.h)
 qt4_wrap_cpp(PLANMOCSrcs src/common/plannar.h)
 qt4_wrap_cpp(CTRLMOCSrcs src/controller.h)
 qt4_wrap_cpp(INTERFACEMOCSrcs src/Interface.h)
+qt4_wrap_cpp(COMM32PORTMOCSrcs src/ndi/Comm32Port.h)
+qt4_wrap_cpp(COMPORTSETTINGSMOCSrcs src/ndi/COMPortSettings.h)
+qt4_wrap_cpp(NEWALERTFLAGSMOCSrcs src/ndi/NewAlertFlagsDlg.h)
+qt4_wrap_cpp(SYSTEMFEATURESMOCSrcs src/ndi/SystemFeaturesDlg.h)
+qt4_wrap_cpp(PROGRAMOPTIONSMOCSrcs src/ndi/ProgramOptions.h)
+qt4_wrap_cpp(ILLUMINATORFIRINGRATEMOCSrcs src/ndi/IlluminatorFiringRate.h)
+qt4_wrap_cpp(ROMFILEMOCSrcs src/ndi/ROMFileDlg.h)
+qt4_wrap_cpp(COMPORTTIMEOUTMOCSrcs src/ndi/COMPortTimeOut.h)
 
 set(eigen_DIRS /usr/include/eigen3)
 set(orocos_kdl_DIRS /opt/ros/indigo/include)
@@ -44,60 +68,6 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR} ${or
 include_directories( /opt/ros/indigo/include )
 link_directories( /opt/ros/indigo/lib )
 
-IF (QtSerialPort_INCLUDE_DIR AND QtSerialPort_LIBRARIES) 
-      SET (QtSerialPort_FOUND TRUE) 
-ELSE (QtSerialPort_INCLUDE_DIR AND QtSerialPort_LIBRARIES) 
-      IF (UNIX) 
-              FIND_LIBRARY (QtSerialPort_LIBRARIES 
-                              NAMES 
-                                      SerialPort 
-                              PATH_SUFFIXES 
-                                      qt4 
-                              ) 
-              FIND_PATH (QtSerialPort_INCLUDE_DIR QtAddOnSerialPort/serialport.h 
-                              PATHS 
-                                      ${QtSerialPort_DIR}/include 
-                                      ENV PATH 
-                              ) 
-      ELSE () 
-              IF (MINGW) 
-                      IF (NOT QtSerialPort_DIR) 
-                              MESSAGE (FATAL_ERRO "Set the QtSerialPort_DIR") 
-                      ELSE () 
-                              FIND_LIBRARY (QtSerialPort_LIBRARIES 
-                                      NAMES 
-                                              SerialPort1 
-                                      PATH_SUFFIXES 
-                                              release 
-                                      PATHS 
-                                              ${QtSerialPort_DIR}/src/serialport 
-                                      ) 
-                              FIND_PATH (QtSerialPort_INCLUDE_DIR QtAddOnSerialPort/serialport.h 
-                                      PATHS 
-                                              ${QtSerialPort_DIR}/include 
-                                      ENV PATH 
-                                      ) 
-                      ENDIF () 
-              ENDIF () 
-      ENDIF () 
-ENDIF () 
- 
-IF (QtSerialPort_LIBRARIES AND QtSerialPort_INCLUDE_DIR) 
-      SET (QtSerialPort_FOUND 1) 
-ENDIF () 
- 
-IF (QtSerialPort_FOUND) 
-      MESSAGE (STATU "Found the QtSerialPort libraries at: ${QtSerialPort_LIBRARIES}") 
-      MESSAGE (STATU "Found QtSerialPort headers at: ${QtSerialPort_INCLUDE_DIR}") 
-ELSE (QtSerialPort_FOUND) 
-      IF (QtSerialPort_FIND_REQUIRED) 
-              MESSAGE (FATAL_ERRO "Could NOT find required QtSerialPort library, aborting") 
-      ELSE (QtSerialPort_FIND_REQUIRED) 
-              MESSAGE (STATU "Could NOT find QtSerialPort") 
-      ENDIF () 
-ENDIF ()  
-
-
 add_executable(
     KRC4_control_async
     src/main.cpp
@@ -107,12 +77,46 @@ add_executable(
     src/common/geometry.cpp
     src/common/message.cpp
     src/common/tcpthread.cpp
+    src/ndi/Comm32Port.cpp
+    src/ndi/CommandHandling.cpp
+    src/ndi/Conversions.cpp
+    src/ndi/inifile.cpp
+    src/ndi/COMPortSettings.cpp
+    src/ndi/NewAlertFlagsDlg.cpp
+    src/ndi/SystemFeaturesDlg.cpp
+    src/ndi/ProgramOptions.cpp
+    src/ndi/IlluminatorFiringRate.cpp
+    src/ndi/ROMFileDlg.cpp
+    src/ndi/COMPortTimeOut.cpp
     ${UISrcs}
     ${UIMOCSrcs}
+    ${UISUB1Srcs}
+    ${UISUB1MOCSrcs}
+    ${UISUB2Srcs}
+    ${UISUB2MOCSrcs}
+    ${UISUB3Srcs}
+    ${UISUB3MOCSrcs}
+    ${UISUB4Srcs}
+    ${UISUB4MOCSrcs}
+    ${UISUB5Srcs}
+    ${UISUB5MOCSrcs}
+    ${UISUB6Srcs}
+    ${UISUB6MOCSrcs}
+    ${UISUB7Srcs}
+    ${UISUB7MOCSrcs}
     ${THREADMOCSrcs}
     ${PLANMOCSrcs}
     ${CTRLMOCSrcs}
-    ${INTERFACEMOCSrcs})
-target_link_libraries(KRC4_control_async ${QT_LIBRARIES} ${catkin_LIBRARIES} -lQtNetwork -lQtXml orocos-kdl kdl_parser roscpp rosconsole roscpp_serialization rostime interactive_markers)
+    ${INTERFACEMOCSrcs}
+    ${COMM32PORTMOCSrcs}
+    ${COMPORTSETTINGSMOCSrcs}
+    ${NEWALERTFLAGSMOCSrcs}
+    ${SYSTEMFEATURESMOCSrcs}
+    ${PROGRAMOPTIONSMOCSrcs}
+    ${ILLUMINATORFIRINGRATEMOCSrcs}
+    ${ROMFILEMOCSrcs}
+    ${COMPORTTIMEOUTMOCSrcs}
+    )
+target_link_libraries(KRC4_control_async ${QT_LIBRARIES} ${catkin_LIBRARIES} QtNetwork QtXml QtSerialPort orocos-kdl kdl_parser roscpp rosconsole roscpp_serialization rostime interactive_markers)
 
 

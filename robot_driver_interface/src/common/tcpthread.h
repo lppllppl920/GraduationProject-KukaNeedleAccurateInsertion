@@ -50,28 +50,8 @@
 #include <QtCore/qmetatype.h>
 #include <list>
 #include <QHash>
-
-#include <ros/ros.h>
-#include <ros/callback_queue.h>
-#include <ros/callback_queue_interface.h>
-
-#include <moveit/move_group_interface/move_group.h>
-#include <moveit/planning_scene_interface/planning_scene_interface.h>
-#include <moveit_msgs/DisplayRobotState.h>
-#include <moveit_msgs/DisplayTrajectory.h>
-#include <moveit_msgs/AttachedCollisionObject.h>
-#include <moveit_msgs/CollisionObject.h>
-
-#include <control_msgs/FollowJointTrajectoryActionGoal.h>
-
-#include <interactive_markers/interactive_marker_server.h>
-#include <interactive_markers/interactive_marker_client.h>
-#include <interactive_markers/menu_handler.h>
-
-#include <tf/transform_broadcaster.h>
-#include <tf/tf.h>
-
 #include <QApplication>
+#include <ros/ros.h>
 
 // Max length of feedbackQueue
 #define QUEUE_MAXLEN 2048

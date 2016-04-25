@@ -30,15 +30,31 @@
 #ifndef MY_PLANNAR
 #define MY_PLANNAR
 
-#include "message.h"
-#include "tcpthread.h"
-// Includes the descartes robot model we will be using
 #include <descartes_moveit/moveit_state_adapter.h>
-// Includes the descartes trajectory type we will be using
 #include <descartes_trajectory/axial_symmetric_pt.h>
 #include <descartes_trajectory/cart_trajectory_pt.h>
-// Includes the planner we will be using
 #include <descartes_planner/dense_planner.h>
+
+#include <ros/ros.h>
+#include <ros/callback_queue.h>
+#include <ros/callback_queue_interface.h>
+
+#include <moveit/move_group_interface/move_group.h>
+#include <moveit/planning_scene_interface/planning_scene_interface.h>
+#include <moveit_msgs/DisplayRobotState.h>
+#include <moveit_msgs/DisplayTrajectory.h>
+#include <moveit_msgs/AttachedCollisionObject.h>
+#include <moveit_msgs/CollisionObject.h>
+
+#include <control_msgs/FollowJointTrajectoryActionGoal.h>
+
+#include <interactive_markers/interactive_marker_server.h>
+#include <interactive_markers/interactive_marker_client.h>
+#include <interactive_markers/menu_handler.h>
+
+#include <tf/transform_broadcaster.h>
+#include <tf/tf.h>
+
 #include <cmath>
 #include <qmath.h>
 #include <iomanip>
@@ -46,6 +62,8 @@
 #include <ctime>
 #include <QVector>
 
+#include "message.h"
+#include "tcpthread.h"
 // --------------------------------------------------------------------------
 // Plannar class
 //  - publicly inherited from QObect, for signal-slot connection between main

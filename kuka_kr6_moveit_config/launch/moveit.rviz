@@ -7,7 +7,7 @@ Panels:
         - /MotionPlanning1
         - /MotionPlanning1/Planned Path1
       Splitter Ratio: 0.74256
-    Tree Height: 353
+    Tree Height: 365
   - Class: rviz/Help
     Name: Help
   - Class: rviz/Views
@@ -111,7 +111,7 @@ Visualization Manager:
             Alpha: 1
             Show Axes: false
             Show Trail: false
-        Loop Animation: false
+        Loop Animation: true
         Robot Alpha: 0.5
         Show Robot Collision: false
         Show Robot Visual: true
@@ -215,16 +215,6 @@ Visualization Manager:
           Value: true
         flange:
           Value: true
-        link1:
-          Value: true
-        link2:
-          Value: true
-        link3:
-          Value: true
-        link4:
-          Value: true
-        link5:
-          Value: true
         link6:
           Value: true
         tip:
@@ -238,15 +228,6 @@ Visualization Manager:
       Show Names: true
       Tree:
         base_link:
-          link1:
-            link2:
-              link3:
-                link4:
-                  link5:
-                    link6:
-                      flange:
-                        tip:
-                          {}
           world:
             {}
       Update Interval: 0
@@ -266,22 +247,22 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/XYOrbit
-      Distance: 4.08928
+      Distance: 3.49567
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.06
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: 0.113567
-        Y: 0.10592
+        X: 1.02318
+        Y: -0.128075
         Z: 2.23518e-07
       Name: Current View
       Near Clip Distance: 0.01
-      Pitch: 0.269793
+      Pitch: 0.594792
       Target Frame: base_link
       Value: XYOrbit (rviz)
-      Yaw: 6.22677
+      Yaw: 6.17177
     Saved: ~
 Window Geometry:
   Displays:
@@ -297,5 +278,5 @@ Window Geometry:
   Views:
     collapsed: false
   Width: 927
-  X: 982
+  X: 792
   Y: 14
