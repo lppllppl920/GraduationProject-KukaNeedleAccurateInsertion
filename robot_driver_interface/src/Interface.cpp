@@ -9,24 +9,11 @@
  */
 
 #include "Interface.h"
-/* 	DDX_Control(pDX, IDC_FRAME_NO, m_ctlFrameNo);
- DDX_Control(pDX, IDC_PORT_HANDLES, m_ctlPortHandleCB);
- DDX_Control(pDX, IDC_REFERENCE_HANDLE_CMB, m_ctlRefHandleCB);
- DDX_Control(pDX, IDC_TRACKING_LIST, m_ctlTrackingList);
- DDX_Text(pDX, IDC_FRAME_NO, m_szFrameNumber);
- DDX_Text(pDX, IDC_SYSTEMMODE, m_szSystemMode);
- DDX_Check(pDX, IDC_TRACKING_REPORT_OOV, m_bUse0x0800Option);
- DDX_Check(pDX, IDC_EULER_ANGLES, m_bUseEulerAngles);
- DDX_Radio(pDX, IDC_TRACKING_TX, m_nTrackingMode);
- DDX_Text(pDX, IDC_MANUF_ID, m_szManufID);
- DDX_Check(pDX, IDC_PORT_ENABLED, m_bPortEnabled);
- DDX_Check(pDX, IDC_PORT_INIT, m_bPortInitialized);
- DDX_Text(pDX, IDC_SERIAL_NO, m_szSerialNo);
- DDX_Text(pDX, IDC_TOOL_REV, m_szToolRev);
- DDX_Text(pDX, IDC_TOOL_TYPE, m_szToolType);
- DDX_Text(pDX, IDC_PARTNUMBER, m_szPartNumber); */
 Interface::Interface(QMainWindow *parent) :
-		dtController_(), dtLastAxis_(0, 0, 0, 0, 0, 0) {
+		dtController_(), dtLastAxis_(0, 0, 0, 0, 0, 0), dtSubWindowCOMPortSettings_(
+				this), dtSubWindowIlluminatorFiringRate_(this), dtSubWindowNewAlertFlags_(
+				this), dtSubWindowProgramOptions_(this), dtSubWindowROMFile_(
+				this), dtSubWindowSystemFeatures_(this) {
 
 	ROS_INFO("Interface Constructing...");
 
@@ -47,7 +34,7 @@ Interface::Interface(QMainWindow *parent) :
 	connect(pushButton_AddWaypoint, SIGNAL(clicked()), this,
 			SLOT(addWaypoints()));
 	connect(pushButton_ExecuteWaypointsPlan, SIGNAL(clicked()), &dtController_,
-			SLOT(visualizeExecutePlanCb()));
+			SLOT(visualizeExecutePlanCb()), Qt::QueuedConnection);
 	connect(pushButton_Do, SIGNAL(clicked()), this,
 			SLOT(manipulateCollisionObject()));
 	connect(pushButton_ConvertPosetoJoint, SIGNAL(clicked()), this,
@@ -58,6 +45,10 @@ Interface::Interface(QMainWindow *parent) :
 			SLOT(rotateAroundAxis()));
 	connect(pushButton_ExecuteRotatePlan, SIGNAL(clicked()), this,
 			SLOT(executeMotionPlan()));
+	connect(pushButton_CalculateRotationMatrix, SIGNAL(clicked()), this,
+			SLOT(calculateRotationMatrix()));
+	connect(pushButton_NeedleCalibration, SIGNAL(clicked()), this,
+			SLOT(calibrateNeedle()));
 	// NDI related
 	connect(pushButton_ResetSystem, SIGNAL(clicked()), this,
 			SLOT(resetNDISystem()));
@@ -105,34 +96,37 @@ Interface::Interface(QMainWindow *parent) :
 
 	connect(comboBox_Port, SIGNAL(currentIndexChanged(int)), this,
 			SLOT(selchangePortHandles()));
+	connect(comboBox_Handle, SIGNAL(currentIndexChanged(int)), this,
+			SLOT(clearTransformData()));
 	connect(comboBox_Reference, SIGNAL(currentIndexChanged(int)), this,
 			SLOT(selchangeRefPortHandle()));
 	connect(checkBox_HandleEnable, SIGNAL(clicked(bool)), this,
 			SLOT(portEnabled()));
 
 	// Others related
-	connect(this, SIGNAL(sendTrajectory(const TrajectoryGoal&)), &dtController_,
-			SLOT(sendTrajectory(const TrajectoryGoal&)));
+	//connect(this, SIGNAL(sendTrajectory(const TrajectoryGoal&)), &dtController_,
+	//		SLOT(sendTrajectory(const TrajectoryGoal&)));
 
 	connect(&dtController_, SIGNAL(newFeedback(Feedback* )), this,
-			SLOT(newFeedbackReceived(Feedback* )));
-
+			SLOT(newFeedbackReceived(Feedback* )), Qt::QueuedConnection);
 	connect(&dtController_, SIGNAL(newFeedback(Feedback* )), this,
-			SLOT(displayFeedback(Feedback* )));
+			SLOT(displayFeedback(Feedback* )), Qt::QueuedConnection);
+	connect(&dtController_, SIGNAL(shutdown()), this, SLOT(shutdown()),
+			Qt::QueuedConnection);
 
-	connect(&dtController_, SIGNAL(shutdown()), this, SLOT(shutdown()));
-	// When motion plan is obtain in controller_, transfer plan to interface object for visualization
 	connect(&dtController_, SIGNAL(visualizeMotionPlan(MotionPlan)), this,
-			SLOT(visualizeMotionPlan(MotionPlan)));
+			SLOT(visualizeMotionPlan(MotionPlan)), Qt::QueuedConnection);
 	connect(this, SIGNAL(addWaypointsSignal()), &dtController_,
-			SLOT(addWaypointsCb()));
+			SLOT(addWaypointsCb()), Qt::QueuedConnection);
 	connect(this, SIGNAL(visualizeExecutePlan()), &dtController_,
-			SLOT(visualizeExecutePlanCb()));
+			SLOT(visualizeExecutePlanCb()), Qt::QueuedConnection);
 	connect(this,
 			SIGNAL(endEffectorPos(const InteractiveMarkerFeedbackConstPtr&)),
 			&dtController_,
-			SLOT(endEffectorPosCb(const InteractiveMarkerFeedbackConstPtr&)));
+			SLOT(endEffectorPosCb(const InteractiveMarkerFeedbackConstPtr&)),
+			Qt::QueuedConnection);
 
+// KUKA related
 	// Set publisher for planned path display
 	dtDisplayPublisher_ = pdtNodeHandle_->advertise<
 			moveit_msgs::DisplayTrajectory>("/move_group/display_planned_path",
@@ -150,10 +144,10 @@ Interface::Interface(QMainWindow *parent) :
 					10, &Interface::endEffectorPosCb, this);
 
 	// Set subscriber for Motion trajectory execution
-	dtMotionTrajectorySubsriber_ = pdtNodeHandle_->subscribe<
-			control_msgs::FollowJointTrajectoryActionGoal, Interface>(
-			"/joint_trajectory_action/goal", 10, &Interface::trajectoryActionCb,
-			this);
+	//dtMotionTrajectorySubsriber_ = pdtNodeHandle_->subscribe<
+	//		control_msgs::FollowJointTrajectoryActionGoal, Interface>(
+	//		"/joint_trajectory_action/goal", 10, &Interface::trajectoryActionCb,
+	//		this);
 
 	dtPlanningSceneDiffPublisher_ = pdtNodeHandle_->advertise<
 			moveit_msgs::PlanningScene>("/planning_scene", 1);
@@ -186,14 +180,8 @@ Interface::Interface(QMainWindow *parent) :
 	pdtPlannar_ = boost::shared_ptr<Plannar>(dtController_.getPlannar());
 
 	nCollisionOperationCount_ = 0;
-
 // NDI related
 	pdtCommandHandling_ = boost::make_shared<CommandHandling>();
-
-	strSystemMode_ = "Setup Mode";
-	lineEdit_Mode->setText(QString(strSystemMode_.c_str()));
-	setMode( MODE_PRE_INIT);
-
 
 	nCOMPort_ = 0;
 	nTrackingMode_ = 0;
@@ -204,7 +192,6 @@ Interface::Interface(QMainWindow *parent) :
 	bSystemInitialized_ = false;
 	bPortsActivated_ = false;
 	bInterference_ = false;
-
 	bUse0x0800Option_ = false;
 	bUseEulerAngles_ = false;
 	bPortEnabled_ = false;
@@ -225,15 +212,422 @@ Interface::Interface(QMainWindow *parent) :
 	checkBox_HandleInitialize->setChecked(bPortInitialized_);
 	checkBox_0x0800->setChecked(bUse0x0800Option_);
 	radioButton_TXMode->setChecked(!nTrackingMode_);
+
+	// timer for periodically retrieving the transform data
+	dtGetDataTimer_ = new QTimer(this);
+	connect(dtGetDataTimer_, SIGNAL(timeout()), this,
+			SLOT(getSystemTransformData()));
+
+	strSystemMode_ = "Setup Mode";
+	lineEdit_Mode->setText(QString(strSystemMode_.c_str()));
+	setMode( MODE_PRE_INIT);
+
+	bMotionComplete_ = false;
+
+	//dtController_.start();
+	dtControllerThread_ = new QThread;
+	dtController_.moveToThread(dtControllerThread_);
+	ROS_INFO("Controller thread starts...");
+	dtControllerThread_->start();
+
 }
 
 Interface::~Interface() {
-	ROS_INFO("Interface Deconstructing...");
-	QApplication::exit();
-	ros::shutdown();
+	std::cout << "Interface Deconstructing..." << std::endl;
+
+	std::cout << "Controller thread ends..." << std::endl;
+	dtControllerThread_->exit();
 }
 
 // Slots function
+void Interface::calibrateNeedle() {
+	// TODO: After calibration, we need to change URDF file to save these settings
+	if (lineEdit_NDI_X->text().isEmpty() || lineEdit_NDI_Y->text().isEmpty()
+			|| lineEdit_NDI_Z->text().isEmpty()
+			|| lineEdit_KUKA_A->text().isEmpty()
+			|| lineEdit_KUKA_B->text().isEmpty()
+			|| lineEdit_KUKA_C->text().isEmpty()) {
+		ROS_ERROR("value of the reference point is empty");
+		return;
+	}
+
+	if (output_x->toPlainText().isEmpty() || output_y->toPlainText().isEmpty()
+			|| output_z->toPlainText().isEmpty()
+			|| output_a->toPlainText().isEmpty()
+			|| output_b->toPlainText().isEmpty()
+			|| output_c->toPlainText().isEmpty()) {
+		ROS_ERROR("KUKA feedback value is empty");
+		return;
+	}
+
+	if (lineEdit_Tx->text().isEmpty() || lineEdit_Ty->text().isEmpty()
+			|| lineEdit_Tz->text().isEmpty()) {
+		ROS_ERROR("NDI tool position is missing");
+		return;
+	}
+
+	pushButton_NeedleCalibration->setEnabled(false);
+	dtGetDataTimer_->stop();
+
+	Axis feedback_axis;
+	Frame feedback_frame;
+
+	std::vector<double> NDI_reference_point(6);
+	std::vector<double> KUKA_position(3);
+
+	KDL::Vector NDI_delta_position;
+	KDL::Vector KUKA_delta_position;
+
+	geometry_msgs::Pose target_pose;
+	std::vector<double> euler_angle(3);
+
+	KDL::Rotation Inverse_rotation_matrix = dtNDIKUKARotationMatrix_.Inverse();
+	KDL::Rotation dtRotation;
+
+// Pos for reference point in NDI frame
+	NDI_reference_point[0] = lineEdit_NDI_X->text().toDouble();
+	NDI_reference_point[1] = lineEdit_NDI_Y->text().toDouble();
+	NDI_reference_point[2] = lineEdit_NDI_Z->text().toDouble();
+	NDI_reference_point[3] = lineEdit_KUKA_A->text().toDouble() / 180.0 * M_PI;
+	NDI_reference_point[4] = lineEdit_KUKA_B->text().toDouble() / 180.0 * M_PI;
+	NDI_reference_point[5] = lineEdit_KUKA_C->text().toDouble() / 180.0 * M_PI;
+
+// First rotate KUKA to specified ABC pos
+	euler_angle[0] = NDI_reference_point[3];
+	euler_angle[1] = NDI_reference_point[4];
+	euler_angle[2] = NDI_reference_point[5];
+
+	dtRotation = KDL::Rotation::RPY(euler_angle[2], euler_angle[1],
+			euler_angle[0]);
+	dtRotation.GetQuaternion(target_pose.orientation.x,
+			target_pose.orientation.y, target_pose.orientation.z,
+			target_pose.orientation.w);
+	feedback_axis = dtController_.getFeedbackAxis();
+	dtLastAxis_.set(feedback_axis);
+	pdtPlannar_->getModel().Axis2Frame(feedback_axis, feedback_frame);
+	target_pose.position.x = feedback_frame.X / 1000.0;
+	target_pose.position.y = feedback_frame.Y / 1000.0;
+	target_pose.position.z = feedback_frame.Z / 1000.0;
+
+	bool Replan_flag = false;
+	do {
+		Replan_flag = false;
+		if (!dtController_.planTargetMotion(target_pose)) {
+			ROS_ERROR("Motion plan failed");
+			pushButton_NeedleCalibration->setEnabled(true);
+			dtGetDataTimer_->start(1000);
+			return;
+		}
+		dtSubWindowMotionPlanDecision_.exec();
+//TODO: how to notify this function that the robot motion has completed
+		if (dtSubWindowMotionPlanDecision_.nReturnValue_ == MOTION_PLAN_EXECUTE) {
+			dtController_.executeMotionPlan();
+
+		} else if (dtSubWindowMotionPlanDecision_.nReturnValue_
+				== MOTION_PLAN_REPLAN) {
+			Replan_flag = true;
+		} else {
+			pushButton_NeedleCalibration->setEnabled(true);
+			dtGetDataTimer_->start(1000);
+			return;
+		}
+	} while (Replan_flag);
+
+// Then move KUKA to specified XYZ reference point in NDI frame
+	feedback_axis = dtController_.getFeedbackAxis();
+	dtLastAxis_.set(feedback_axis);
+	pdtPlannar_->getModel().Axis2Frame(feedback_axis, feedback_frame);
+	euler_angle[0] = feedback_frame.A / 180.0 * M_PI;
+	euler_angle[1] = feedback_frame.B / 180.0 * M_PI;
+	euler_angle[2] = feedback_frame.C / 180.0 * M_PI;
+
+	dtRotation = KDL::Rotation::RPY(euler_angle[2], euler_angle[1],
+			euler_angle[0]);
+	dtRotation.GetQuaternion(target_pose.orientation.x,
+			target_pose.orientation.y, target_pose.orientation.z,
+			target_pose.orientation.w);
+
+	if (!getSystemTransformData()) {
+		ROS_ERROR("Cannot get tool position data");
+		pushButton_NeedleCalibration->setEnabled(true);
+		dtGetDataTimer_->start(1000);
+		return;
+	}
+	NDI_delta_position.data[0] = NDI_reference_point[0]
+			- lineEdit_Tx->text().toDouble() / 1000.0;
+	NDI_delta_position.data[1] = NDI_reference_point[1]
+			- lineEdit_Ty->text().toDouble() / 1000.0;
+	NDI_delta_position.data[2] = NDI_reference_point[2]
+			- lineEdit_Tz->text().toDouble() / 1000.0;
+	KUKA_delta_position = Inverse_rotation_matrix * NDI_delta_position;
+
+	while (sqrt(
+			KUKA_delta_position.data[0] * KUKA_delta_position.data[0]
+					+ KUKA_delta_position.data[1] * KUKA_delta_position.data[1]
+					+ KUKA_delta_position.data[2] * KUKA_delta_position.data[2])
+			> 0.0003) {
+
+		feedback_axis = dtController_.getFeedbackAxis();
+		dtLastAxis_.set(feedback_axis);
+		pdtPlannar_->getModel().Axis2Frame(feedback_axis, feedback_frame);
+		target_pose.position.x = feedback_frame.X / 1000.0
+				+ KUKA_delta_position.data[0];
+		target_pose.position.y = feedback_frame.Y / 1000.0
+				+ KUKA_delta_position.data[1];
+		target_pose.position.z = feedback_frame.Z / 1000.0
+				+ KUKA_delta_position.data[2];
+
+		do {
+			Replan_flag = false;
+			if (!dtController_.planTargetMotion(target_pose)) {
+				ROS_ERROR("Motion plan failed");
+				pushButton_NeedleCalibration->setEnabled(true);
+				dtGetDataTimer_->start(1000);
+				return;
+			}
+			dtSubWindowMotionPlanDecision_.exec();
+
+			if (dtSubWindowMotionPlanDecision_.nReturnValue_
+					== MOTION_PLAN_EXECUTE) {
+				dtController_.executeMotionPlan();
+			} else if (dtSubWindowMotionPlanDecision_.nReturnValue_
+					== MOTION_PLAN_REPLAN) {
+				Replan_flag = true;
+			} else {
+				pushButton_NeedleCalibration->setEnabled(true);
+				dtGetDataTimer_->start(1000);
+				return;
+			}
+		} while (Replan_flag);
+
+		if (!getSystemTransformData()) {
+			ROS_ERROR("Cannot get tool position data");
+			pushButton_NeedleCalibration->setEnabled(true);
+			dtGetDataTimer_->start(1000);
+			return;
+		}
+
+		NDI_delta_position.data[0] = NDI_reference_point[0]
+				- lineEdit_Tx->text().toDouble() / 1000.0;
+		NDI_delta_position.data[1] = NDI_reference_point[1]
+				- lineEdit_Ty->text().toDouble() / 1000.0;
+		NDI_delta_position.data[2] = NDI_reference_point[2]
+				- lineEdit_Tz->text().toDouble() / 1000.0;
+		KUKA_delta_position = Inverse_rotation_matrix * NDI_delta_position;
+	}
+
+	pushButton_NeedleCalibration->setEnabled(true);
+	dtGetDataTimer_->start(1000);
+}
+//Calculate robotation matrix between NDI frame and KUKA frame
+void Interface::calculateRotationMatrix() {
+
+	if (output_x->toPlainText().isEmpty() || output_y->toPlainText().isEmpty()
+			|| output_z->toPlainText().isEmpty()) {
+		ROS_ERROR("KUKA feedback value is empty");
+		return;
+	}
+	if (lineEdit_dX->text().isEmpty() || lineEdit_dY->text().isEmpty()
+			|| lineEdit_dZ->text().isEmpty()) {
+		ROS_ERROR("value of the delta pos is empty");
+		return;
+	}
+	if (lineEdit_Tx->text().isEmpty() || lineEdit_Ty->text().isEmpty()
+			|| lineEdit_Tz->text().isEmpty()) {
+		ROS_ERROR("NDI tool position is missing");
+		return;
+	}
+
+	pushButton_CalculateRotationMatrix->setEnabled(false);
+
+	dtGetDataTimer_->stop();
+
+	Axis feedback_axis;
+	Frame feedback_frame;
+
+	// move x, y, z independently so that we could calculate each column of the rotation matrix separately
+	std::vector<double> Kuka_position_x(4), Kuka_position_y(4), Kuka_position_z(
+			4);
+	std::vector<double> NDI_position_x(4), NDI_position_y(4), NDI_position_z(4);
+
+	geometry_msgs::Pose target_pose;
+	std::vector<double> euler_angle(3);
+
+	feedback_axis = dtController_.getFeedbackAxis();
+	dtLastAxis_.set(feedback_axis);
+	pdtPlannar_->getModel().Axis2Frame(feedback_axis, feedback_frame);
+	euler_angle[0] = feedback_frame.A / 180.0 * M_PI;
+	euler_angle[1] = feedback_frame.B / 180.0 * M_PI;
+	euler_angle[2] = feedback_frame.C / 180.0 * M_PI;
+
+	KDL::Rotation dtRotation = KDL::Rotation::RPY(euler_angle[2],
+			euler_angle[1], euler_angle[0]);
+	dtRotation.GetQuaternion(target_pose.orientation.x,
+			target_pose.orientation.y, target_pose.orientation.z,
+			target_pose.orientation.w);
+	Kuka_position_x[0] = feedback_frame.X / 1000.0;
+	Kuka_position_y[0] = feedback_frame.Y / 1000.0;
+	Kuka_position_z[0] = feedback_frame.Z / 1000.0;
+
+	if (!getSystemTransformData()) {
+		ROS_ERROR("Cannot get tool position data");
+		pushButton_CalculateRotationMatrix->setEnabled(true);
+		dtGetDataTimer_->start(1000);
+		return;
+	}
+	NDI_position_x[0] = lineEdit_Tx->text().toDouble() / 1000.0;
+	NDI_position_y[0] = lineEdit_Ty->text().toDouble() / 1000.0;
+	NDI_position_z[0] = lineEdit_Tz->text().toDouble() / 1000.0;
+
+	// Pose 1
+	target_pose.position.x = Kuka_position_x[1] = Kuka_position_x[0]
+			+ lineEdit_dX->text().toDouble();
+	target_pose.position.y = Kuka_position_y[1] = Kuka_position_y[0];
+	target_pose.position.z = Kuka_position_z[1] = Kuka_position_z[0];
+
+	bool Replan_flag = false;
+	do {
+		Replan_flag = false;
+		if (!dtController_.planTargetMotion(target_pose)) {
+			ROS_ERROR("Motion plan failed");
+			pushButton_CalculateRotationMatrix->setEnabled(true);
+			dtGetDataTimer_->start(1000);
+			return;
+		}
+		dtSubWindowMotionPlanDecision_.exec();
+		ROS_ERROR("debug");
+		if (dtSubWindowMotionPlanDecision_.nReturnValue_ == MOTION_PLAN_EXECUTE) {
+			dtController_.executeMotionPlan();
+		} else if (dtSubWindowMotionPlanDecision_.nReturnValue_
+				== MOTION_PLAN_REPLAN) {
+			Replan_flag = true;
+		} else {
+			pushButton_CalculateRotationMatrix->setEnabled(true);
+			dtGetDataTimer_->start(1000);
+			return;
+		}
+	} while (Replan_flag);
+
+	if (!getSystemTransformData()) {
+		ROS_ERROR("Cannot get tool position data");
+		pushButton_CalculateRotationMatrix->setEnabled(true);
+		dtGetDataTimer_->start(1000);
+		return;
+	}
+	NDI_position_x[1] = lineEdit_Tx->text().toDouble() / 1000.0;
+	NDI_position_y[1] = lineEdit_Ty->text().toDouble() / 1000.0;
+	NDI_position_z[1] = lineEdit_Tz->text().toDouble() / 1000.0;
+
+	// Pose 2
+	target_pose.position.x = Kuka_position_x[2] = Kuka_position_x[0];
+	target_pose.position.y = Kuka_position_y[2] = Kuka_position_y[0]
+			+ lineEdit_dY->text().toDouble();
+	target_pose.position.z = Kuka_position_z[2] = Kuka_position_z[0];
+
+	do {
+		Replan_flag = false;
+		if (!dtController_.planTargetMotion(target_pose)) {
+			ROS_ERROR("Motion plan failed");
+			pushButton_CalculateRotationMatrix->setEnabled(true);
+			dtGetDataTimer_->start(1000);
+			return;
+		}
+		dtSubWindowMotionPlanDecision_.exec();
+
+		if (dtSubWindowMotionPlanDecision_.nReturnValue_ == MOTION_PLAN_EXECUTE) {
+			dtController_.executeMotionPlan();
+		} else if (dtSubWindowMotionPlanDecision_.nReturnValue_
+				== MOTION_PLAN_REPLAN) {
+			Replan_flag = true;
+		} else {
+			pushButton_CalculateRotationMatrix->setEnabled(true);
+			dtGetDataTimer_->start(1000);
+			return;
+		}
+	} while (Replan_flag);
+
+	if (!getSystemTransformData()) {
+		ROS_ERROR("Cannot get tool position data");
+		pushButton_CalculateRotationMatrix->setEnabled(true);
+		dtGetDataTimer_->start(1000);
+		return;
+	}
+	NDI_position_x[2] = lineEdit_Tx->text().toDouble() / 1000.0;
+	NDI_position_y[2] = lineEdit_Ty->text().toDouble() / 1000.0;
+	NDI_position_z[2] = lineEdit_Tz->text().toDouble() / 1000.0;
+
+	// Pose 3
+	target_pose.position.x = Kuka_position_x[3] = Kuka_position_x[0];
+	target_pose.position.y = Kuka_position_y[3] = Kuka_position_y[0];
+	target_pose.position.z = Kuka_position_z[3] = Kuka_position_z[0]
+			+ lineEdit_dZ->text().toDouble();
+
+	do {
+		Replan_flag = false;
+		if (!dtController_.planTargetMotion(target_pose)) {
+			ROS_ERROR("Motion plan failed");
+			pushButton_CalculateRotationMatrix->setEnabled(true);
+			dtGetDataTimer_->start(1000);
+			return;
+		}
+		dtSubWindowMotionPlanDecision_.exec();
+
+		if (dtSubWindowMotionPlanDecision_.nReturnValue_ == MOTION_PLAN_EXECUTE) {
+			dtController_.executeMotionPlan();
+		} else if (dtSubWindowMotionPlanDecision_.nReturnValue_
+				== MOTION_PLAN_REPLAN) {
+			Replan_flag = true;
+		} else {
+			pushButton_CalculateRotationMatrix->setEnabled(true);
+			dtGetDataTimer_->start(1000);
+			return;
+		}
+	} while (Replan_flag);
+
+	if (!getSystemTransformData()) {
+		ROS_ERROR("Cannot get tool position data");
+		pushButton_CalculateRotationMatrix->setEnabled(true);
+		dtGetDataTimer_->start(1000);
+		return;
+	}
+	NDI_position_x[3] = lineEdit_Tx->text().toDouble() / 1000.0;
+	NDI_position_y[3] = lineEdit_Ty->text().toDouble() / 1000.0;
+	NDI_position_z[3] = lineEdit_Tz->text().toDouble() / 1000.0;
+
+	KDL::Vector delta_NDI_position(NDI_position_x[1] - NDI_position_x[0],
+			NDI_position_y[1] - NDI_position_y[0],
+			NDI_position_z[1] - NDI_position_z[0]);
+	KDL::Vector Rotation_c0(
+			delta_NDI_position / lineEdit_dX->text().toDouble());
+
+	delta_NDI_position.data[0] = NDI_position_x[2] - NDI_position_x[0];
+	delta_NDI_position.data[1] = NDI_position_y[2] - NDI_position_y[0];
+	delta_NDI_position.data[2] = NDI_position_z[2] - NDI_position_z[0];
+	KDL::Vector Rotation_c1(
+			delta_NDI_position / lineEdit_dY->text().toDouble());
+
+	delta_NDI_position.data[0] = NDI_position_x[3] - NDI_position_x[0];
+	delta_NDI_position.data[1] = NDI_position_y[3] - NDI_position_y[0];
+	delta_NDI_position.data[2] = NDI_position_z[3] - NDI_position_z[0];
+	KDL::Vector Rotation_c2(
+			delta_NDI_position / lineEdit_dZ->text().toDouble());
+
+	Rotation_c0.Normalize();
+	Rotation_c1.Normalize();
+	Rotation_c2.Normalize();
+
+	dtNDIKUKARotationMatrix_ = KDL::Rotation(Rotation_c0, Rotation_c1,
+			Rotation_c2);
+	ROS_INFO(
+			"NDI and KUKA frame rotation matrix: \n%f, %f, %f \n%f, %f, %f \n%f, %f, %f\n",
+			dtNDIKUKARotationMatrix_.data[0], dtNDIKUKARotationMatrix_.data[1],
+			dtNDIKUKARotationMatrix_.data[2], dtNDIKUKARotationMatrix_.data[3],
+			dtNDIKUKARotationMatrix_.data[4], dtNDIKUKARotationMatrix_.data[5],
+			dtNDIKUKARotationMatrix_.data[6], dtNDIKUKARotationMatrix_.data[7],
+			dtNDIKUKARotationMatrix_.data[8]);
+
+	dtGetDataTimer_->start(1000);
+}
 //call back function for GUI push button
 /*****************************************************************
  Name:				OnTrackingBut
@@ -374,6 +768,8 @@ void Interface::initializeNDISystem() {
 		ROS_ERROR("SetSystemComParms failed");
 	}/* else */
 
+	//Set Timer
+	dtGetDataTimer_->stop();
 }/* initializeNDISystem */
 /*****************************************************************
  Name:				resetNDISystem
@@ -426,7 +822,9 @@ void Interface::resetNDISystem() {
 	lineEdit_Mode->setText(QString(strSystemMode_.c_str()));
 	setMode(MODE_PRE_INIT);
 	ROS_INFO("System reset successful");
-	//UpdateData(false);
+
+	//Set Timer
+	dtGetDataTimer_->stop();
 } /* resetNDISystem */
 /*****************************************************************
  Name:				activateHandles
@@ -498,15 +896,6 @@ int Interface::activatePorts() {
 			if (pdtCommandHandling_->pdtHandleInformation_[i].dtHandleInfo.nInitialized
 					== 1) {
 				sprintf(pszPortID, "%02X", i);
-				//TODO:
-				//if( CommandHandling_->HandleInformation_[i].pchrToolType[1] != '8' )
-				//{
-				//m_ctlTrackingList.InsertItem( 0, NULL );
-				//m_ctlTrackingList.SetItemText( 0, 1,
-				//	CommandHandling_->HandleInformation_[i].PhysicalPort );
-
-				//m_ctlTrackingList.SetItemText( 0, 0, pszPortID );
-				//}/* if */
 				comboBox_Port->addItem(QString(pszPortID));
 				comboBox_Reference->addItem(QString(pszPortID));
 				comboBox_Handle->addItem(QString(pszPortID));
@@ -562,13 +951,6 @@ int Interface::startTracking() {
 			comboBox_Port->setCurrentIndex(0);
 			selchangePortHandles();
 		}
-//TODO: Based on the current index of comboBox_Handle, display corresponding transform parameters
-		//AfxBeginThread( FillTrackingTable,
-		//			  m_hWnd,
-		//			  THREAD_PRIORITY_NORMAL,
-		//			  0,
-		//			  0 );
-
 		return 1;
 	} /* if */
 
@@ -610,40 +992,6 @@ int Interface::stopTracking() {
 	return 0;
 } /* stopTracking */
 
-/*****************************************************************
- Name:				FillTrackingTable
-
- Inputs:
- input LPVOID pParam - normal thread input
-
- Return Value:
- UINT - normal thread return
-
- Description:
- This is the thread call that controls the collection of data
-
- This thread allows the user to perform other tasks
- within the program while data is being collected
- *****************************************************************/
-//TODO: need to redesign this method
-//UINT FillTrackingTable( LPVOID pParam)
-//{
-//	HWND hWnd = (HWND)pParam;
-//	while ( !StopTracking_ )
-//	{
-/*
- * while tracking, post messages to fill the list
- */
-//		if ( IsTracking_ )
-//			::SendMessage( hWnd, WM_FILL_LIST, 0, 0 );
-//		else
-//			StopTracking_ = true;
-//	}/* while */
-/* when tracking stopped, kill the thread */
-//	StopTracking_ = false;
-//	AfxEndThread( 0, true );
-//	return 0;
-//} /* FillTrackingTable */
 /*****************************************************************
  Name:				getSystemTransformData
 
@@ -818,6 +1166,15 @@ long Interface::comPortTimeout() {
 	//}; /* switch */
 	return 0;
 } /* comPortTimeout */
+void Interface::clearTransformData() {
+	lineEdit_Tx->clear();
+	lineEdit_Ty->clear();
+	lineEdit_Tz->clear();
+	lineEdit_Qo->clear();
+	lineEdit_Qx->clear();
+	lineEdit_Qy->clear();
+	lineEdit_Qz->clear();
+}
 /*****************************************************************
  Name:				selchangePortHandles
 
@@ -925,7 +1282,7 @@ void Interface::portEnabled() {
 	if (!bPortEnabled_)
 		pdtCommandHandling_->DisablePort(nPortHandle);
 	else
-		pdtCommandHandling_->EnableOnePorts(nPortHandle);
+		pdtCommandHandling_->EnableOnePort(nPortHandle);
 } /* portEnabled */
 
 /*****************************************************************
@@ -980,8 +1337,11 @@ void Interface::settingsRomfilesettings() {
 			pdtCommandHandling_->dtSystemInformation_.nNoMagneticPorts;
 	dtSubWindowROMFile_.nTypeofSystem_ =
 			pdtCommandHandling_->dtSystemInformation_.nTypeofSystem;
-	ROS_INFO("ROMFileSettings: %d %d %d %d", dtSubWindowROMFile_.nNoActivePorts_, dtSubWindowROMFile_.nNoPassivePorts_,
-			dtSubWindowROMFile_.nNoMagneticPorts_, dtSubWindowROMFile_.nTypeofSystem_);
+	ROS_INFO("ROMFileSettings: %d %d %d %d",
+			dtSubWindowROMFile_.nNoActivePorts_,
+			dtSubWindowROMFile_.nNoPassivePorts_,
+			dtSubWindowROMFile_.nNoMagneticPorts_,
+			dtSubWindowROMFile_.nTypeofSystem_);
 	dtSubWindowROMFile_.Init();
 	dtSubWindowROMFile_.show();
 
@@ -1197,20 +1557,24 @@ void Interface::setMode(int nMode) {
 
 	switch (nMode) {
 	case MODE_PRE_INIT: {
+		dtGetDataTimer_->stop();
 		bPreInitialization = true;
 		break;
 	} /* case */
 	case MODE_INIT: {
+		dtGetDataTimer_->stop();
 		bInitialized = true;
 		bPreInitialization = false;
 		bPortsActivated_ = false;
 		break;
 	} /* case */
 	case MODE_ACTIVATED: {
+		dtGetDataTimer_->stop();
 		bInitialized = true;
 		break;
 	} /* case */
 	case MODE_TRACKING: {
+		dtGetDataTimer_->start(1000);
 		bTrackingMode = true;
 		break;
 	} /* case */
@@ -1295,6 +1659,74 @@ void Interface::manipulateCollisionObject() {
 	int shape_index = comboBox_Shape->currentIndex();
 	int operation_index = comboBox_Operation->currentIndex();
 
+	// if operation is ADD
+	if (operation_index == 0) {
+		if (lineEdit_CollisionID->text().isEmpty()) {
+			ROS_ERROR("Collision ID is empty, Cannot add collision object");
+			return;
+		}
+		switch (shape_index) {
+		case 0: {
+			//BOX
+			if (lineEdit_X_Radius->text().isEmpty()
+					|| lineEdit_Y_Height->text().isEmpty()
+					|| lineEdit_Z->text().isEmpty()) {
+				ROS_ERROR(
+						"Certain box dimention is empty, Cannot add collision object");
+				return;
+			}
+			break;
+		}
+		case 1: {
+			//SPHERE
+			if (lineEdit_X_Radius->text().isEmpty()) {
+				ROS_ERROR(
+						"Certain sphere dimention is empty, Cannot add collision object");
+				return;
+			}
+			break;
+		}
+		case 2: {
+			//CYLINDER
+			if (lineEdit_X_Radius->text().isEmpty()
+					|| lineEdit_Y_Height->text().isEmpty()) {
+				ROS_ERROR(
+						"Certain cylinder dimention is empty, Cannot add collision object");
+				return;
+			}
+			break;
+		}
+		case 3: {
+			//CONE
+			if (lineEdit_X_Radius->text().isEmpty()
+					|| lineEdit_Y_Height->text().isEmpty()) {
+				ROS_ERROR(
+						"Certain cone dimention is empty, Cannot add collision object");
+				return;
+			}
+			break;
+		}
+		default: {
+			return;
+		}
+		}
+
+		if (lineEdit_TransX->text().isEmpty()
+				|| lineEdit_TransY->text().isEmpty()
+				|| lineEdit_TransZ->text().isEmpty()
+				|| lineEdit_RotateA->text().isEmpty()
+				|| lineEdit_RotateB->text().isEmpty()
+				|| lineEdit_RotateC->text().isEmpty()) {
+			ROS_ERROR(
+					"Some descartes value is empty, Cannot add collision object");
+			return;
+		}
+	} else {
+		if (listWidget_CurrentCollisionObject->currentItem()->text().isEmpty()) {
+			ROS_ERROR("Cannot remove empty collision object");
+			return;
+		}
+	}
 	moveit_msgs::CollisionObject collision_object;
 	std::vector<double> collision_dimensions;
 	collision_dimensions.resize(3);
@@ -1414,6 +1846,16 @@ void Interface::manipulateCollisionObject() {
 
 }
 void Interface::visualizeJointPlan() {
+
+	if (lineEdit_Joint1->text().isEmpty() || lineEdit_Joint2->text().isEmpty()
+			|| lineEdit_Joint3->text().isEmpty()
+			|| lineEdit_Joint4->text().isEmpty()
+			|| lineEdit_Joint5->text().isEmpty()
+			|| lineEdit_Joint6->text().isEmpty()) {
+		ROS_ERROR("Some joint value is empty, Cannot plan a motion");
+		return;
+	}
+
 	std::map<std::string, double> target_joints;
 	target_joints["joint1"] = lineEdit_Joint1->text().toDouble() / 180.0 * M_PI;
 	target_joints["joint2"] = lineEdit_Joint2->text().toDouble() / 180.0 * M_PI;
@@ -1422,9 +1864,23 @@ void Interface::visualizeJointPlan() {
 	target_joints["joint5"] = lineEdit_Joint5->text().toDouble() / 180.0 * M_PI;
 	target_joints["joint6"] = lineEdit_Joint6->text().toDouble() / 180.0 * M_PI;
 
-	dtController_.planTargetMotion(target_joints);
+	if (!dtController_.planTargetMotion(target_joints)) {
+		ROS_ERROR("Motion plan failed");
+		return;
+	}
+	pushButton_ExecutePlan->setEnabled(true);
 }
 void Interface::visualizePosePlan() {
+
+	if (lineEdit_TransX->text().isEmpty() || lineEdit_TransY->text().isEmpty()
+			|| lineEdit_TransZ->text().isEmpty()
+			|| lineEdit_RotateA->text().isEmpty()
+			|| lineEdit_RotateB->text().isEmpty()
+			|| lineEdit_RotateC->text().isEmpty()) {
+		ROS_ERROR("Some descartes value is empty, Cannot plan a motion");
+		return;
+	}
+
 	geometry_msgs::Pose target_pose;
 	target_pose.position.x = lineEdit_TransX->text().toDouble();
 	target_pose.position.y = lineEdit_TransY->text().toDouble();
@@ -1441,10 +1897,26 @@ void Interface::visualizePosePlan() {
 			target_pose.orientation.y, target_pose.orientation.z,
 			target_pose.orientation.w);
 
-	//Axis2Frame()
-	dtController_.planTargetMotion(target_pose);
+	if (!dtController_.planTargetMotion(target_pose)) {
+		ROS_ERROR("Motion plan failed");
+		return;
+	}
+	pushButton_ExecutePlan->setEnabled(true);
 }
 void Interface::visualizeIncrPosePlan() {
+
+	if (output_x->toPlainText().isEmpty() || output_y->toPlainText().isEmpty()
+			|| output_z->toPlainText().isEmpty()
+			|| lineEdit_incrTransX->text().isEmpty()
+			|| lineEdit_incrTransY->text().isEmpty()
+			|| lineEdit_incrTransZ->text().isEmpty()
+			|| lineEdit_incrRotateA->text().isEmpty()
+			|| lineEdit_incrRotateB->text().isEmpty()
+			|| lineEdit_incrRotateC->text().isEmpty()) {
+		ROS_ERROR("Some descartes value is empty, Cannot plan a motion");
+		return;
+	}
+
 	geometry_msgs::Pose target_pose;
 	target_pose.position.x = output_x->toPlainText().toDouble() / 1000.0
 			+ lineEdit_incrTransX->text().toDouble();
@@ -1467,9 +1939,24 @@ void Interface::visualizeIncrPosePlan() {
 			target_pose.orientation.y, target_pose.orientation.z,
 			target_pose.orientation.w);
 
-	dtController_.planTargetMotion(target_pose);
+	if (!dtController_.planTargetMotion(target_pose)) {
+		ROS_ERROR("Motion plan failed");
+		return;
+	}
+	pushButton_ExecutePlan->setEnabled(true);
 }
 void Interface::addWaypoints() {
+	//TODO: comment the line below
+	//ROS_INFO("Interface: Thread %d", QThread::currentThreadId());
+	if (lineEdit_TransX->text().isEmpty() || lineEdit_TransY->text().isEmpty()
+			|| lineEdit_TransZ->text().isEmpty()
+			|| lineEdit_RotateA->text().isEmpty()
+			|| lineEdit_RotateB->text().isEmpty()
+			|| lineEdit_RotateC->text().isEmpty()) {
+		ROS_ERROR("Some descartes value is empty, Cannot add as a waypoint");
+		return;
+	}
+
 	geometry_msgs::Pose target_pose;
 	target_pose.position.x = lineEdit_TransX->text().toDouble();
 	target_pose.position.y = lineEdit_TransY->text().toDouble();
@@ -1487,8 +1974,19 @@ void Interface::addWaypoints() {
 			target_pose.orientation.w);
 
 	dtController_.addWaypoints(target_pose);
+	pushButton_ExecuteWaypointsPlan->setEnabled(true);
 }
 void Interface::rotateAroundAxis() {
+
+	if (output_x->toPlainText().isEmpty() || output_y->toPlainText().isEmpty()
+			|| output_z->toPlainText().isEmpty()
+			|| output_a->toPlainText().isEmpty()
+			|| output_b->toPlainText().isEmpty()
+			|| output_c->toPlainText().isEmpty()) {
+		ROS_ERROR("Some feedback value is empty, Cannot plan a rotate motion");
+		return;
+	}
+
 	// Axis type
 	int axis_type = comboBox_AxisType->currentIndex();
 	// Pose target
@@ -1573,12 +2071,19 @@ void Interface::rotateAroundAxis() {
 	target_pose.position.y = vector_rotate.data[1];
 	target_pose.position.z = vector_rotate.data[2];
 
-	dtController_.planTargetMotion(target_pose);
+	if (!dtController_.planTargetMotion(target_pose)) {
+		ROS_ERROR("motion plan failed");
+		return;
+	}
+
+	pushButton_ExecuteRotatePlan->setEnabled(true);
 
 }
 void Interface::executeMotionPlan() {
 
-	dtController_.executeMotionPlan();
+	if (dtController_.executeMotionPlan()) {
+		pushButton_ExecutePlan->setEnabled(false);
+	}
 }
 
 void Interface::newFeedbackReceived(Feedback* feedback) {
@@ -1614,10 +2119,10 @@ void Interface::shutdown() {
 }
 
 // Callback function
-void Interface::trajectoryActionCb(const TrajectoryGoal& feedback) {
-	ROS_INFO("Trajectory received.");
-	emit sendTrajectory(feedback);
-}
+//void Interface::trajectoryActionCb(const TrajectoryGoal& feedback) {
+//	ROS_INFO("Trajectory received.");
+//	emit sendTrajectory(feedback);
+//}
 void Interface::addWaypointsCb() {
 	ROS_INFO("Interface: add way points callback");
 	emit addWaypointsSignal();
@@ -1857,88 +2362,99 @@ void Interface::on_send_pos_button_clicked() {
 
 void Interface::displayFeedback(Feedback* feedback) {
 
+	if (!feedback->getSetOK() || !feedback->getParsedOK()) {
+		output_message->setText("Feedback parsing failed");
+		QPalette pm = output_message->palette();
+		pm.setColor(QPalette::Base, QColor(170, 0, 0));
+		output_message->setPalette(pm);
+		return;
+	}
+
+	Axis feedback_axis;
+	Frame feedback_frame;
+	feedback_axis = feedback->getAxis();
+	dtLastAxis_.set(feedback_axis);
+	pdtPlannar_->getModel().Axis2Frame(feedback_axis, feedback_frame);
+
+	if (feedback->getBufferExtreme() == feedback->Empty) {
+		bMotionComplete_ = true;
+	} else {
+		bMotionComplete_ = false;
+	}
+
 	nJointStateDisplayCount_++;
-	if (nJointStateDisplayCount_ >= 100) {
-		if (feedback->getSetOK() && feedback->getParsedOK()) {
-			Axis feedback_axis;
-			Frame feedback_frame;
-			feedback_axis = feedback->getAxis();
+	if (nJointStateDisplayCount_ >= 10) {
+		output_a1->setText(QString("%1").arg(feedback_axis.A1, 8, 'f', 4));
+		output_a2->setText(QString("%1").arg(feedback_axis.A2, 8, 'f', 4));
+		output_a3->setText(QString("%1").arg(feedback_axis.A3, 8, 'f', 4));
+		output_a4->setText(QString("%1").arg(feedback_axis.A4, 8, 'f', 4));
+		output_a5->setText(QString("%1").arg(feedback_axis.A5, 8, 'f', 4));
+		output_a6->setText(QString("%1").arg(feedback_axis.A6, 8, 'f', 4));
 
-			dtLastAxis_.set(feedback_axis);
-			pdtPlannar_->getModel().Axis2Frame(feedback_axis, feedback_frame);
+		output_x->setText(QString("%1").arg(feedback_frame.X, 8, 'f', 4));
+		output_y->setText(QString("%1").arg(feedback_frame.Y, 8, 'f', 4));
+		output_z->setText(QString("%1").arg(feedback_frame.Z, 8, 'f', 4));
+		output_a->setText(QString("%1").arg(feedback_frame.A, 8, 'f', 4));
+		output_b->setText(QString("%1").arg(feedback_frame.B, 8, 'f', 4));
+		output_c->setText(QString("%1").arg(feedback_frame.C, 8, 'f', 4));
 
-			output_a1->setText(QString("%1").arg(feedback_axis.A1, 8, 'f', 4));
-			output_a2->setText(QString("%1").arg(feedback_axis.A2, 8, 'f', 4));
-			output_a3->setText(QString("%1").arg(feedback_axis.A3, 8, 'f', 4));
-			output_a4->setText(QString("%1").arg(feedback_axis.A4, 8, 'f', 4));
-			output_a5->setText(QString("%1").arg(feedback_axis.A5, 8, 'f', 4));
-			output_a6->setText(QString("%1").arg(feedback_axis.A6, 8, 'f', 4));
+		output_s->setText(QString::number(feedback->getPos().S));
+		output_t->setText(QString::number(feedback->getPos().T));
 
-			output_x->setText(QString("%1").arg(feedback_frame.X, 8, 'f', 4));
-			output_y->setText(QString("%1").arg(feedback_frame.Y, 8, 'f', 4));
-			output_z->setText(QString("%1").arg(feedback_frame.Z, 8, 'f', 4));
-			output_a->setText(QString("%1").arg(feedback_frame.A, 8, 'f', 4));
-			output_b->setText(QString("%1").arg(feedback_frame.B, 8, 'f', 4));
-			output_c->setText(QString("%1").arg(feedback_frame.C, 8, 'f', 4));
+		output_buf_front->setText(QString::number(feedback->getBufferFront()));
+		output_buf_last->setText(QString::number(feedback->getBufferLast()));
 
-			output_s->setText(QString::number(feedback->getPos().S));
-			output_t->setText(QString::number(feedback->getPos().T));
+		output_seq->setText(QString::number(feedback->getSeq()));
+		output_result->setText(QString::number(feedback->getStamp()));
 
-			output_buf_front->setText(
-					QString::number(feedback->getBufferFront()));
-			output_buf_last->setText(
-					QString::number(feedback->getBufferLast()));
+		if (feedback->getText() != "Timer Feedback")
+			output_message->setText(
+					QString::fromStdString(feedback->getText()));
 
-			output_seq->setText(QString::number(feedback->getSeq()));
-			output_result->setText(QString::number(feedback->getStamp()));
+		if (feedback->getBufferExtreme() == Feedback::Full) {
+			QPalette pf = output_buf_front->palette();
+			pf.setColor(QPalette::Base, QColor(170, 0, 0));
+			output_buf_front->setPalette(pf);
 
-			if (feedback->getText() != "Timer Feedback")
-				output_message->setText(
-						QString::fromStdString(feedback->getText()));
-
-			if (feedback->getBufferExtreme() == Feedback::Full) {
-				QPalette pf = output_buf_front->palette();
-				pf.setColor(QPalette::Base, QColor(170, 0, 0));
-				output_buf_front->setPalette(pf);
-
-				QPalette pl = output_buf_last->palette();
-				pl.setColor(QPalette::Base, QColor(170, 0, 0));
-				output_buf_last->setPalette(pl);
-			} else {
-				QPalette pf = output_buf_front->palette();
-				pf.setColor(QPalette::Base, QColor(0, 170, 0));
-				output_buf_front->setPalette(pf);
-
-				QPalette pl = output_buf_last->palette();
-				pl.setColor(QPalette::Base, QColor(0, 170, 0));
-				output_buf_last->setPalette(pl);
-			}
-
-			if (feedback->getSuccess() == 0
-					&& feedback->getType() == Feedback::Hybrid) {
-				QPalette pr = output_result->palette();
-				pr.setColor(QPalette::Base, QColor(170, 0, 0));
-				output_result->setPalette(pr);
-			} else if (feedback->getType() == Feedback::Hybrid) {
-				QPalette pr = output_result->palette();
-				pr.setColor(QPalette::Base, QColor(0, 170, 0));
-				output_result->setPalette(pr);
-			}
-
-			//setAlignment();
+			QPalette pl = output_buf_last->palette();
+			pl.setColor(QPalette::Base, QColor(170, 0, 0));
+			output_buf_last->setPalette(pl);
 		} else {
-			output_message->setText("Feedback parsing failed");
-			QPalette pm = output_message->palette();
-			pm.setColor(QPalette::Base, QColor(170, 0, 0));
-			output_message->setPalette(pm);
+			QPalette pf = output_buf_front->palette();
+			pf.setColor(QPalette::Base, QColor(0, 170, 0));
+			output_buf_front->setPalette(pf);
 
-			//setAlignment();
+			QPalette pl = output_buf_last->palette();
+			pl.setColor(QPalette::Base, QColor(0, 170, 0));
+			output_buf_last->setPalette(pl);
+		}
+
+		if (feedback->getSuccess() == 0
+				&& feedback->getType() == Feedback::Hybrid) {
+			QPalette pr = output_result->palette();
+			pr.setColor(QPalette::Base, QColor(170, 0, 0));
+			output_result->setPalette(pr);
+		} else if (feedback->getType() == Feedback::Hybrid) {
+			QPalette pr = output_result->palette();
+			pr.setColor(QPalette::Base, QColor(0, 170, 0));
+			output_result->setPalette(pr);
 		}
 		nJointStateDisplayCount_ = 0;
 	}
 
 }
 void Interface::convertPoseTargettoJointTarget() {
+
+	if (lineEdit_TransX->text().isEmpty() || lineEdit_TransY->text().isEmpty()
+			|| lineEdit_TransZ->text().isEmpty()
+			|| lineEdit_RotateA->text().isEmpty()
+			|| lineEdit_RotateB->text().isEmpty()
+			|| lineEdit_RotateC->text().isEmpty()) {
+		ROS_ERROR(
+				"Some descartes value is empty, Cannot convert pose target to joint target");
+		return;
+	}
+
 	Frame temp_frame(lineEdit_TransX->text().toDouble() * 1000.0,
 			lineEdit_TransY->text().toDouble() * 1000.0,
 			lineEdit_TransZ->text().toDouble() * 1000.0,

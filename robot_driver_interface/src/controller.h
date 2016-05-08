@@ -12,6 +12,7 @@
 #define KRC_CONTROLLER
 
 #include "plannar.h"
+#include "KukaFeedback.h"
 
 using namespace visualization_msgs;
 using namespace interactive_markers;
@@ -36,7 +37,7 @@ public:
 	geometry_msgs::Pose& getTargetPose();
 	Eigen::Affine3d& getTargetAffine();
 	Plannar* getPlannar();
-
+	Axis getFeedbackAxis();
 // set function
 	void setMotionPlan(moveit::planning_interface::MoveGroup::Plan motion_plan);
 	void setTargetPose(geometry_msgs::Pose target_pose);
@@ -74,13 +75,14 @@ public slots:
 	void endEffectorPosCb(const InteractiveMarkerFeedbackConstPtr &feedback);
 	void newFeedbackReceived(Feedback* feedback);
 	// Send trajectory to plannar object
-	void sendTrajectory(const TrajectoryGoal& feedback);signals:
+	//void sendTrajectory(const TrajectoryGoal& feedback);
+signals:
 	// Shut down
 	void shutdown();
 	// joint state feedback
 	void newFeedback(Feedback* feedback);
 	void visualizeMotionPlan(MotionPlan motion_plan);
-	void sendTrajectorySignal(const TrajectoryGoal& feedback);
+	void sendTrajectorySignal(const MotionPlan& motion_plan);
 
 private:
 // Motion
@@ -110,6 +112,10 @@ private:
 	std::vector<std::string> vecstrRemoveCollisionIds_;
 	std::vector<moveit_msgs::CollisionObject> vecdtCollisionObjects_;
 
+	QThread *dtPlannarThread_;
+
+	KukaFeedback dtKukaFeedbackReceiver_;
+	QThread* dtKukaFeedbackThread_;
 };
 
 #endif

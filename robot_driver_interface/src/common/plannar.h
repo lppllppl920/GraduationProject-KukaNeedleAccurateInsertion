@@ -64,6 +64,7 @@
 
 #include "message.h"
 #include "tcpthread.h"
+#include "ROSThread.h"
 // --------------------------------------------------------------------------
 // Plannar class
 //  - publicly inherited from QObect, for signal-slot connection between main
@@ -218,7 +219,7 @@ public slots:
 	// Called when tcpSocket_ in tcpthread_ is disconencted
 	void disconnected();
 	// Called when Controller emit sendTrajectory() signal
-	void executeTrajectory(const TrajectoryGoal& feedback);signals:
+	void executeTrajectory(const MotionPlan& motion_plan);signals:
 	// Connected with tcpthread_.sendMessage()
 	// send a message to KRC4
 	void sendMessage(QString qs);
@@ -228,6 +229,8 @@ public slots:
 	// Connected with GUI, or higher level controller
 	void newFeedback(Feedback* fb);
 	void shutdownController();
+
+	void LastCommandComplete();
 
 private:
 	// CommandList & FeedbackList management
@@ -313,11 +316,6 @@ private:
 	//  - mainly used to test if Model::getTurn and Model::getStatus functions
 	bool checkStatusTurn(Feedback *fb);
 
-	// Trajectory subscriber
-
-	// private members
-	// thread representing tcp port
-	TCPThread tcpThread_;
 	// stamp to record the sequence of command initiated
 	//  - automatically increase when a command is successfully appended to CommandList
 	//  - stamp of the first command appended to CommandList is 1
@@ -332,11 +330,6 @@ private:
 	// advance_ record the $ADVANCE value of KRL program
 	//  - default value: 3
 	int advance_;
-
-	// Model of robot
-	//  - KUKA KR6 R700 sixx is used here
-	//  - initialized in Plannar constructor
-	Model robot_;
 
 	// Record the most recent Axis information
 	//  - act as initial guess for inverse kinematics iteration
@@ -376,6 +369,16 @@ private:
 	int firstTime_;
 	double averageTime_;
 
+	int lastStamp_;
+
+	QThread *tcpThread_;
+	// thread for ros spinning
+	ROSThread rosThread_;
+	// thread representing tcp port
+	TCPThread tcpObject_;
+	// Model of robot
+	//  - KUKA KR6 R700 sixx is used here
+	Model robot_;
 };
 
 #endif

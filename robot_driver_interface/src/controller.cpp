@@ -11,7 +11,7 @@
 #include "controller.h"
 
 Controller::Controller(std::string group_name) :
-		dtPlannar_() {
+		dtPlannar_(), dtKukaFeedbackReceiver_() {
 
 	ROS_INFO("Controller Constructing...");
 
@@ -19,18 +19,21 @@ Controller::Controller(std::string group_name) :
 			"InteractiveMarkerFeedbackConstPtr");
 	qRegisterMetaType<TrajectoryGoal>("TrajectoryGoal");
 	qRegisterMetaType<MotionPlan>("MotionPlan");
-	//qRegisterMetaType<Feedback>("Feedback");
 
 	// When object plannar_'s "newFeedback" function is called, its parameter will be passed to Controller's "newFeedback" function 
 	// and Controller's "newFeedback" function will be called.
 	connect(&dtPlannar_, SIGNAL(newFeedback(Feedback*)), this,
-			SLOT(newFeedbackReceived(Feedback*)));
-	// The same with shutdownController() and shutdown().
-	connect(&dtPlannar_, SIGNAL(shutdownController()), this,
-			SIGNAL(shutdown()));
+			SLOT(newFeedbackReceived(Feedback*)), Qt::QueuedConnection);
+	// This is to notify that the last motion command has been executed
+	connect(&dtPlannar_, SIGNAL(shutdownController()), this, SIGNAL(shutdown()),
+			Qt::QueuedConnection);
+	connect(&dtPlannar_, SIGNAL(newFeedback(Feedback* )), &dtKukaFeedbackReceiver_,
+			SLOT(ObtainJointFeedback(Feedback* )), Qt::QueuedConnection);
+	connect(&dtPlannar_, SIGNAL(LastCommandComplete()), &dtKukaFeedbackReceiver_,
+			SLOT(LastCommandComplete()), Qt::QueuedConnection);
 	// Send Trajectory to plannar_ object
-	connect(this, SIGNAL(sendTrajectorySignal(const TrajectoryGoal&)),
-			&dtPlannar_, SLOT(executeTrajectory(const TrajectoryGoal&)));
+	connect(this, SIGNAL(sendTrajectorySignal(const MotionPlan&)), &dtPlannar_,
+			SLOT(executeTrajectory(const MotionPlan&)), Qt::QueuedConnection);
 
 	// Settings for MoveGroup
 	pdtMoveGroup_ = boost::make_shared<moveit::planning_interface::MoveGroup>(
@@ -66,18 +69,26 @@ Controller::Controller(std::string group_name) :
 	// Initialize number of way points
 	nWaypointCount_ = 0;
 
-	// Publisher for planning scene
-	//planning_scene_diff_publisher_ = node_handle.advertise<moveit_msgs::PlanningScene>("planning_scene", 1);
+	// Assign a new thread to plannar
+	dtPlannarThread_ = new QThread;
+	dtPlannar_.moveToThread(dtPlannarThread_);
+	ROS_INFO("Plannar thread starts...");
+	dtPlannarThread_->start();
+
+	dtKukaFeedbackThread_ = new QThread;
+	dtKukaFeedbackReceiver_.moveToThread(dtKukaFeedbackThread_);
+	ROS_INFO("Kuka feedback receiver thread starts...");
+	dtKukaFeedbackThread_->start();
 
 }
 
 Controller::~Controller() {
-	ROS_INFO("Controller Deconstructing...");
-}
+	std::cout << "Controller Deconstructing..." << std::endl;
 
-void Controller::sendTrajectory(const TrajectoryGoal& feedback) {
-	ROS_INFO("Controller: motion plan received.");
-	emit sendTrajectorySignal(feedback);
+	std::cout << "Plannar thread ends..." << std::endl;
+	dtPlannarThread_->exit();
+	std::cout << "Kuka feedback receiver thread ends..." << std::endl;
+	dtKukaFeedbackThread_->exit();
 }
 
 void Controller::newFeedbackReceived(Feedback* feedback) {
@@ -158,7 +169,7 @@ bool Controller::planTargetAffineMotion() {
 // Execute motion plan
 bool Controller::executeMotionPlan(
 		moveit::planning_interface::MoveGroup::Plan motion_plan) {
-
+#ifdef KUKA_SIM
 	dtMotionStatus_ = pdtMoveGroup_->execute(motion_plan);
 	if (dtMotionStatus_.val != moveit_msgs::MoveItErrorCodes::SUCCESS) {
 		ROS_INFO("Motion execution failed");
@@ -167,10 +178,26 @@ bool Controller::executeMotionPlan(
 		ROS_INFO("Motion execution succeeded");
 		return true;
 	}
+#else
+	dtKukaFeedbackReceiver_.dtLastCommandCompleteLock_.lockForWrite();
+	dtKukaFeedbackReceiver_.bLastCommandComplete_ = false;
+	dtKukaFeedbackReceiver_.dtLastCommandCompleteLock_.unlock();
+
+	emit sendTrajectorySignal((const MotionPlan) motion_plan);
+
+	while (!dtKukaFeedbackReceiver_.bLastCommandComplete_) {
+
+	}
+	ROS_INFO("Motion plan executed successfully");
+	dtKukaFeedbackReceiver_.dtLastCommandCompleteLock_.lockForWrite();
+	dtKukaFeedbackReceiver_.bLastCommandComplete_ = false;
+	dtKukaFeedbackReceiver_.dtLastCommandCompleteLock_.unlock();
+	return true;
+#endif
 
 }
 bool Controller::executeMotionPlan() {
-
+#ifdef KUKA_SIM
 	dtMotionStatus_ = pdtMoveGroup_->execute(dtMotionPlan_);
 	if (dtMotionStatus_.val != moveit_msgs::MoveItErrorCodes::SUCCESS) {
 		ROS_INFO("Motion execution failed");
@@ -179,12 +206,28 @@ bool Controller::executeMotionPlan() {
 		ROS_INFO("Motion execution succeeded");
 		return true;
 	}
+#else
+	dtKukaFeedbackReceiver_.dtLastCommandCompleteLock_.lockForWrite();
+	dtKukaFeedbackReceiver_.bLastCommandComplete_ = false;
+	dtKukaFeedbackReceiver_.dtLastCommandCompleteLock_.unlock();
+
+	emit sendTrajectorySignal((const MotionPlan) dtMotionPlan_);
+
+	while (!dtKukaFeedbackReceiver_.bLastCommandComplete_) {
+
+	}
+	ROS_INFO("Motion plan executed successfully");
+	dtKukaFeedbackReceiver_.dtLastCommandCompleteLock_.lockForWrite();
+	dtKukaFeedbackReceiver_.bLastCommandComplete_ = false;
+	dtKukaFeedbackReceiver_.dtLastCommandCompleteLock_.unlock();
+	return true;
+#endif
 
 }
 // Async execute motion plan
 bool Controller::asyncExecuteMotionPlan(
 		moveit::planning_interface::MoveGroup::Plan motion_plan) {
-
+#ifdef KUKA_SIM
 	dtMotionStatus_ = pdtMoveGroup_->asyncExecute(motion_plan);
 	if (dtMotionStatus_.val != moveit_msgs::MoveItErrorCodes::SUCCESS) {
 		ROS_INFO("Async motion execution failed");
@@ -193,10 +236,24 @@ bool Controller::asyncExecuteMotionPlan(
 		ROS_INFO("Async motion execution succeeded");
 		return true;
 	}
+#else
+	dtKukaFeedbackReceiver_.dtLastCommandCompleteLock_.lockForWrite();
+	dtKukaFeedbackReceiver_.bLastCommandComplete_ = false;
+	dtKukaFeedbackReceiver_.dtLastCommandCompleteLock_.unlock();
 
+	emit sendTrajectorySignal((const MotionPlan) motion_plan);
+	while (!dtKukaFeedbackReceiver_.bLastCommandComplete_) {
+
+	}
+	ROS_INFO("Motion plan executed successfully");
+	dtKukaFeedbackReceiver_.dtLastCommandCompleteLock_.lockForWrite();
+	dtKukaFeedbackReceiver_.bLastCommandComplete_ = false;
+	dtKukaFeedbackReceiver_.dtLastCommandCompleteLock_.unlock();
+	return true;
+#endif
 }
 bool Controller::asyncExecuteMotionPlan() {
-
+#ifdef KUKA_SIM
 	dtMotionStatus_ = pdtMoveGroup_->asyncExecute(dtMotionPlan_);
 	if (dtMotionStatus_.val != moveit_msgs::MoveItErrorCodes::SUCCESS) {
 		ROS_INFO("Async motion execution failed");
@@ -205,17 +262,36 @@ bool Controller::asyncExecuteMotionPlan() {
 		ROS_INFO("Async motion execution succeeded");
 		return true;
 	}
+#else
+	dtKukaFeedbackReceiver_.dtLastCommandCompleteLock_.lockForWrite();
+	dtKukaFeedbackReceiver_.bLastCommandComplete_ = false;
+	dtKukaFeedbackReceiver_.dtLastCommandCompleteLock_.unlock();
 
+	emit sendTrajectorySignal((const MotionPlan) dtMotionPlan_);
+	while (!dtKukaFeedbackReceiver_.bLastCommandComplete_) {
+
+	}
+	ROS_INFO("Motion plan executed successfully");
+	dtKukaFeedbackReceiver_.dtLastCommandCompleteLock_.lockForWrite();
+	dtKukaFeedbackReceiver_.bLastCommandComplete_ = false;
+	dtKukaFeedbackReceiver_.dtLastCommandCompleteLock_.unlock();
+	return true;
+#endif
 }
 void Controller::visualizeMotionPlan() {
 	emit visualizeMotionPlan(dtMotionPlan_);
 }
 
 void Controller::stopMotion() {
+#ifdef KUKA_SIM
 	pdtMoveGroup_->stop();
+#else
+	//TODO:
+#endif
 }
 void Controller::addWaypoints(geometry_msgs::Pose waypoint_pose) {
 	ROS_INFO("Controller: add %d th way point", ++nWaypointCount_);
+	//ROS_INFO("Controller: Thread %d", QThread::currentThreadId());
 	vecdtWaypoints_.push_back(waypoint_pose);
 }
 void Controller::addWaypointsCb() {
@@ -241,15 +317,28 @@ void Controller::visualizeExecutePlanCb() {
 		bool success = pdtMoveGroup_->plan(temp_plan);
 		ROS_INFO("Controller: visualizing plan (pose goal) %s",
 				success ? "" : "FAILED");
-		// this sleep function could be commented to speed up
-		//sleep(5.0);
 		if (success) {
+#ifdef KUKA_SIM
 			pdtMoveGroup_->execute(temp_plan);
+#else
+			dtKukaFeedbackReceiver_.dtLastCommandCompleteLock_.lockForWrite();
+			dtKukaFeedbackReceiver_.bLastCommandComplete_ = false;
+			dtKukaFeedbackReceiver_.dtLastCommandCompleteLock_.unlock();
+
+			emit sendTrajectorySignal((const MotionPlan) temp_plan);
+			while (!dtKukaFeedbackReceiver_.bLastCommandComplete_) {
+
+			}
+			ROS_INFO("Motion plan executed successfully");
+			dtKukaFeedbackReceiver_.dtLastCommandCompleteLock_.lockForWrite();
+			dtKukaFeedbackReceiver_.bLastCommandComplete_ = false;
+			dtKukaFeedbackReceiver_.dtLastCommandCompleteLock_.unlock();
+#endif
 		} else {
 			// This one ensures that no unreachable motion command will be sent to Kuka,
 			// so no need to do reachable check in plannar_ object
 			ROS_ERROR(
-					"Controller: error while planning position of arm, no move command was sent!\n");;
+					"Controller: error while planning position of arm, no move command was sent!\n");
 		}
 	}
 
@@ -332,6 +421,14 @@ geometry_msgs::Pose& Controller::getEndEffectorPos() {
 	return dtEndEffectorPos_;
 }
 
+Axis Controller::getFeedbackAxis() {
+	Axis feedback_axis;
+	dtKukaFeedbackReceiver_.dtFeedbackLock_.lockForRead();
+	feedback_axis = dtKukaFeedbackReceiver_.dtJointFeedback_.getAxis();
+	dtKukaFeedbackReceiver_.dtFeedbackLock_.unlock();
+	return feedback_axis;
+}
+
 void Controller::setMotionPlan(
 		moveit::planning_interface::MoveGroup::Plan motion_plan) {
 	dtMotionPlan_ = motion_plan;
@@ -348,3 +445,4 @@ void Controller::setTargetJoints(std::map<std::string, double> target_joints) {
 void Controller::setTargetAffine(Eigen::Affine3d target_affine) {
 	dtTargetAffine_ = target_affine;
 }
+

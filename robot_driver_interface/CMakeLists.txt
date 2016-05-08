@@ -38,9 +38,13 @@ qt4_wrap_ui(UISUB6Srcs src/gui/robotInterface_ROMFile.ui)
 qt4_wrap_cpp(UISUB6MOCSrcs src/gui/ui_robotInterface_ROMFile.h)
 qt4_wrap_ui(UISUB6Srcs src/gui/robotInterface_COMPortTimeOut.ui)
 qt4_wrap_cpp(UISUB6MOCSrcs src/gui/ui_robotInterface_COMPortTimeOut.h)
+qt4_wrap_ui(UISUB7Srcs src/gui/robotInterface_MotionPlanDecision.ui)
+qt4_wrap_cpp(UISUB7MOCSrcs src/gui/ui_robotInterface_MotionPlanDecision.h)
 
 qt4_wrap_cpp(THREADMOCSrcs src/common/tcpthread.h)
 qt4_wrap_cpp(PLANMOCSrcs src/common/plannar.h)
+qt4_wrap_cpp(ROSTHREADMOCSrcs src/common/ROSThread.h)
+qt4_wrap_cpp(KUKAFEEDBACKMOCSrcs src/KukaFeedback.h)
 qt4_wrap_cpp(CTRLMOCSrcs src/controller.h)
 qt4_wrap_cpp(INTERFACEMOCSrcs src/Interface.h)
 qt4_wrap_cpp(COMM32PORTMOCSrcs src/ndi/Comm32Port.h)
@@ -51,6 +55,7 @@ qt4_wrap_cpp(PROGRAMOPTIONSMOCSrcs src/ndi/ProgramOptions.h)
 qt4_wrap_cpp(ILLUMINATORFIRINGRATEMOCSrcs src/ndi/IlluminatorFiringRate.h)
 qt4_wrap_cpp(ROMFILEMOCSrcs src/ndi/ROMFileDlg.h)
 qt4_wrap_cpp(COMPORTTIMEOUTMOCSrcs src/ndi/COMPortTimeOut.h)
+qt4_wrap_cpp(MOTIONPLANDECISIONMOCSrcs src/MotionPlanDecision.h)
 
 set(eigen_DIRS /usr/include/eigen3)
 set(orocos_kdl_DIRS /opt/ros/indigo/include)
@@ -73,10 +78,13 @@ add_executable(
     src/main.cpp
     src/controller.cpp
     src/Interface.cpp
+    src/KukaFeedback.cpp
+    src/MotionPlanDecision.cpp
     src/common/plannar.cpp
     src/common/geometry.cpp
     src/common/message.cpp
     src/common/tcpthread.cpp
+    src/common/ROSThread.cpp
     src/ndi/Comm32Port.cpp
     src/ndi/CommandHandling.cpp
     src/ndi/Conversions.cpp
@@ -105,6 +113,8 @@ add_executable(
     ${UISUB7Srcs}
     ${UISUB7MOCSrcs}
     ${THREADMOCSrcs}
+    ${ROSTHREADMOCSrcs}
+    ${KUKAFEEDBACKMOCSrcs}
     ${PLANMOCSrcs}
     ${CTRLMOCSrcs}
     ${INTERFACEMOCSrcs}
@@ -116,6 +126,7 @@ add_executable(
     ${ILLUMINATORFIRINGRATEMOCSrcs}
     ${ROMFILEMOCSrcs}
     ${COMPORTTIMEOUTMOCSrcs}
+    ${MOTIONPLANDECISIONMOCSrcs}
     )
 target_link_libraries(KRC4_control_async ${QT_LIBRARIES} ${catkin_LIBRARIES} QtNetwork QtXml QtSerialPort orocos-kdl kdl_parser roscpp rosconsole roscpp_serialization rostime interactive_markers)
 

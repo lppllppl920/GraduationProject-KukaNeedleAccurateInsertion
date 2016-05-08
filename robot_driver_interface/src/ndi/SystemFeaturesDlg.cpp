@@ -7,7 +7,7 @@
 
 #include <ndi/SystemFeaturesDlg.h>
 
-SystemFeaturesDlg::SystemFeaturesDlg() {
+SystemFeaturesDlg::SystemFeaturesDlg(QWidget* parent) {
 	setupUi(this);
 	nNoActivePorts_ = 0;
 	nNoActiveWireless_ = 0;

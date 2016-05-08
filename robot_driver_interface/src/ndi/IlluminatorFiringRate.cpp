@@ -7,7 +7,7 @@
 
 #include <ndi/IlluminatorFiringRate.h>
 
-IlluminatorFiringRate::IlluminatorFiringRate() {
+IlluminatorFiringRate::IlluminatorFiringRate(QWidget* parent) {
 	setupUi(this);
 	nFiringRate_ = 0;
 	nTypeOfSystem_ = POLARIS_SYSTEM;

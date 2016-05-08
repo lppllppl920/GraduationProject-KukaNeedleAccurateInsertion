@@ -7,7 +7,7 @@
 
 #include <ndi/ROMFileDlg.h>
 
-ROMFileDlg::ROMFileDlg() {
+ROMFileDlg::ROMFileDlg(QWidget* parent) {
 	setupUi(this);
 	strPortID_ = "";
 	strROMFile_ = "";
@@ -196,7 +196,8 @@ void ROMFileDlg::FillROMFileTable() {
 		 */
 		if (i == 4) {
 			sprintf(pszPortID, "Port %d", i);
-			AddItemToList(pszPortID, "TDS Expansion Port");
+			strcpy(pszROMFileName, "TDS Expansion Port");
+			AddItemToList(pszPortID, pszROMFileName);
 			continue;
 		}/* if */
 

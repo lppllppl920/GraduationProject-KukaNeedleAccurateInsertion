@@ -539,7 +539,7 @@ Feedback::Feedback(const char *filename) :
 				<< std::endl;
 	} else if (!doc_.setContent(&file)) {
 		setOK_ = false;
-		std::cout << "Feedback::Feedback: Cannot set document" << std::endl;
+		//std::cout << "Feedback::Feedback: Cannot set document" << std::endl;
 		file.close();
 	} else {
 		file.close();
@@ -553,7 +553,7 @@ Feedback::Feedback(const QString &qs, bool& isParsed) :
 		frame_(), axis_() {
 	if (!doc_.setContent(qs)) {
 		setOK_ = false;
-		std::cout << "Feedback::Feedback: Cannot set document" << std::endl;
+		//std::cout << "Feedback::Feedback: Cannot set document" << std::endl;
 		isParsed = false;
 	} else {
 		setOK_ = true;

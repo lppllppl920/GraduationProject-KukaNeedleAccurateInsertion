@@ -23,6 +23,7 @@
 #include "ndi/IlluminatorFiringRate.h"
 #include "ndi/ROMFileDlg.h"
 #include "ndi/COMPortTimeOut.h"
+#include "MotionPlanDecision.h"
 #include "controller.h"
 
 using namespace visualization_msgs;
@@ -80,6 +81,8 @@ public slots:
 	void on_stop_button_clicked();
 	void on_terminate_buf_button_clicked();
 	void on_convert_button_clicked();
+	void calculateRotationMatrix();
+	void calibrateNeedle();
 	//NDI related
 	void resetNDISystem();
 	void initializeNDISystem();
@@ -103,14 +106,13 @@ public slots:
 	void optionsProgramoptions();
 	void portEnabled();
 	void reInitializeSystem();
-
+	void clearTransformData();
 	void optionsProgramoptions_OK();
 	void settingsComPortSettings_OK();
 	void optionsIlluminatorfiringrate_OK();
 
 signals:
 // Send trajectory to controller object
-	void sendTrajectory(const TrajectoryGoal& feedback);
 	void addWaypointsSignal();
 	void visualizeExecutePlan();
 	void endEffectorPos(const InteractiveMarkerFeedbackConstPtr &feedback);
@@ -118,10 +120,8 @@ signals:
 private:
 	boost::shared_ptr<ros::NodeHandle> pdtNodeHandle_;
 
-	Controller dtController_;
-
 // Subscriber for motion trajectory
-	ros::Subscriber dtMotionTrajectorySubsriber_;
+	//ros::Subscriber dtMotionTrajectorySubsriber_;
 
 // Display trajectory
 	ros::Publisher dtDisplayPublisher_;
@@ -181,8 +181,8 @@ private:
 	int nCOMPort_; /* the current com port number */
 	int nTrackingMode_;
 
-	bool bStopTracking_, /* flag that tells the thread to stop tracking */
-	bIsTracking_; /* flag that specifies if we are tracking */
+	bool bStopTracking_; /* flag that tells the thread to stop tracking */
+	bool bIsTracking_; /* flag that specifies if we are tracking */
 
 	COMPortSettings dtSubWindowCOMPortSettings_;
 	NewAlertFlagsDlg dtSubWindowNewAlertFlags_;
@@ -190,6 +190,17 @@ private:
 	ProgramOptions dtSubWindowProgramOptions_;
 	IlluminatorFiringRate dtSubWindowIlluminatorFiringRate_;
 	ROMFileDlg dtSubWindowROMFile_;
+	MotionPlanDecision dtSubWindowMotionPlanDecision_;
+
+	QTimer *dtGetDataTimer_;
+
+	KDL::Rotation dtNDIKUKARotationMatrix_;
+	bool bMotionComplete_;
+
+	Controller dtController_;
+	QThread* dtControllerThread_;
+
+	Frame dtFrameFeedback_;
 
 };
 

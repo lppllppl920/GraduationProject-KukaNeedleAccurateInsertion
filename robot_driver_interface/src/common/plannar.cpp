@@ -11,18 +11,18 @@
 #include "plannar.h"
 
 Plannar::Plannar() :
-		tcpThread_(), lastAxis_(),
-		robot_("/home/lxt12/Kuka_interface/src/kuka_kr6/robots/kuka_kr6_needle.urdf"){
+		tcpObject_(), rosThread_(), robot_(
+				"/home/lxt12/Kuka_interface/src/kuka_kr6/robots/kuka_kr6_needle.urdf") {
 	ROS_INFO("Plannar Constructing...");
 
 	stamp_ = 0;
-	connect(&tcpThread_, SIGNAL(feedbackReceived(QString)), this,
+	connect(&tcpObject_, SIGNAL(feedbackReceived(QString)), this,
 			SLOT(feedbackReceived(QString)), Qt::QueuedConnection);
-	connect(this, SIGNAL(sendMessage(QString)), &tcpThread_,
+	connect(this, SIGNAL(sendMessage(QString)), &tcpObject_,
 			SLOT(sendMessage(QString)), Qt::QueuedConnection);
-	connect(this, SIGNAL(debug()), &tcpThread_, SLOT(debug()),
+	connect(this, SIGNAL(debug()), &tcpObject_, SLOT(debug()),
 			Qt::QueuedConnection);
-	connect(&tcpThread_, SIGNAL(disconnected()), this, SLOT(disconnected()),
+	connect(&tcpObject_, SIGNAL(disconnected()), this, SLOT(disconnected()),
 			Qt::QueuedConnection);
 
 	CommandIterBufFront = CommandList.begin();
@@ -36,17 +36,26 @@ Plannar::Plannar() :
 	// default value for $ADVANCE
 	advance_ = 3;
 
-	ROS_INFO("TCP thread starts...");
-	tcpThread_.start();
+	// Assign a new thread to ROS publisher and subscriber
+	rosThread_.start();
+
+	// Assign a new thread to plannar
+	tcpThread_ = new QThread;
+	tcpObject_.moveToThread(tcpThread_);
+	ROS_INFO("TCP Thread starts...");
+	tcpThread_->start();
 
 	lastTime_ = 0;
 	feedbackCount_ = 0;
 	averageTime_ = 0.0;
 	firstTime_ = 0;
+	lastStamp_ = -1;
 
+	lastAxis_ = Axis(0, 0, 0, 0, 0, 0);
 }
 
 Plannar::~Plannar() {
+	std::cout << "Plannar Deconstructing..." << std::endl;
 	while (!CommandList.empty()) {
 		Command * cmd = CommandList.front();
 		CommandList.pop_front();
@@ -57,34 +66,65 @@ Plannar::~Plannar() {
 		FeedbackList.pop_front();
 		delete fb;
 	}
-	ROS_INFO("Plannar Deconstructing...");
+	std::cout << "TCP thread ends..." << std::endl;
+	tcpThread_->exit();
+	std::cout << "ROS thread ends..." << std::endl;
+	rosThread_.exit();
 }
 
-void Plannar::executeTrajectory(const TrajectoryGoal& feedback) {
+void Plannar::executeTrajectory(const MotionPlan& motion_plan) {
 
+	//ROS_INFO("Plannar: Thread %d", QThread::currentThreadId());
 	Axis a;
 
-	for (int i = 0; i < feedback->goal.trajectory.points.size(); i++) {
+	for (int i = 0; i < motion_plan.trajectory_.joint_trajectory.points.size();
+			i++) {
 		ROS_INFO("%dth point joint positions: %.2f %.2f %.2f %.2f %.2f %.2f", i,
-				feedback->goal.trajectory.points[i].positions[0] / M_PI * 180.0,
-				feedback->goal.trajectory.points[i].positions[1] / M_PI * 180.0,
-				feedback->goal.trajectory.points[i].positions[2] / M_PI * 180.0,
-				feedback->goal.trajectory.points[i].positions[3] / M_PI * 180.0,
-				feedback->goal.trajectory.points[i].positions[4] / M_PI * 180.0,
-				feedback->goal.trajectory.points[i].positions[5] / M_PI * 180.0);
+				motion_plan.trajectory_.joint_trajectory.points[i].positions[0] / M_PI * 180.0,
+				motion_plan.trajectory_.joint_trajectory.points[i].positions[1] / M_PI * 180.0,
+				motion_plan.trajectory_.joint_trajectory.points[i].positions[2] / M_PI * 180.0,
+				motion_plan.trajectory_.joint_trajectory.points[i].positions[3] / M_PI * 180.0,
+				motion_plan.trajectory_.joint_trajectory.points[i].positions[4] / M_PI * 180.0,
+				motion_plan.trajectory_.joint_trajectory.points[i].positions[5] / M_PI * 180.0);
 	}
 
 	// TODO: For now, I just use every trajectory points as motion commands.
 	// This could be simplified using some criteria to reduce the number of commands.
-	for (int i = 0; i < feedback->goal.trajectory.points.size(); i++) {
-		a.A1 = feedback->goal.trajectory.points[i].positions[0] / M_PI * 180.0;
-		a.A2 = feedback->goal.trajectory.points[i].positions[1] / M_PI * 180.0;
-		a.A3 = feedback->goal.trajectory.points[i].positions[2] / M_PI * 180.0;
-		a.A4 = feedback->goal.trajectory.points[i].positions[3] / M_PI * 180.0;
-		a.A5 = feedback->goal.trajectory.points[i].positions[4] / M_PI * 180.0;
-		a.A6 = feedback->goal.trajectory.points[i].positions[5] / M_PI * 180.0;
-		motion(Command::PTP, a, Command::C_DIS);
+	for (int i = 0;
+			i < motion_plan.trajectory_.joint_trajectory.points.size() - 1;
+			i++) {
+		a.A1 = motion_plan.trajectory_.joint_trajectory.points[i].positions[0]
+				/ M_PI * 180.0;
+		a.A2 = motion_plan.trajectory_.joint_trajectory.points[i].positions[1]
+				/ M_PI * 180.0;
+		a.A3 = motion_plan.trajectory_.joint_trajectory.points[i].positions[2]
+				/ M_PI * 180.0;
+		a.A4 = motion_plan.trajectory_.joint_trajectory.points[i].positions[3]
+				/ M_PI * 180.0;
+		a.A5 = motion_plan.trajectory_.joint_trajectory.points[i].positions[4]
+				/ M_PI * 180.0;
+		a.A6 = motion_plan.trajectory_.joint_trajectory.points[i].positions[5]
+				/ M_PI * 180.0;
+		motion(Command::PTP, a, Command::Approx::C_DIS);
 	}
+
+	int i = motion_plan.trajectory_.joint_trajectory.points.size() - 1;
+	a.A1 = motion_plan.trajectory_.joint_trajectory.points[i].positions[0]
+			/ M_PI * 180.0;
+	a.A2 = motion_plan.trajectory_.joint_trajectory.points[i].positions[1]
+			/ M_PI * 180.0;
+	a.A3 = motion_plan.trajectory_.joint_trajectory.points[i].positions[2]
+			/ M_PI * 180.0;
+	a.A4 = motion_plan.trajectory_.joint_trajectory.points[i].positions[3]
+			/ M_PI * 180.0;
+	a.A5 = motion_plan.trajectory_.joint_trajectory.points[i].positions[4]
+			/ M_PI * 180.0;
+	a.A6 = motion_plan.trajectory_.joint_trajectory.points[i].positions[5]
+			/ M_PI * 180.0;
+	motion(Command::PTP, a, Command::Approx::NONE);
+	// Record the last command stamp for knowing when this series of motion complete
+	lastStamp_ = stamp_;
+
 }
 
 void Plannar::feedbackReceived(QString qs) {
@@ -95,18 +135,17 @@ void Plannar::feedbackReceived(QString qs) {
 		delete fb;
 	}
 	Feedback* fb = new Feedback(qs, isParsed);
-	if(isParsed) {
+	if (isParsed) {
 		FeedbackList.push_back(fb);
 		updateQueueStatus(fb);
-	}
-	else {
+	} else {
 		return;
 	}
 }
 
 void Plannar::disconnected() {
 	// exit tcp thread for disconnecting
-	tcpThread_.exit();
+	tcpThread_->exit();
 	ROS_INFO("TCP thread stops...");
 	// emit signal to shut down Controller
 	emit shutdownController();
@@ -147,13 +186,13 @@ void Plannar::updateQueueStatus(Feedback* fb) {
 	// for debugging
 //    checkStatusTurn(fb);
 
-	/*TODO: std::cout << "--- Feedback, Seq = " << fb->getSeq() << ", Hour = "
-			<< fb->getHour() << ", Time = " << fb->getTime() << ", Buffer: "
-			<< fb->getBufferFront() << " - " << fb->getBufferLast()
-			<< ", Text = " << fb->getText();*/
+	/* std::cout << "--- Feedback, Seq = " << fb->getSeq() << ", Hour = "
+	 << fb->getHour() << ", Time = " << fb->getTime() << ", Buffer: "
+	 << fb->getBufferFront() << " - " << fb->getBufferLast()
+	 << ", Text = " << fb->getText();*/
 
 	updateFrequencyPerformance(fb);
-	//TODO: std::cout << std::endl;
+	//std::cout << std::endl;
 
 	if (fb->getText() == "STOP immediately")
 		stopRecv(fb);
@@ -170,7 +209,12 @@ void Plannar::updateQueueStatus(Feedback* fb) {
 	lastAxis_.set(fb->getAxis());
 //    printFeedbackBasic();
 //    printCommandList();
+	// If the last series of motion is completed
 	emit newFeedback(fb);
+	if (lastStamp_ == fb->getStamp()) {
+		ROS_INFO("Last command complete");
+		emit LastCommandComplete();
+	}
 }
 
 void Plannar::updateCommandIterNextACK(Feedback* fb) {
@@ -351,11 +395,11 @@ void Plannar::updateFrequencyPerformance(Feedback* fb) {
 
 	} else {
 		feedbackCount_++;
-		//TODO: std::cout << ", Cycle time: " << lastTime_ - fb->getTime() << " ms,";
+		// std::cout << ", Cycle time: " << lastTime_ - fb->getTime() << " ms,";
 		lastTime_ = fb->getTime();
 		averageTime_ = (double) (firstTime_ - lastTime_)
 				/ (double) (feedbackCount_ - 1);
-		//TODO: std::cout << " Avg time: " << averageTime_ << " ms";
+		// std::cout << " Avg time: " << averageTime_ << " ms";
 
 	}
 }
@@ -625,19 +669,19 @@ bool Plannar::reachableCheck(Axis& a) {
 }
 // reachableCheck for Frame and Pos is not accomplished yet
 bool Plannar::reachableCheck(Frame &f) {
-    Axis a_convert;
-    if ( robot_.Frame2Axis(lastAxis_, f, a_convert) )
-        return reachableCheck(a_convert);
-    else
-        return false;
+	Axis a_convert;
+	if (robot_.Frame2Axis(lastAxis_, f, a_convert))
+		return reachableCheck(a_convert);
+	else
+		return false;
 }
 
 bool Plannar::reachableCheck(Pos &p) {
-    Axis a_convert;
-    if ( robot_.Pos2Axis(lastAxis_, p, a_convert) )
-        return reachableCheck(a_convert);
-    else
-        return false;
+	Axis a_convert;
+	if (robot_.Pos2Axis(lastAxis_, p, a_convert))
+		return reachableCheck(a_convert);
+	else
+		return false;
 }
 
 void Plannar::configuration(Command::Param param, float number) {
@@ -854,7 +898,7 @@ bool Plannar::checkStatusTurn(Feedback *fb) {
 }
 
 TCPThread& Plannar::getTCPThread() {
-	return tcpThread_;
+	return tcpObject_;
 }
 
 Model& Plannar::getModel() {

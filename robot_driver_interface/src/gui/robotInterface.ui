@@ -24,7 +24,7 @@
      </rect>
     </property>
     <property name="currentIndex">
-     <number>1</number>
+     <number>0</number>
     </property>
     <widget class="QWidget" name="tab">
      <attribute name="title">
@@ -770,7 +770,7 @@
        </rect>
       </property>
       <property name="currentIndex">
-       <number>0</number>
+       <number>4</number>
       </property>
       <widget class="QWidget" name="tab_PathPlanning">
        <attribute name="title">
@@ -853,6 +853,9 @@
          </item>
          <item row="8" column="3">
           <widget class="QPushButton" name="pushButton_ExecutePlan">
+           <property name="enabled">
+            <bool>false</bool>
+           </property>
            <property name="maximumSize">
             <size>
              <width>217</width>
@@ -1168,6 +1171,9 @@
          </item>
          <item row="8" column="1">
           <widget class="QPushButton" name="pushButton_ExecuteWaypointsPlan">
+           <property name="enabled">
+            <bool>false</bool>
+           </property>
            <property name="maximumSize">
             <size>
              <width>217</width>
@@ -1371,6 +1377,9 @@
          </item>
          <item row="4" column="0">
           <widget class="QPushButton" name="pushButton_ExecuteRotatePlan">
+           <property name="enabled">
+            <bool>false</bool>
+           </property>
            <property name="text">
             <string>Execute Rotate Plan</string>
            </property>
@@ -1434,6 +1443,177 @@
           </widget>
          </item>
         </layout>
+       </widget>
+      </widget>
+      <widget class="QWidget" name="tab_NDICalibration">
+       <attribute name="title">
+        <string>NDI Calibration</string>
+       </attribute>
+       <widget class="QGroupBox" name="groupBox_ReferencePoint">
+        <property name="geometry">
+         <rect>
+          <x>10</x>
+          <y>170</y>
+          <width>411</width>
+          <height>141</height>
+         </rect>
+        </property>
+        <property name="title">
+         <string>Target Reference Point (XYZ for NDI frame, ABC for KUKA frame)</string>
+        </property>
+        <widget class="QWidget" name="gridLayoutWidget_4">
+         <property name="geometry">
+          <rect>
+           <x>10</x>
+           <y>30</y>
+           <width>251</width>
+           <height>101</height>
+          </rect>
+         </property>
+         <layout class="QGridLayout" name="gridLayout_4">
+          <item row="0" column="0">
+           <widget class="QLabel" name="label_X">
+            <property name="text">
+             <string>X</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="QLabel" name="label_Y">
+            <property name="text">
+             <string>Y</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="2">
+           <widget class="QLabel" name="label_Z">
+            <property name="text">
+             <string>Z</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QLineEdit" name="lineEdit_NDI_X"/>
+          </item>
+          <item row="1" column="2">
+           <widget class="QLineEdit" name="lineEdit_NDI_Z"/>
+          </item>
+          <item row="1" column="1">
+           <widget class="QLineEdit" name="lineEdit_NDI_Y"/>
+          </item>
+          <item row="2" column="0">
+           <widget class="QLabel" name="label_A">
+            <property name="text">
+             <string>A</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="1">
+           <widget class="QLabel" name="label_B">
+            <property name="text">
+             <string>B</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="2">
+           <widget class="QLabel" name="label_C">
+            <property name="text">
+             <string>C</string>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="0">
+           <widget class="QLineEdit" name="lineEdit_KUKA_A"/>
+          </item>
+          <item row="3" column="1">
+           <widget class="QLineEdit" name="lineEdit_KUKA_B"/>
+          </item>
+          <item row="3" column="2">
+           <widget class="QLineEdit" name="lineEdit_KUKA_C"/>
+          </item>
+         </layout>
+        </widget>
+       </widget>
+       <widget class="QPushButton" name="pushButton_CalculateRotationMatrix">
+        <property name="geometry">
+         <rect>
+          <x>470</x>
+          <y>70</y>
+          <width>95</width>
+          <height>24</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>Calc. Rot. Mat.</string>
+        </property>
+       </widget>
+       <widget class="QPushButton" name="pushButton_NeedleCalibration">
+        <property name="geometry">
+         <rect>
+          <x>470</x>
+          <y>110</y>
+          <width>95</width>
+          <height>24</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>Needle Calib.</string>
+        </property>
+       </widget>
+       <widget class="QGroupBox" name="groupBox_ReferencePoint_2">
+        <property name="geometry">
+         <rect>
+          <x>10</x>
+          <y>50</y>
+          <width>271</width>
+          <height>91</height>
+         </rect>
+        </property>
+        <property name="title">
+         <string>Translation for Rot. Calc. (KUKA frame)</string>
+        </property>
+        <widget class="QWidget" name="gridLayoutWidget_5">
+         <property name="geometry">
+          <rect>
+           <x>10</x>
+           <y>30</y>
+           <width>251</width>
+           <height>51</height>
+          </rect>
+         </property>
+         <layout class="QGridLayout" name="gridLayout_5">
+          <item row="0" column="0">
+           <widget class="QLabel" name="label_dX">
+            <property name="text">
+             <string>dX</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="QLabel" name="label_dY">
+            <property name="text">
+             <string>dY</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="2">
+           <widget class="QLabel" name="label_dZ">
+            <property name="text">
+             <string>dZ</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QLineEdit" name="lineEdit_dX"/>
+          </item>
+          <item row="1" column="1">
+           <widget class="QLineEdit" name="lineEdit_dY"/>
+          </item>
+          <item row="1" column="2">
+           <widget class="QLineEdit" name="lineEdit_dZ"/>
+          </item>
+         </layout>
+        </widget>
        </widget>
       </widget>
       <widget class="QWidget" name="tab_Environment">
@@ -2579,6 +2759,12 @@
              <height>27</height>
             </size>
            </property>
+           <property name="verticalScrollBarPolicy">
+            <enum>Qt::ScrollBarAlwaysOff</enum>
+           </property>
+           <property name="horizontalScrollBarPolicy">
+            <enum>Qt::ScrollBarAlwaysOff</enum>
+           </property>
           </widget>
          </item>
          <item row="0" column="0" colspan="2">
@@ -2640,6 +2826,12 @@
              <width>61</width>
              <height>27</height>
             </size>
+           </property>
+           <property name="verticalScrollBarPolicy">
+            <enum>Qt::ScrollBarAlwaysOff</enum>
+           </property>
+           <property name="horizontalScrollBarPolicy">
+            <enum>Qt::ScrollBarAlwaysOff</enum>
            </property>
           </widget>
          </item>
@@ -3453,7 +3645,7 @@
      <x>0</x>
      <y>0</y>
      <width>1002</width>
-     <height>25</height>
+     <height>21</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">

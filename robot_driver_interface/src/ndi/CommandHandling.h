@@ -31,7 +31,7 @@ public:
 	int InitializeAllPorts();
 	int InitializeHandle(int Handle);
 	int EnableAllPorts();
-	int EnableOnePorts(int PortHandle);
+	int EnableOnePort(int PortHandle);
 	int DisablePort(int PortHandle);
 	int ActivateAllPorts();
 	int LoadTTCFG(char *PortID);

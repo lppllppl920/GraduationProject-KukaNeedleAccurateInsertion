@@ -708,6 +708,8 @@ int CommandHandling::InitializeAllPorts() {
 
 				if (*pszROMFileName) {
 					if (!strncmp(pszROMFileName, "TTCFG", 5))
+						// sets up a configuration for a wired tool, so that you can test the tool without using
+						// a tool definition file.
 						LoadTTCFG(pszPortID);
 					else
 						LoadVirtualSROM(pszROMFileName, pszPortID, false);
@@ -842,7 +844,7 @@ int CommandHandling::EnableAllPorts() {
  Description:   This routine enables specified port handles that need
  to be enabled using the PENA command.
  *****************************************************************/
-int CommandHandling::EnableOnePorts(int nPortHandle) {
+int CommandHandling::EnableOnePort(int nPortHandle) {
 	memset(pchrCommand_, 0, sizeof(pchrCommand_));
 	sprintf(pchrCommand_, "PENA %02X%c", nPortHandle, 'D');
 	if (!SendMessage(pchrCommand_, TRUE))
@@ -1017,7 +1019,7 @@ int CommandHandling::LoadVirtualSROM(char * pszFileName, char * pPhysicalPortID,
  int - 1 if successful, 0 otherwise
 
  Description:
- This routine loads the Test Tool ConFiGutation to the specified
+ This routine loads the Test Tool ConFiGuration to the specified
  port.
  *****************************************************************/
 int CommandHandling::LoadTTCFG(char * pszPortID) {
@@ -1361,7 +1363,7 @@ int CommandHandling::GetTXTransforms(bool bReturn0x0800Option) {
 			} /* if */
 			else {
 				pdtHandleInformation_[nHandle].dtXfrms.ulFlags =
-						TRANSFORM_VALID;
+				TRANSFORM_VALID;
 
 				if (!ExtractValue(pszTransformInfo, 6, 10000.,
 						&pdtHandleInformation_[nHandle].dtXfrms.dtRotation.fQ0)
@@ -1564,7 +1566,7 @@ int CommandHandling::GetBXTransforms(bool bReturn0x0800Option) {
 						&pszTransformInfo[nSpot]);
 				nSpot += 4;
 				pdtHandleInformation_[nHandle].dtXfrms.ulFlags =
-						TRANSFORM_VALID;
+				TRANSFORM_VALID;
 			} /* if */
 
 			if (uTransStatus == 2 || uTransStatus == 4) /* 2 means the tool is missing and */
@@ -1697,7 +1699,7 @@ void CommandHandling::ApplyXfrms() {
 																pdtHandleInformation_[nHandle].dtXfrms.dtRotation.fQz =
 																BAD_FLOAT;
 				pdtHandleInformation_[nHandle].dtXfrms.ulFlags =
-						TRANSFORM_MISSING;
+				TRANSFORM_MISSING;
 			}/* if */
 			else {
 				dtRefQuatXfrm.dtRotation =
@@ -1956,7 +1958,7 @@ int CommandHandling::SendMessage(char *Command_, bool bAddCRC) {
 	if (strlen(Command_) >= (MAX_COMMAND_MSG)) {
 		return bComplete;
 	} /* if */
-	ROS_INFO("Sending Command: %s", Command_);
+	//ROS_INFO("Sending Command: %s", Command_);
 	for (i = 0; i < strlen(Command_); i++) {
 		if (dtCOMPort_->SerialPutChar(Command_[i]) <= 0) {
 			bComplete = false;
@@ -2015,7 +2017,7 @@ int CommandHandling::GetResponse() {
 			QByteArray requestData = serial->readAll();
 			while (serial->waitForReadyRead(10))
 				requestData += serial->readAll();
-			ROS_INFO("Response: %s", requestData.data());
+			//ROS_INFO("Response: %s", requestData.data());
 			strcpy(pchrLastReply_, requestData.data());
 			bDone = true;
 		} else {

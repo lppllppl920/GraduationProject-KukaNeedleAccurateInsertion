@@ -145,7 +145,7 @@ void Pos::printPos() {
 
 Model::Model(std::string fn) :
 		filename(fn) {
-	std::cout << "Model Constructing..." << std::endl;
+	ROS_INFO("Model Constructing...");
 
 	valid_ = true;
 	if (!kdl_parser::treeFromFile(filename, tree_)) {
@@ -178,10 +178,10 @@ Model::Model(std::string fn) :
 }
 
 Model::~Model() {
+	std::cout << "Model Deconstructing..." << std::endl;
 	delete ikSolver_;
 	delete fkSolver_;
 	delete fkSolver_rot_;
-	std::cout << "Model Deconstructing..." << std::endl;
 }
 
 void Model::setupSolver() {

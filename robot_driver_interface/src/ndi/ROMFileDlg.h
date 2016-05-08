@@ -18,7 +18,7 @@
 class ROMFileDlg: public QWidget, private Ui::SubWindow_ROMFile {
 Q_OBJECT
 public:
-	ROMFileDlg();
+	ROMFileDlg(QWidget* parent = 0);
 	virtual ~ROMFileDlg();
 	void ReadINIParam_array(std::string Section, std::string Key, char* array);
 

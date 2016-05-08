@@ -18,7 +18,7 @@ class IlluminatorFiringRate: public QWidget,
 		private Ui::SubWindow_IlluminatorFiringRate {
 Q_OBJECT
 public:
-	IlluminatorFiringRate();
+	IlluminatorFiringRate(QWidget* parent = 0);
 	virtual ~IlluminatorFiringRate();
 	template<class T> void ReadINIParam(std::string Section, std::string Key,
 			T& Value) {

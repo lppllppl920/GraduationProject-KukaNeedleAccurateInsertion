@@ -64,7 +64,7 @@
 // TCPThread class
 //  - publicly inherited from QThread
 // --------------------------------------------------------------------------
-class TCPThread: public QThread {
+class TCPThread: public QObject {
 Q_OBJECT
 public:
 	// TCPThread constructor, default port number: 59152
@@ -75,8 +75,6 @@ public:
 	// TCPThread deconstructor
 	// Delete pointer component and send rest feedback to plannar
 	~TCPThread();
-
-	void run();
 
 public slots:
 	// Called when new connection to tcpSocket_ is established
@@ -131,6 +129,8 @@ private:
 	// verbose output enabled if set to true
 	// for debugging purposes
 	bool stdPrint_;
+
+	QThread* tcpServerThread_;
 };
 
 #endif

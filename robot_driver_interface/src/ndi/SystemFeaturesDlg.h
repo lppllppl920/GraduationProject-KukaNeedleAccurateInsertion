@@ -16,7 +16,7 @@
 class SystemFeaturesDlg: public QWidget, private Ui::SubWindow_SystemFeatures {
 Q_OBJECT
 public:
-	SystemFeaturesDlg();
+	SystemFeaturesDlg(QWidget* parent = 0);
 	virtual ~SystemFeaturesDlg();
 	void Init();
 	void SetVariables(std::string pszVersionInfo, int nNoActivePorts,
