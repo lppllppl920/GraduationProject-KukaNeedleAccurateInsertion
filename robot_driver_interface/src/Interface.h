@@ -13,7 +13,6 @@
 
 #include <boost/lexical_cast.hpp>
 #include <boost/make_shared.hpp>
-
 #include "gui/ui_robotInterface.h"
 #include "ndi/CommandHandling.h"
 #include "ndi/COMPortSettings.h"
@@ -24,7 +23,10 @@
 #include "ndi/ROMFileDlg.h"
 #include "ndi/COMPortTimeOut.h"
 #include "MotionPlanDecision.h"
+#include "WaitForExecution.h"
 #include "controller.h"
+
+#define NDI_TIME_INTERVAL 200
 
 using namespace visualization_msgs;
 using namespace interactive_markers;
@@ -82,7 +84,12 @@ public slots:
 	void on_terminate_buf_button_clicked();
 	void on_convert_button_clicked();
 	void calculateRotationMatrix();
-	void calibrateNeedle();
+	void ndiFeedbackMove();
+	void calibrateNeedlePoint();
+	void calculateNDIKUKATransform();
+	void calibrateNeedleDirection();
+	void recordKUKAFeedback();
+	void closeDialogWindow();
 	//NDI related
 	void resetNDISystem();
 	void initializeNDISystem();
@@ -105,6 +112,7 @@ public slots:
 	void optionsIlluminatorfiringrate();
 	void optionsProgramoptions();
 	void portEnabled();
+	void useMarkerNeedleTransformChanged();
 	void reInitializeSystem();
 	void clearTransformData();
 	void optionsProgramoptions_OK();
@@ -116,6 +124,7 @@ signals:
 	void addWaypointsSignal();
 	void visualizeExecutePlan();
 	void endEffectorPos(const InteractiveMarkerFeedbackConstPtr &feedback);
+	void executeMotionPlan_signal();
 
 private:
 	boost::shared_ptr<ros::NodeHandle> pdtNodeHandle_;
@@ -191,16 +200,23 @@ private:
 	IlluminatorFiringRate dtSubWindowIlluminatorFiringRate_;
 	ROMFileDlg dtSubWindowROMFile_;
 	MotionPlanDecision dtSubWindowMotionPlanDecision_;
+	WaitForExecution dtSubWindowWaitForExecution_;
 
 	QTimer *dtGetDataTimer_;
 
 	KDL::Rotation dtNDIKUKARotationMatrix_;
+	KDL::Vector dtNDIKUKATranslationVector_;
 	bool bMotionComplete_;
 
 	Controller dtController_;
 	QThread* dtControllerThread_;
 
 	Frame dtFrameFeedback_;
+
+	QuatTransformation dtMarkerNeedleTransform_;
+	bool bUseMarkerNeedleTransform_;
+
+	FILE *pfOut_;
 
 };
 

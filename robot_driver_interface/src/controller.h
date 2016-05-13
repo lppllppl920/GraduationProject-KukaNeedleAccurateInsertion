@@ -13,6 +13,7 @@
 
 #include "plannar.h"
 #include "KukaFeedback.h"
+#include "WaitForExecution.h"
 
 using namespace visualization_msgs;
 using namespace interactive_markers;
@@ -56,7 +57,7 @@ public:
 	bool planTargetJointsMotion();
 	bool planTargetPoseMotion();
 	bool planTargetAffineMotion();
-	bool executeMotionPlan();
+
 	bool asyncExecuteMotionPlan();
 	void visualizeMotionPlan();
 	void stopMotion();
@@ -74,6 +75,8 @@ public slots:
 	void visualizeExecutePlanCb();
 	void endEffectorPosCb(const InteractiveMarkerFeedbackConstPtr &feedback);
 	void newFeedbackReceived(Feedback* feedback);
+	bool executeMotionPlan();
+	void closeDialogWindow();
 	// Send trajectory to plannar object
 	//void sendTrajectory(const TrajectoryGoal& feedback);
 signals:
@@ -83,8 +86,10 @@ signals:
 	void newFeedback(Feedback* feedback);
 	void visualizeMotionPlan(MotionPlan motion_plan);
 	void sendTrajectorySignal(const MotionPlan& motion_plan);
+	void closeWindow();
 
-private:
+
+public:
 // Motion
 	boost::shared_ptr<moveit::planning_interface::MoveGroup> pdtMoveGroup_;
 	moveit::planning_interface::PlanningSceneInterface dtPlanningSceneInterface_;
@@ -116,6 +121,7 @@ private:
 
 	KukaFeedback dtKukaFeedbackReceiver_;
 	QThread* dtKukaFeedbackThread_;
+	WaitForExecution* pdtSubWindowWaitForExecution_;
 };
 
 #endif

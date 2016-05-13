@@ -13,16 +13,16 @@
 TCPThread::TCPThread(quint16 port) {
 	ROS_INFO("TCPThread Constructing...");
 	this->port_ = port;
+	ROS_INFO("TCP Thread: %lu", QThread::currentThreadId());
 	tcpServer_ = new QTcpServer();
 	if (!tcpServer_->listen(QHostAddress("172.31.1.149"), port_)) {
-		std::cout << tcpServer_->errorString().toStdString() << std::endl;
+		ROS_ERROR( "%s", tcpServer_->errorString().toStdString().c_str());
 	}
-	tcpSocket_ = NULL;
 	connect(tcpServer_, SIGNAL(newConnection()), this, SLOT(newConnect()),
 			Qt::QueuedConnection);
+	tcpSocket_ = NULL;
 	sendLock_ = false;
 	stdPrint_ = false;
-	tcpServerThread_ = NULL;
 }
 
 TCPThread::~TCPThread() {
@@ -36,21 +36,15 @@ TCPThread::~TCPThread() {
 		emit feedbackReceived(tp_qs);
 		feedbackQueue.pop_front();
 	}
-	std::cout << "TCP Server thread ends..." << std::endl;
-	if (tcpServerThread_ != NULL) {
-		tcpServerThread_->exit();
-	}
+}
+
+void TCPThread::run() {
+	exec();
 }
 
 void TCPThread::newConnect() {
 	ROS_INFO("New TCP connection");
 	tcpSocket_ = tcpServer_->nextPendingConnection();
-
-	tcpServerThread_ = new QThread;
-	ROS_INFO("TCP Server Thread starts...");
-	tcpSocket_->moveToThread(tcpServerThread_);
-	tcpServerThread_->start();
-
 	connect(tcpSocket_, SIGNAL(readyRead()), this, SLOT(readMessage()),
 			Qt::QueuedConnection);
 	connect(tcpSocket_, SIGNAL(disconnected()), this, SLOT(destroyConnect()),
@@ -58,10 +52,9 @@ void TCPThread::newConnect() {
 }
 
 void TCPThread::destroyConnect() {
-	std::cout << "Destroy TCP connection" << std::endl;
-	std::cout << "TCP Server ends..." << std::endl;
-	tcpServerThread_->exit();
-	emit disconnected();
+	//std::cout << "Destroy TCP connection" << std::endl;
+	ROS_INFO("TCP disconnected, wait for a new connection");
+	//emit disconnected();
 }
 
 void TCPThread::readMessage() {

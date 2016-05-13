@@ -1,3 +1,11 @@
+/********************************************************************************
+** Form generated from reading UI file 'robotInterface.ui'
+**
+** Created by: Qt User Interface Compiler version 4.8.6
+**
+** WARNING! All changes made in this file will be lost when recompiling UI file!
+********************************************************************************/
+
 #ifndef UI_ROBOTINTERFACE_H
 #define UI_ROBOTINTERFACE_H
 
@@ -56,7 +64,6 @@ public:
     QTextEdit *output_a6;
     QTextEdit *output_buf_front;
     QTextEdit *output_y;
-    QTextEdit *output_seq;
     QTextEdit *output_a5;
     QTextEdit *output_a;
     QLabel *label_Buffer;
@@ -72,8 +79,9 @@ public:
     QTextEdit *output_z;
     QTextEdit *output_x;
     QLabel *label_Result;
-    QLabel *label_No;
     QPushButton *stop_button;
+    QTextEdit *output_seq;
+    QLabel *label_No;
     QTabWidget *tabWidget_Robot;
     QWidget *tab_PathPlanning;
     QWidget *gridLayoutWidget_2;
@@ -122,21 +130,8 @@ public:
     QLineEdit *lineEdit_incrRotateC;
     QPushButton *pushButton_VisualizeIncrPosePlan;
     QPushButton *pushButton_AddWaypoint;
-    QWidget *tab_Calibration;
-    QWidget *gridLayoutWidget_10;
-    QGridLayout *gridLayout_10;
-    QLineEdit *lineEdit_AxisVectorZ;
-    QLabel *label_AxisType;
-    QLabel *label_RotateDegree;
-    QLineEdit *lineEdit_RotateDegree;
-    QLabel *label_AxisVector;
-    QPushButton *pushButton_ExecuteRotatePlan;
-    QPushButton *pushButton_VisualizeRotatePlan;
-    QComboBox *comboBox_AxisType;
-    QLineEdit *lineEdit_AxisVectorX;
-    QLineEdit *lineEdit_AxisVectorY;
     QWidget *tab_NDICalibration;
-    QGroupBox *groupBox_ReferencePoint;
+    QGroupBox *groupBox_NDIFeedbackMove;
     QWidget *gridLayoutWidget_4;
     QGridLayout *gridLayout_4;
     QLabel *label_X;
@@ -151,9 +146,8 @@ public:
     QLineEdit *lineEdit_KUKA_A;
     QLineEdit *lineEdit_KUKA_B;
     QLineEdit *lineEdit_KUKA_C;
-    QPushButton *pushButton_CalculateRotationMatrix;
-    QPushButton *pushButton_NeedleCalibration;
-    QGroupBox *groupBox_ReferencePoint_2;
+    QPushButton *pushButton_NDIFeedbackMove;
+    QGroupBox *groupBox_CalculateRotationMatrix;
     QWidget *gridLayoutWidget_5;
     QGridLayout *gridLayout_5;
     QLabel *label_dX;
@@ -162,6 +156,16 @@ public:
     QLineEdit *lineEdit_dX;
     QLineEdit *lineEdit_dY;
     QLineEdit *lineEdit_dZ;
+    QPushButton *pushButton_CalculateRotationMatrix;
+    QGroupBox *groupBox_NeedlePointCalibration;
+    QWidget *gridLayoutWidget_7;
+    QGridLayout *gridLayout_7;
+    QLabel *label_NeedlePointIndicator;
+    QPushButton *pushButton_CalibrateNeedlePoint;
+    QComboBox *comboBox_NeedlePointIndicator;
+    QPushButton *pushButton_CalculateNDIKUKATransform;
+    QPushButton *pushButton_CalibrateNeedleDirection;
+    QLabel *label_MarkerNeedleWarning;
     QWidget *tab_Environment;
     QWidget *gridLayoutWidget_6;
     QGridLayout *gridLayout_2;
@@ -231,6 +235,25 @@ public:
     QLabel *label_Joint4_4;
     QLabel *label_Joint5_4;
     QLabel *label_Joint6_4;
+    QWidget *tab_Calibration;
+    QWidget *gridLayoutWidget_10;
+    QGridLayout *gridLayout_10;
+    QLineEdit *lineEdit_AxisVectorZ;
+    QLabel *label_AxisType;
+    QLabel *label_RotateDegree;
+    QLineEdit *lineEdit_RotateDegree;
+    QLabel *label_AxisVector;
+    QPushButton *pushButton_ExecuteRotatePlan;
+    QPushButton *pushButton_VisualizeRotatePlan;
+    QComboBox *comboBox_AxisType;
+    QLineEdit *lineEdit_AxisVectorX;
+    QLineEdit *lineEdit_AxisVectorY;
+    QWidget *tab_Record;
+    QWidget *gridLayoutWidget_8;
+    QGridLayout *gridLayout_8;
+    QLineEdit *lineEdit_PrefixMessage;
+    QLabel *label_PrefixMessage;
+    QPushButton *pushButton_RecordKUKAFeedback;
     QWidget *tab_2;
     QGroupBox *groupBox_ToolProperties;
     QWidget *gridLayoutWidget_11;
@@ -281,6 +304,7 @@ public:
     QLineEdit *lineEdit_Qz;
     QLineEdit *lineEdit_Error;
     QLineEdit *lineEdit_Status;
+    QCheckBox *checkBox_UseMarkerNeedleTransform;
     QGroupBox *groupBox_TrackingMode;
     QWidget *gridLayoutWidget_14;
     QGridLayout *gridLayout_14;
@@ -344,7 +368,7 @@ public:
         tab->setObjectName(QString::fromUtf8("tab"));
         gridLayoutWidget_3 = new QWidget(tab);
         gridLayoutWidget_3->setObjectName(QString::fromUtf8("gridLayoutWidget_3"));
-        gridLayoutWidget_3->setGeometry(QRect(20, 370, 781, 151));
+        gridLayoutWidget_3->setGeometry(QRect(20, 370, 791, 151));
         gridLayout_6 = new QGridLayout(gridLayoutWidget_3);
         gridLayout_6->setObjectName(QString::fromUtf8("gridLayout_6"));
         gridLayout_6->setContentsMargins(0, 0, 0, 0);
@@ -467,15 +491,6 @@ public:
         output_y->setTextInteractionFlags(Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse);
 
         gridLayout_6->addWidget(output_y, 1, 2, 1, 1, Qt::AlignHCenter|Qt::AlignVCenter);
-
-        output_seq = new QTextEdit(gridLayoutWidget_3);
-        output_seq->setObjectName(QString::fromUtf8("output_seq"));
-        output_seq->setMinimumSize(QSize(174, 31));
-        output_seq->setMaximumSize(QSize(174, 40));
-        output_seq->setTabChangesFocus(true);
-        output_seq->setTextInteractionFlags(Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse);
-
-        gridLayout_6->addWidget(output_seq, 0, 7, 1, 2);
 
         output_a5 = new QTextEdit(gridLayoutWidget_3);
         output_a5->setObjectName(QString::fromUtf8("output_a5"));
@@ -614,19 +629,27 @@ public:
 
         gridLayout_6->addWidget(label_Result, 3, 4, 1, 1);
 
-        label_No = new QLabel(gridLayoutWidget_3);
-        label_No->setObjectName(QString::fromUtf8("label_No"));
-        label_No->setMinimumSize(QSize(30, 27));
-        label_No->setMaximumSize(QSize(30, 27));
-
-        gridLayout_6->addWidget(label_No, 0, 6, 1, 1);
-
         stop_button = new QPushButton(gridLayoutWidget_3);
         stop_button->setObjectName(QString::fromUtf8("stop_button"));
         stop_button->setMinimumSize(QSize(81, 27));
         stop_button->setMaximumSize(QSize(81, 27));
 
         gridLayout_6->addWidget(stop_button, 0, 4, 1, 1);
+
+        output_seq = new QTextEdit(gridLayoutWidget_3);
+        output_seq->setObjectName(QString::fromUtf8("output_seq"));
+        output_seq->setMaximumSize(QSize(84, 40));
+        output_seq->setTabChangesFocus(true);
+        output_seq->setTextInteractionFlags(Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse);
+
+        gridLayout_6->addWidget(output_seq, 0, 8, 1, 1);
+
+        label_No = new QLabel(gridLayoutWidget_3);
+        label_No->setObjectName(QString::fromUtf8("label_No"));
+        label_No->setMinimumSize(QSize(30, 27));
+        label_No->setMaximumSize(QSize(30, 27));
+
+        gridLayout_6->addWidget(label_No, 0, 7, 1, 1);
 
         tabWidget_Robot = new QTabWidget(tab);
         tabWidget_Robot->setObjectName(QString::fromUtf8("tabWidget_Robot"));
@@ -907,79 +930,14 @@ public:
         gridLayout->addWidget(pushButton_AddWaypoint, 7, 1, 1, 1);
 
         tabWidget_Robot->addTab(tab_PathPlanning, QString());
-        tab_Calibration = new QWidget();
-        tab_Calibration->setObjectName(QString::fromUtf8("tab_Calibration"));
-        gridLayoutWidget_10 = new QWidget(tab_Calibration);
-        gridLayoutWidget_10->setObjectName(QString::fromUtf8("gridLayoutWidget_10"));
-        gridLayoutWidget_10->setGeometry(QRect(0, 10, 481, 281));
-        gridLayout_10 = new QGridLayout(gridLayoutWidget_10);
-        gridLayout_10->setObjectName(QString::fromUtf8("gridLayout_10"));
-        gridLayout_10->setContentsMargins(0, 0, 0, 0);
-        lineEdit_AxisVectorZ = new QLineEdit(gridLayoutWidget_10);
-        lineEdit_AxisVectorZ->setObjectName(QString::fromUtf8("lineEdit_AxisVectorZ"));
-        lineEdit_AxisVectorZ->setMaximumSize(QSize(160, 27));
-
-        gridLayout_10->addWidget(lineEdit_AxisVectorZ, 1, 3, 1, 1);
-
-        label_AxisType = new QLabel(gridLayoutWidget_10);
-        label_AxisType->setObjectName(QString::fromUtf8("label_AxisType"));
-
-        gridLayout_10->addWidget(label_AxisType, 0, 0, 1, 1);
-
-        label_RotateDegree = new QLabel(gridLayoutWidget_10);
-        label_RotateDegree->setObjectName(QString::fromUtf8("label_RotateDegree"));
-
-        gridLayout_10->addWidget(label_RotateDegree, 2, 0, 1, 1);
-
-        lineEdit_RotateDegree = new QLineEdit(gridLayoutWidget_10);
-        lineEdit_RotateDegree->setObjectName(QString::fromUtf8("lineEdit_RotateDegree"));
-        lineEdit_RotateDegree->setMaximumSize(QSize(160, 27));
-
-        gridLayout_10->addWidget(lineEdit_RotateDegree, 2, 1, 1, 1);
-
-        label_AxisVector = new QLabel(gridLayoutWidget_10);
-        label_AxisVector->setObjectName(QString::fromUtf8("label_AxisVector"));
-
-        gridLayout_10->addWidget(label_AxisVector, 1, 0, 1, 1);
-
-        pushButton_ExecuteRotatePlan = new QPushButton(gridLayoutWidget_10);
-        pushButton_ExecuteRotatePlan->setObjectName(QString::fromUtf8("pushButton_ExecuteRotatePlan"));
-        pushButton_ExecuteRotatePlan->setEnabled(false);
-
-        gridLayout_10->addWidget(pushButton_ExecuteRotatePlan, 4, 0, 1, 1);
-
-        pushButton_VisualizeRotatePlan = new QPushButton(gridLayoutWidget_10);
-        pushButton_VisualizeRotatePlan->setObjectName(QString::fromUtf8("pushButton_VisualizeRotatePlan"));
-
-        gridLayout_10->addWidget(pushButton_VisualizeRotatePlan, 3, 0, 1, 1);
-
-        comboBox_AxisType = new QComboBox(gridLayoutWidget_10);
-        comboBox_AxisType->setObjectName(QString::fromUtf8("comboBox_AxisType"));
-        comboBox_AxisType->setMaximumSize(QSize(266, 27));
-
-        gridLayout_10->addWidget(comboBox_AxisType, 0, 1, 1, 1);
-
-        lineEdit_AxisVectorX = new QLineEdit(gridLayoutWidget_10);
-        lineEdit_AxisVectorX->setObjectName(QString::fromUtf8("lineEdit_AxisVectorX"));
-        lineEdit_AxisVectorX->setMaximumSize(QSize(160, 27));
-
-        gridLayout_10->addWidget(lineEdit_AxisVectorX, 1, 1, 1, 1);
-
-        lineEdit_AxisVectorY = new QLineEdit(gridLayoutWidget_10);
-        lineEdit_AxisVectorY->setObjectName(QString::fromUtf8("lineEdit_AxisVectorY"));
-        lineEdit_AxisVectorY->setMaximumSize(QSize(160, 27));
-
-        gridLayout_10->addWidget(lineEdit_AxisVectorY, 1, 2, 1, 1);
-
-        tabWidget_Robot->addTab(tab_Calibration, QString());
         tab_NDICalibration = new QWidget();
         tab_NDICalibration->setObjectName(QString::fromUtf8("tab_NDICalibration"));
-        groupBox_ReferencePoint = new QGroupBox(tab_NDICalibration);
-        groupBox_ReferencePoint->setObjectName(QString::fromUtf8("groupBox_ReferencePoint"));
-        groupBox_ReferencePoint->setGeometry(QRect(10, 170, 411, 141));
-        gridLayoutWidget_4 = new QWidget(groupBox_ReferencePoint);
+        groupBox_NDIFeedbackMove = new QGroupBox(tab_NDICalibration);
+        groupBox_NDIFeedbackMove->setObjectName(QString::fromUtf8("groupBox_NDIFeedbackMove"));
+        groupBox_NDIFeedbackMove->setGeometry(QRect(10, 170, 491, 141));
+        gridLayoutWidget_4 = new QWidget(groupBox_NDIFeedbackMove);
         gridLayoutWidget_4->setObjectName(QString::fromUtf8("gridLayoutWidget_4"));
-        gridLayoutWidget_4->setGeometry(QRect(10, 30, 251, 101));
+        gridLayoutWidget_4->setGeometry(QRect(10, 30, 471, 108));
         gridLayout_4 = new QGridLayout(gridLayoutWidget_4);
         gridLayout_4->setObjectName(QString::fromUtf8("gridLayout_4"));
         gridLayout_4->setContentsMargins(0, 0, 0, 0);
@@ -1043,18 +1001,17 @@ public:
 
         gridLayout_4->addWidget(lineEdit_KUKA_C, 3, 2, 1, 1);
 
-        pushButton_CalculateRotationMatrix = new QPushButton(tab_NDICalibration);
-        pushButton_CalculateRotationMatrix->setObjectName(QString::fromUtf8("pushButton_CalculateRotationMatrix"));
-        pushButton_CalculateRotationMatrix->setGeometry(QRect(470, 70, 95, 24));
-        pushButton_NeedleCalibration = new QPushButton(tab_NDICalibration);
-        pushButton_NeedleCalibration->setObjectName(QString::fromUtf8("pushButton_NeedleCalibration"));
-        pushButton_NeedleCalibration->setGeometry(QRect(470, 110, 95, 24));
-        groupBox_ReferencePoint_2 = new QGroupBox(tab_NDICalibration);
-        groupBox_ReferencePoint_2->setObjectName(QString::fromUtf8("groupBox_ReferencePoint_2"));
-        groupBox_ReferencePoint_2->setGeometry(QRect(10, 50, 271, 91));
-        gridLayoutWidget_5 = new QWidget(groupBox_ReferencePoint_2);
+        pushButton_NDIFeedbackMove = new QPushButton(gridLayoutWidget_4);
+        pushButton_NDIFeedbackMove->setObjectName(QString::fromUtf8("pushButton_NDIFeedbackMove"));
+
+        gridLayout_4->addWidget(pushButton_NDIFeedbackMove, 3, 3, 1, 1);
+
+        groupBox_CalculateRotationMatrix = new QGroupBox(tab_NDICalibration);
+        groupBox_CalculateRotationMatrix->setObjectName(QString::fromUtf8("groupBox_CalculateRotationMatrix"));
+        groupBox_CalculateRotationMatrix->setGeometry(QRect(10, 50, 401, 91));
+        gridLayoutWidget_5 = new QWidget(groupBox_CalculateRotationMatrix);
         gridLayoutWidget_5->setObjectName(QString::fromUtf8("gridLayoutWidget_5"));
-        gridLayoutWidget_5->setGeometry(QRect(10, 30, 251, 51));
+        gridLayoutWidget_5->setGeometry(QRect(10, 30, 391, 52));
         gridLayout_5 = new QGridLayout(gridLayoutWidget_5);
         gridLayout_5->setObjectName(QString::fromUtf8("gridLayout_5"));
         gridLayout_5->setContentsMargins(0, 0, 0, 0);
@@ -1088,6 +1045,44 @@ public:
 
         gridLayout_5->addWidget(lineEdit_dZ, 1, 2, 1, 1);
 
+        pushButton_CalculateRotationMatrix = new QPushButton(gridLayoutWidget_5);
+        pushButton_CalculateRotationMatrix->setObjectName(QString::fromUtf8("pushButton_CalculateRotationMatrix"));
+
+        gridLayout_5->addWidget(pushButton_CalculateRotationMatrix, 1, 3, 1, 1);
+
+        groupBox_NeedlePointCalibration = new QGroupBox(tab_NDICalibration);
+        groupBox_NeedlePointCalibration->setObjectName(QString::fromUtf8("groupBox_NeedlePointCalibration"));
+        groupBox_NeedlePointCalibration->setGeometry(QRect(450, 40, 311, 101));
+        gridLayoutWidget_7 = new QWidget(groupBox_NeedlePointCalibration);
+        gridLayoutWidget_7->setObjectName(QString::fromUtf8("gridLayoutWidget_7"));
+        gridLayoutWidget_7->setGeometry(QRect(0, 30, 307, 61));
+        gridLayout_7 = new QGridLayout(gridLayoutWidget_7);
+        gridLayout_7->setObjectName(QString::fromUtf8("gridLayout_7"));
+        gridLayout_7->setContentsMargins(0, 0, 0, 0);
+        label_NeedlePointIndicator = new QLabel(gridLayoutWidget_7);
+        label_NeedlePointIndicator->setObjectName(QString::fromUtf8("label_NeedlePointIndicator"));
+
+        gridLayout_7->addWidget(label_NeedlePointIndicator, 0, 0, 1, 1);
+
+        pushButton_CalibrateNeedlePoint = new QPushButton(gridLayoutWidget_7);
+        pushButton_CalibrateNeedlePoint->setObjectName(QString::fromUtf8("pushButton_CalibrateNeedlePoint"));
+
+        gridLayout_7->addWidget(pushButton_CalibrateNeedlePoint, 1, 1, 1, 1);
+
+        comboBox_NeedlePointIndicator = new QComboBox(gridLayoutWidget_7);
+        comboBox_NeedlePointIndicator->setObjectName(QString::fromUtf8("comboBox_NeedlePointIndicator"));
+
+        gridLayout_7->addWidget(comboBox_NeedlePointIndicator, 1, 0, 1, 1);
+
+        pushButton_CalculateNDIKUKATransform = new QPushButton(tab_NDICalibration);
+        pushButton_CalculateNDIKUKATransform->setObjectName(QString::fromUtf8("pushButton_CalculateNDIKUKATransform"));
+        pushButton_CalculateNDIKUKATransform->setGeometry(QRect(580, 200, 181, 27));
+        pushButton_CalibrateNeedleDirection = new QPushButton(tab_NDICalibration);
+        pushButton_CalibrateNeedleDirection->setObjectName(QString::fromUtf8("pushButton_CalibrateNeedleDirection"));
+        pushButton_CalibrateNeedleDirection->setGeometry(QRect(580, 240, 181, 27));
+        label_MarkerNeedleWarning = new QLabel(tab_NDICalibration);
+        label_MarkerNeedleWarning->setObjectName(QString::fromUtf8("label_MarkerNeedleWarning"));
+        label_MarkerNeedleWarning->setGeometry(QRect(20, 10, 431, 31));
         tabWidget_Robot->addTab(tab_NDICalibration, QString());
         tab_Environment = new QWidget();
         tab_Environment->setObjectName(QString::fromUtf8("tab_Environment"));
@@ -1629,6 +1624,95 @@ public:
         gridLayout_3->addWidget(label_Joint6_4, 3, 7, 1, 1);
 
         tabWidget_Robot->addTab(tab_SingleCommand, QString());
+        tab_Calibration = new QWidget();
+        tab_Calibration->setObjectName(QString::fromUtf8("tab_Calibration"));
+        gridLayoutWidget_10 = new QWidget(tab_Calibration);
+        gridLayoutWidget_10->setObjectName(QString::fromUtf8("gridLayoutWidget_10"));
+        gridLayoutWidget_10->setGeometry(QRect(0, 10, 481, 281));
+        gridLayout_10 = new QGridLayout(gridLayoutWidget_10);
+        gridLayout_10->setObjectName(QString::fromUtf8("gridLayout_10"));
+        gridLayout_10->setContentsMargins(0, 0, 0, 0);
+        lineEdit_AxisVectorZ = new QLineEdit(gridLayoutWidget_10);
+        lineEdit_AxisVectorZ->setObjectName(QString::fromUtf8("lineEdit_AxisVectorZ"));
+        lineEdit_AxisVectorZ->setMaximumSize(QSize(160, 27));
+
+        gridLayout_10->addWidget(lineEdit_AxisVectorZ, 1, 3, 1, 1);
+
+        label_AxisType = new QLabel(gridLayoutWidget_10);
+        label_AxisType->setObjectName(QString::fromUtf8("label_AxisType"));
+
+        gridLayout_10->addWidget(label_AxisType, 0, 0, 1, 1);
+
+        label_RotateDegree = new QLabel(gridLayoutWidget_10);
+        label_RotateDegree->setObjectName(QString::fromUtf8("label_RotateDegree"));
+
+        gridLayout_10->addWidget(label_RotateDegree, 2, 0, 1, 1);
+
+        lineEdit_RotateDegree = new QLineEdit(gridLayoutWidget_10);
+        lineEdit_RotateDegree->setObjectName(QString::fromUtf8("lineEdit_RotateDegree"));
+        lineEdit_RotateDegree->setMaximumSize(QSize(160, 27));
+
+        gridLayout_10->addWidget(lineEdit_RotateDegree, 2, 1, 1, 1);
+
+        label_AxisVector = new QLabel(gridLayoutWidget_10);
+        label_AxisVector->setObjectName(QString::fromUtf8("label_AxisVector"));
+
+        gridLayout_10->addWidget(label_AxisVector, 1, 0, 1, 1);
+
+        pushButton_ExecuteRotatePlan = new QPushButton(gridLayoutWidget_10);
+        pushButton_ExecuteRotatePlan->setObjectName(QString::fromUtf8("pushButton_ExecuteRotatePlan"));
+        pushButton_ExecuteRotatePlan->setEnabled(false);
+
+        gridLayout_10->addWidget(pushButton_ExecuteRotatePlan, 4, 0, 1, 1);
+
+        pushButton_VisualizeRotatePlan = new QPushButton(gridLayoutWidget_10);
+        pushButton_VisualizeRotatePlan->setObjectName(QString::fromUtf8("pushButton_VisualizeRotatePlan"));
+
+        gridLayout_10->addWidget(pushButton_VisualizeRotatePlan, 3, 0, 1, 1);
+
+        comboBox_AxisType = new QComboBox(gridLayoutWidget_10);
+        comboBox_AxisType->setObjectName(QString::fromUtf8("comboBox_AxisType"));
+        comboBox_AxisType->setMaximumSize(QSize(266, 27));
+
+        gridLayout_10->addWidget(comboBox_AxisType, 0, 1, 1, 1);
+
+        lineEdit_AxisVectorX = new QLineEdit(gridLayoutWidget_10);
+        lineEdit_AxisVectorX->setObjectName(QString::fromUtf8("lineEdit_AxisVectorX"));
+        lineEdit_AxisVectorX->setMaximumSize(QSize(160, 27));
+
+        gridLayout_10->addWidget(lineEdit_AxisVectorX, 1, 1, 1, 1);
+
+        lineEdit_AxisVectorY = new QLineEdit(gridLayoutWidget_10);
+        lineEdit_AxisVectorY->setObjectName(QString::fromUtf8("lineEdit_AxisVectorY"));
+        lineEdit_AxisVectorY->setMaximumSize(QSize(160, 27));
+
+        gridLayout_10->addWidget(lineEdit_AxisVectorY, 1, 2, 1, 1);
+
+        tabWidget_Robot->addTab(tab_Calibration, QString());
+        tab_Record = new QWidget();
+        tab_Record->setObjectName(QString::fromUtf8("tab_Record"));
+        gridLayoutWidget_8 = new QWidget(tab_Record);
+        gridLayoutWidget_8->setObjectName(QString::fromUtf8("gridLayoutWidget_8"));
+        gridLayoutWidget_8->setGeometry(QRect(20, 30, 581, 41));
+        gridLayout_8 = new QGridLayout(gridLayoutWidget_8);
+        gridLayout_8->setObjectName(QString::fromUtf8("gridLayout_8"));
+        gridLayout_8->setContentsMargins(0, 0, 0, 0);
+        lineEdit_PrefixMessage = new QLineEdit(gridLayoutWidget_8);
+        lineEdit_PrefixMessage->setObjectName(QString::fromUtf8("lineEdit_PrefixMessage"));
+
+        gridLayout_8->addWidget(lineEdit_PrefixMessage, 0, 1, 1, 1);
+
+        label_PrefixMessage = new QLabel(gridLayoutWidget_8);
+        label_PrefixMessage->setObjectName(QString::fromUtf8("label_PrefixMessage"));
+
+        gridLayout_8->addWidget(label_PrefixMessage, 0, 0, 1, 1);
+
+        pushButton_RecordKUKAFeedback = new QPushButton(gridLayoutWidget_8);
+        pushButton_RecordKUKAFeedback->setObjectName(QString::fromUtf8("pushButton_RecordKUKAFeedback"));
+
+        gridLayout_8->addWidget(pushButton_RecordKUKAFeedback, 0, 2, 1, 1);
+
+        tabWidget_Robot->addTab(tab_Record, QString());
         tabWidget_Device->addTab(tab, QString());
         tab_2 = new QWidget();
         tab_2->setObjectName(QString::fromUtf8("tab_2"));
@@ -1874,6 +1958,11 @@ public:
 
         gridLayout_13->addWidget(lineEdit_Status, 2, 8, 1, 1);
 
+        checkBox_UseMarkerNeedleTransform = new QCheckBox(gridLayoutWidget_13);
+        checkBox_UseMarkerNeedleTransform->setObjectName(QString::fromUtf8("checkBox_UseMarkerNeedleTransform"));
+
+        gridLayout_13->addWidget(checkBox_UseMarkerNeedleTransform, 0, 3, 1, 3);
+
         groupBox_TrackingMode = new QGroupBox(groupBox_TrackingInformation);
         groupBox_TrackingMode->setObjectName(QString::fromUtf8("groupBox_TrackingMode"));
         groupBox_TrackingMode->setGeometry(QRect(0, 130, 361, 131));
@@ -1961,7 +2050,7 @@ public:
         MainWindow->setStatusBar(statusbar);
         menubar = new QMenuBar(MainWindow);
         menubar->setObjectName(QString::fromUtf8("menubar"));
-        menubar->setGeometry(QRect(0, 0, 1002, 21));
+        menubar->setGeometry(QRect(0, 0, 1002, 25));
         menuFile = new QMenu(menubar);
         menuFile->setObjectName(QString::fromUtf8("menuFile"));
         menuSettings = new QMenu(menubar);
@@ -1998,7 +2087,7 @@ public:
         retranslateUi(MainWindow);
 
         tabWidget_Device->setCurrentIndex(0);
-        tabWidget_Robot->setCurrentIndex(4);
+        tabWidget_Robot->setCurrentIndex(5);
 
 
         QMetaObject::connectSlotsByName(MainWindow);
@@ -2027,8 +2116,8 @@ public:
         terminate_buf_button->setText(QApplication::translate("MainWindow", "Term", 0, QApplication::UnicodeUTF8));
         copy_button->setText(QApplication::translate("MainWindow", "Copy", 0, QApplication::UnicodeUTF8));
         label_Result->setText(QApplication::translate("MainWindow", "Result", 0, QApplication::UnicodeUTF8));
-        label_No->setText(QApplication::translate("MainWindow", "No.", 0, QApplication::UnicodeUTF8));
         stop_button->setText(QApplication::translate("MainWindow", "Stop", 0, QApplication::UnicodeUTF8));
+        label_No->setText(QApplication::translate("MainWindow", "No.", 0, QApplication::UnicodeUTF8));
         pushButton_ConvertPosetoJoint->setText(QApplication::translate("MainWindow", "Pose to Joint", 0, QApplication::UnicodeUTF8));
         label_incrRotateC->setText(QApplication::translate("MainWindow", "Incr. RotateC", 0, QApplication::UnicodeUTF8));
         label_incrTransY->setText(QApplication::translate("MainWindow", "Incr. TransY", 0, QApplication::UnicodeUTF8));
@@ -2056,32 +2145,26 @@ public:
         pushButton_VisualizeIncrPosePlan->setText(QApplication::translate("MainWindow", "Incr. Pose Plan", 0, QApplication::UnicodeUTF8));
         pushButton_AddWaypoint->setText(QApplication::translate("MainWindow", "Add Waypoint", 0, QApplication::UnicodeUTF8));
         tabWidget_Robot->setTabText(tabWidget_Robot->indexOf(tab_PathPlanning), QApplication::translate("MainWindow", "Path Planning", 0, QApplication::UnicodeUTF8));
-        label_AxisType->setText(QApplication::translate("MainWindow", "Axis Type", 0, QApplication::UnicodeUTF8));
-        label_RotateDegree->setText(QApplication::translate("MainWindow", "Rotate Degree", 0, QApplication::UnicodeUTF8));
-        label_AxisVector->setText(QApplication::translate("MainWindow", "Axis Vector", 0, QApplication::UnicodeUTF8));
-        pushButton_ExecuteRotatePlan->setText(QApplication::translate("MainWindow", "Execute Rotate Plan", 0, QApplication::UnicodeUTF8));
-        pushButton_VisualizeRotatePlan->setText(QApplication::translate("MainWindow", "Visualize Rotate Plan", 0, QApplication::UnicodeUTF8));
-        comboBox_AxisType->clear();
-        comboBox_AxisType->insertItems(0, QStringList()
-         << QApplication::translate("MainWindow", "X", 0, QApplication::UnicodeUTF8)
-         << QApplication::translate("MainWindow", "Y", 0, QApplication::UnicodeUTF8)
-         << QApplication::translate("MainWindow", "Z", 0, QApplication::UnicodeUTF8)
-         << QApplication::translate("MainWindow", "Custom", 0, QApplication::UnicodeUTF8)
-        );
-        tabWidget_Robot->setTabText(tabWidget_Robot->indexOf(tab_Calibration), QApplication::translate("MainWindow", "Calibration", 0, QApplication::UnicodeUTF8));
-        groupBox_ReferencePoint->setTitle(QApplication::translate("MainWindow", "Target Reference Point (XYZ for NDI frame, ABC for KUKA frame)", 0, QApplication::UnicodeUTF8));
+        groupBox_NDIFeedbackMove->setTitle(QApplication::translate("MainWindow", "NDI Feedback Move (XYZ for NDI frame, ABC for KUKA frame)", 0, QApplication::UnicodeUTF8));
         label_X->setText(QApplication::translate("MainWindow", "X", 0, QApplication::UnicodeUTF8));
         label_Y->setText(QApplication::translate("MainWindow", "Y", 0, QApplication::UnicodeUTF8));
         label_Z->setText(QApplication::translate("MainWindow", "Z", 0, QApplication::UnicodeUTF8));
         label_A->setText(QApplication::translate("MainWindow", "A", 0, QApplication::UnicodeUTF8));
         label_B->setText(QApplication::translate("MainWindow", "B", 0, QApplication::UnicodeUTF8));
         label_C->setText(QApplication::translate("MainWindow", "C", 0, QApplication::UnicodeUTF8));
-        pushButton_CalculateRotationMatrix->setText(QApplication::translate("MainWindow", "Calc. Rot. Mat.", 0, QApplication::UnicodeUTF8));
-        pushButton_NeedleCalibration->setText(QApplication::translate("MainWindow", "Needle Calib.", 0, QApplication::UnicodeUTF8));
-        groupBox_ReferencePoint_2->setTitle(QApplication::translate("MainWindow", "Translation for Rot. Calc. (KUKA frame)", 0, QApplication::UnicodeUTF8));
+        pushButton_NDIFeedbackMove->setText(QApplication::translate("MainWindow", "NDI Feedback Move", 0, QApplication::UnicodeUTF8));
+        groupBox_CalculateRotationMatrix->setTitle(QApplication::translate("MainWindow", "Calculate Rotation Matrix (KUKA frame)", 0, QApplication::UnicodeUTF8));
         label_dX->setText(QApplication::translate("MainWindow", "dX", 0, QApplication::UnicodeUTF8));
         label_dY->setText(QApplication::translate("MainWindow", "dY", 0, QApplication::UnicodeUTF8));
         label_dZ->setText(QApplication::translate("MainWindow", "dZ", 0, QApplication::UnicodeUTF8));
+        pushButton_CalculateRotationMatrix->setText(QApplication::translate("MainWindow", "Calc. Rot. Mat.", 0, QApplication::UnicodeUTF8));
+        groupBox_NeedlePointCalibration->setTitle(QApplication::translate("MainWindow", "Needle Point Calibration", 0, QApplication::UnicodeUTF8));
+        label_NeedlePointIndicator->setText(QApplication::translate("MainWindow", "Needle Point Indicator ", 0, QApplication::UnicodeUTF8));
+        pushButton_CalibrateNeedlePoint->setText(QApplication::translate("MainWindow", "Calib. Needle Point", 0, QApplication::UnicodeUTF8));
+        pushButton_CalculateNDIKUKATransform->setText(QApplication::translate("MainWindow", "Calc. NDI KUKA Transform", 0, QApplication::UnicodeUTF8));
+        pushButton_CalibrateNeedleDirection->setText(QApplication::translate("MainWindow", "Calib. Needle Direction", 0, QApplication::UnicodeUTF8));
+        label_MarkerNeedleWarning->setText(QApplication::translate("MainWindow", "Warning: Marker Needle Transform is used, which means \n"
+"the NDI position that will be used is the position of needle point", 0, QApplication::UnicodeUTF8));
         tabWidget_Robot->setTabText(tabWidget_Robot->indexOf(tab_NDICalibration), QApplication::translate("MainWindow", "NDI Calibration", 0, QApplication::UnicodeUTF8));
         label_Dimension_Z->setText(QApplication::translate("MainWindow", "Z", 0, QApplication::UnicodeUTF8));
         label_CurrenCollisionObject->setText(QApplication::translate("MainWindow", "Current Collision Object", 0, QApplication::UnicodeUTF8));
@@ -2165,6 +2248,22 @@ public:
         label_Joint5_4->setText(QApplication::translate("MainWindow", "Joint5", 0, QApplication::UnicodeUTF8));
         label_Joint6_4->setText(QApplication::translate("MainWindow", "Joint6", 0, QApplication::UnicodeUTF8));
         tabWidget_Robot->setTabText(tabWidget_Robot->indexOf(tab_SingleCommand), QApplication::translate("MainWindow", "Single Command", 0, QApplication::UnicodeUTF8));
+        label_AxisType->setText(QApplication::translate("MainWindow", "Axis Type", 0, QApplication::UnicodeUTF8));
+        label_RotateDegree->setText(QApplication::translate("MainWindow", "Rotate Degree", 0, QApplication::UnicodeUTF8));
+        label_AxisVector->setText(QApplication::translate("MainWindow", "Axis Vector", 0, QApplication::UnicodeUTF8));
+        pushButton_ExecuteRotatePlan->setText(QApplication::translate("MainWindow", "Execute Rotate Plan", 0, QApplication::UnicodeUTF8));
+        pushButton_VisualizeRotatePlan->setText(QApplication::translate("MainWindow", "Visualize Rotate Plan", 0, QApplication::UnicodeUTF8));
+        comboBox_AxisType->clear();
+        comboBox_AxisType->insertItems(0, QStringList()
+         << QApplication::translate("MainWindow", "X", 0, QApplication::UnicodeUTF8)
+         << QApplication::translate("MainWindow", "Y", 0, QApplication::UnicodeUTF8)
+         << QApplication::translate("MainWindow", "Z", 0, QApplication::UnicodeUTF8)
+         << QApplication::translate("MainWindow", "Custom", 0, QApplication::UnicodeUTF8)
+        );
+        tabWidget_Robot->setTabText(tabWidget_Robot->indexOf(tab_Calibration), QApplication::translate("MainWindow", "Calibration", 0, QApplication::UnicodeUTF8));
+        label_PrefixMessage->setText(QApplication::translate("MainWindow", "Prefix Message", 0, QApplication::UnicodeUTF8));
+        pushButton_RecordKUKAFeedback->setText(QApplication::translate("MainWindow", "Record KUKA Feedback", 0, QApplication::UnicodeUTF8));
+        tabWidget_Robot->setTabText(tabWidget_Robot->indexOf(tab_Record), QApplication::translate("MainWindow", "Record", 0, QApplication::UnicodeUTF8));
         tabWidget_Device->setTabText(tabWidget_Device->indexOf(tab), QApplication::translate("MainWindow", "KUKA", 0, QApplication::UnicodeUTF8));
         groupBox_ToolProperties->setTitle(QApplication::translate("MainWindow", "Tool Properties", 0, QApplication::UnicodeUTF8));
         label_ToolType->setText(QApplication::translate("MainWindow", "Tool Type", 0, QApplication::UnicodeUTF8));
@@ -2192,6 +2291,7 @@ public:
         label_Ty->setText(QApplication::translate("MainWindow", "Ty", 0, QApplication::UnicodeUTF8));
         label_Status->setText(QApplication::translate("MainWindow", "Status", 0, QApplication::UnicodeUTF8));
         label_Qy->setText(QApplication::translate("MainWindow", "Qy", 0, QApplication::UnicodeUTF8));
+        checkBox_UseMarkerNeedleTransform->setText(QApplication::translate("MainWindow", "Use Marker Needle Transform", 0, QApplication::UnicodeUTF8));
         groupBox_TrackingMode->setTitle(QApplication::translate("MainWindow", "Tracking Mode", 0, QApplication::UnicodeUTF8));
         radioButton_BXMode->setText(QApplication::translate("MainWindow", "BX Mode (Binary return for allocated port)", 0, QApplication::UnicodeUTF8));
         radioButton_TXMode->setText(QApplication::translate("MainWindow", "TX Mode (ASCII return for allocated port)", 0, QApplication::UnicodeUTF8));

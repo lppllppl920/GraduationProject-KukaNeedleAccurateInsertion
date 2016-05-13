@@ -11,18 +11,18 @@
 #include "plannar.h"
 
 Plannar::Plannar() :
-		tcpObject_(), rosThread_(), robot_(
+	tcpThread_(), rosThread_(), robot_(
 				"/home/lxt12/Kuka_interface/src/kuka_kr6/robots/kuka_kr6_needle.urdf") {
 	ROS_INFO("Plannar Constructing...");
 
 	stamp_ = 0;
-	connect(&tcpObject_, SIGNAL(feedbackReceived(QString)), this,
+	connect(&tcpThread_, SIGNAL(feedbackReceived(QString)), this,
 			SLOT(feedbackReceived(QString)), Qt::QueuedConnection);
-	connect(this, SIGNAL(sendMessage(QString)), &tcpObject_,
+	connect(this, SIGNAL(sendMessage(QString)), &tcpThread_,
 			SLOT(sendMessage(QString)), Qt::QueuedConnection);
-	connect(this, SIGNAL(debug()), &tcpObject_, SLOT(debug()),
+	connect(this, SIGNAL(debug()), &tcpThread_, SLOT(debug()),
 			Qt::QueuedConnection);
-	connect(&tcpObject_, SIGNAL(disconnected()), this, SLOT(disconnected()),
+	connect(&tcpThread_, SIGNAL(disconnected()), this, SLOT(disconnected()),
 			Qt::QueuedConnection);
 
 	CommandIterBufFront = CommandList.begin();
@@ -40,16 +40,16 @@ Plannar::Plannar() :
 	rosThread_.start();
 
 	// Assign a new thread to plannar
-	tcpThread_ = new QThread;
-	tcpObject_.moveToThread(tcpThread_);
-	ROS_INFO("TCP Thread starts...");
-	tcpThread_->start();
+	tcpThread_.start();
 
 	lastTime_ = 0;
 	feedbackCount_ = 0;
 	averageTime_ = 0.0;
 	firstTime_ = 0;
+
 	lastStamp_ = -1;
+	MotionComplete_ = false;
+	delayCounter_ = 0;
 
 	lastAxis_ = Axis(0, 0, 0, 0, 0, 0);
 }
@@ -67,14 +67,14 @@ Plannar::~Plannar() {
 		delete fb;
 	}
 	std::cout << "TCP thread ends..." << std::endl;
-	tcpThread_->exit();
+	tcpThread_.exit();
 	std::cout << "ROS thread ends..." << std::endl;
 	rosThread_.exit();
 }
 
 void Plannar::executeTrajectory(const MotionPlan& motion_plan) {
 
-	//ROS_INFO("Plannar: Thread %d", QThread::currentThreadId());
+	ROS_INFO("Plannar thread %lu", QThread::currentThreadId());
 	Axis a;
 
 	for (int i = 0; i < motion_plan.trajectory_.joint_trajectory.points.size();
@@ -124,6 +124,10 @@ void Plannar::executeTrajectory(const MotionPlan& motion_plan) {
 	motion(Command::PTP, a, Command::Approx::NONE);
 	// Record the last command stamp for knowing when this series of motion complete
 	lastStamp_ = stamp_;
+	// flag for whether the motion is completed
+	MotionComplete_ = false;
+	// counter for delay
+	delayCounter_ = 0;
 
 }
 
@@ -145,10 +149,10 @@ void Plannar::feedbackReceived(QString qs) {
 
 void Plannar::disconnected() {
 	// exit tcp thread for disconnecting
-	tcpThread_->exit();
-	ROS_INFO("TCP thread stops...");
+	//tcpThread_.exit();
+	//ROS_INFO("TCP thread stops...");
 	// emit signal to shut down Controller
-	emit shutdownController();
+	//emit shutdownController();
 }
 
 void Plannar::appendCommandList(Command* cmd) {
@@ -186,10 +190,12 @@ void Plannar::updateQueueStatus(Feedback* fb) {
 	// for debugging
 //    checkStatusTurn(fb);
 
-	/* std::cout << "--- Feedback, Seq = " << fb->getSeq() << ", Hour = "
-	 << fb->getHour() << ", Time = " << fb->getTime() << ", Buffer: "
-	 << fb->getBufferFront() << " - " << fb->getBufferLast()
-	 << ", Text = " << fb->getText();*/
+	/*if(lastStamp_ == fb->getStamp() && fb->getText() != "Timer Feedback") {
+		 std::cout << "--- Feedback, Seq = " << fb->getSeq() << ", Hour = "
+		 << fb->getHour() << ", Time = " << fb->getTime() << ", Buffer: "
+		 << fb->getBufferFront() << " - " << fb->getBufferLast()
+		 << ", Text = " << fb->getText();
+	}*/
 
 	updateFrequencyPerformance(fb);
 	//std::cout << std::endl;
@@ -211,9 +217,14 @@ void Plannar::updateQueueStatus(Feedback* fb) {
 //    printCommandList();
 	// If the last series of motion is completed
 	emit newFeedback(fb);
-	if (lastStamp_ == fb->getStamp()) {
-		ROS_INFO("Last command complete");
-		emit LastCommandComplete();
+	if (!MotionComplete_ && lastStamp_ == fb->getStamp() && fb->getBufferExtreme() == Feedback::Extreme::Empty && fb->getText() == "Timer Feedback") {
+		delayCounter_++;
+		if(delayCounter_ >= 600) {
+			ROS_INFO("Plannar: Last command complete, stamp is %d", lastStamp_);
+			emit LastCommandComplete();
+			delayCounter_ = 0;
+			MotionComplete_ = true;
+		}
 	}
 }
 
@@ -898,7 +909,7 @@ bool Plannar::checkStatusTurn(Feedback *fb) {
 }
 
 TCPThread& Plannar::getTCPThread() {
-	return tcpObject_;
+	return tcpThread_;
 }
 
 Model& Plannar::getModel() {

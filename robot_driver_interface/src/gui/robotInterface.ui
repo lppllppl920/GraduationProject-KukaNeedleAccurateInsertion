@@ -35,7 +35,7 @@
        <rect>
         <x>20</x>
         <y>370</y>
-        <width>781</width>
+        <width>791</width>
         <height>151</height>
        </rect>
       </property>
@@ -338,28 +338,6 @@
          </property>
          <property name="horizontalScrollBarPolicy">
           <enum>Qt::ScrollBarAlwaysOff</enum>
-         </property>
-         <property name="tabChangesFocus">
-          <bool>true</bool>
-         </property>
-         <property name="textInteractionFlags">
-          <set>Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
-         </property>
-        </widget>
-       </item>
-       <item row="0" column="7" colspan="2">
-        <widget class="QTextEdit" name="output_seq">
-         <property name="minimumSize">
-          <size>
-           <width>174</width>
-           <height>31</height>
-          </size>
-         </property>
-         <property name="maximumSize">
-          <size>
-           <width>174</width>
-           <height>40</height>
-          </size>
          </property>
          <property name="tabChangesFocus">
           <bool>true</bool>
@@ -720,25 +698,6 @@
          </property>
         </widget>
        </item>
-       <item row="0" column="6">
-        <widget class="QLabel" name="label_No">
-         <property name="minimumSize">
-          <size>
-           <width>30</width>
-           <height>27</height>
-          </size>
-         </property>
-         <property name="maximumSize">
-          <size>
-           <width>30</width>
-           <height>27</height>
-          </size>
-         </property>
-         <property name="text">
-          <string>No.</string>
-         </property>
-        </widget>
-       </item>
        <item row="0" column="4">
         <widget class="QPushButton" name="stop_button">
          <property name="minimumSize">
@@ -758,6 +717,41 @@
          </property>
         </widget>
        </item>
+       <item row="0" column="8">
+        <widget class="QTextEdit" name="output_seq">
+         <property name="maximumSize">
+          <size>
+           <width>84</width>
+           <height>40</height>
+          </size>
+         </property>
+         <property name="tabChangesFocus">
+          <bool>true</bool>
+         </property>
+         <property name="textInteractionFlags">
+          <set>Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="7">
+        <widget class="QLabel" name="label_No">
+         <property name="minimumSize">
+          <size>
+           <width>30</width>
+           <height>27</height>
+          </size>
+         </property>
+         <property name="maximumSize">
+          <size>
+           <width>30</width>
+           <height>27</height>
+          </size>
+         </property>
+         <property name="text">
+          <string>No.</string>
+         </property>
+        </widget>
+       </item>
       </layout>
      </widget>
      <widget class="QTabWidget" name="tabWidget_Robot">
@@ -770,7 +764,7 @@
        </rect>
       </property>
       <property name="currentIndex">
-       <number>4</number>
+       <number>5</number>
       </property>
       <widget class="QWidget" name="tab_PathPlanning">
        <attribute name="title">
@@ -1320,154 +1314,29 @@
         </layout>
        </widget>
       </widget>
-      <widget class="QWidget" name="tab_Calibration">
-       <attribute name="title">
-        <string>Calibration</string>
-       </attribute>
-       <widget class="QWidget" name="gridLayoutWidget_10">
-        <property name="geometry">
-         <rect>
-          <x>0</x>
-          <y>10</y>
-          <width>481</width>
-          <height>281</height>
-         </rect>
-        </property>
-        <layout class="QGridLayout" name="gridLayout_10">
-         <item row="1" column="3">
-          <widget class="QLineEdit" name="lineEdit_AxisVectorZ">
-           <property name="maximumSize">
-            <size>
-             <width>160</width>
-             <height>27</height>
-            </size>
-           </property>
-          </widget>
-         </item>
-         <item row="0" column="0">
-          <widget class="QLabel" name="label_AxisType">
-           <property name="text">
-            <string>Axis Type</string>
-           </property>
-          </widget>
-         </item>
-         <item row="2" column="0">
-          <widget class="QLabel" name="label_RotateDegree">
-           <property name="text">
-            <string>Rotate Degree</string>
-           </property>
-          </widget>
-         </item>
-         <item row="2" column="1">
-          <widget class="QLineEdit" name="lineEdit_RotateDegree">
-           <property name="maximumSize">
-            <size>
-             <width>160</width>
-             <height>27</height>
-            </size>
-           </property>
-          </widget>
-         </item>
-         <item row="1" column="0">
-          <widget class="QLabel" name="label_AxisVector">
-           <property name="text">
-            <string>Axis Vector</string>
-           </property>
-          </widget>
-         </item>
-         <item row="4" column="0">
-          <widget class="QPushButton" name="pushButton_ExecuteRotatePlan">
-           <property name="enabled">
-            <bool>false</bool>
-           </property>
-           <property name="text">
-            <string>Execute Rotate Plan</string>
-           </property>
-          </widget>
-         </item>
-         <item row="3" column="0">
-          <widget class="QPushButton" name="pushButton_VisualizeRotatePlan">
-           <property name="text">
-            <string>Visualize Rotate Plan</string>
-           </property>
-          </widget>
-         </item>
-         <item row="0" column="1">
-          <widget class="QComboBox" name="comboBox_AxisType">
-           <property name="maximumSize">
-            <size>
-             <width>266</width>
-             <height>27</height>
-            </size>
-           </property>
-           <item>
-            <property name="text">
-             <string>X</string>
-            </property>
-           </item>
-           <item>
-            <property name="text">
-             <string>Y</string>
-            </property>
-           </item>
-           <item>
-            <property name="text">
-             <string>Z</string>
-            </property>
-           </item>
-           <item>
-            <property name="text">
-             <string>Custom</string>
-            </property>
-           </item>
-          </widget>
-         </item>
-         <item row="1" column="1">
-          <widget class="QLineEdit" name="lineEdit_AxisVectorX">
-           <property name="maximumSize">
-            <size>
-             <width>160</width>
-             <height>27</height>
-            </size>
-           </property>
-          </widget>
-         </item>
-         <item row="1" column="2">
-          <widget class="QLineEdit" name="lineEdit_AxisVectorY">
-           <property name="maximumSize">
-            <size>
-             <width>160</width>
-             <height>27</height>
-            </size>
-           </property>
-          </widget>
-         </item>
-        </layout>
-       </widget>
-      </widget>
       <widget class="QWidget" name="tab_NDICalibration">
        <attribute name="title">
         <string>NDI Calibration</string>
        </attribute>
-       <widget class="QGroupBox" name="groupBox_ReferencePoint">
+       <widget class="QGroupBox" name="groupBox_NDIFeedbackMove">
         <property name="geometry">
          <rect>
           <x>10</x>
           <y>170</y>
-          <width>411</width>
+          <width>491</width>
           <height>141</height>
          </rect>
         </property>
         <property name="title">
-         <string>Target Reference Point (XYZ for NDI frame, ABC for KUKA frame)</string>
+         <string>NDI Feedback Move (XYZ for NDI frame, ABC for KUKA frame)</string>
         </property>
         <widget class="QWidget" name="gridLayoutWidget_4">
          <property name="geometry">
           <rect>
            <x>10</x>
            <y>30</y>
-           <width>251</width>
-           <height>101</height>
+           <width>471</width>
+           <height>108</height>
           </rect>
          </property>
          <layout class="QGridLayout" name="gridLayout_4">
@@ -1531,54 +1400,35 @@
           <item row="3" column="2">
            <widget class="QLineEdit" name="lineEdit_KUKA_C"/>
           </item>
+          <item row="3" column="3">
+           <widget class="QPushButton" name="pushButton_NDIFeedbackMove">
+            <property name="text">
+             <string>NDI Feedback Move</string>
+            </property>
+           </widget>
+          </item>
          </layout>
         </widget>
        </widget>
-       <widget class="QPushButton" name="pushButton_CalculateRotationMatrix">
-        <property name="geometry">
-         <rect>
-          <x>470</x>
-          <y>70</y>
-          <width>95</width>
-          <height>24</height>
-         </rect>
-        </property>
-        <property name="text">
-         <string>Calc. Rot. Mat.</string>
-        </property>
-       </widget>
-       <widget class="QPushButton" name="pushButton_NeedleCalibration">
-        <property name="geometry">
-         <rect>
-          <x>470</x>
-          <y>110</y>
-          <width>95</width>
-          <height>24</height>
-         </rect>
-        </property>
-        <property name="text">
-         <string>Needle Calib.</string>
-        </property>
-       </widget>
-       <widget class="QGroupBox" name="groupBox_ReferencePoint_2">
+       <widget class="QGroupBox" name="groupBox_CalculateRotationMatrix">
         <property name="geometry">
          <rect>
           <x>10</x>
           <y>50</y>
-          <width>271</width>
+          <width>401</width>
           <height>91</height>
          </rect>
         </property>
         <property name="title">
-         <string>Translation for Rot. Calc. (KUKA frame)</string>
+         <string>Calculate Rotation Matrix (KUKA frame)</string>
         </property>
         <widget class="QWidget" name="gridLayoutWidget_5">
          <property name="geometry">
           <rect>
            <x>10</x>
            <y>30</y>
-           <width>251</width>
-           <height>51</height>
+           <width>391</width>
+           <height>52</height>
           </rect>
          </property>
          <layout class="QGridLayout" name="gridLayout_5">
@@ -1612,8 +1462,97 @@
           <item row="1" column="2">
            <widget class="QLineEdit" name="lineEdit_dZ"/>
           </item>
+          <item row="1" column="3">
+           <widget class="QPushButton" name="pushButton_CalculateRotationMatrix">
+            <property name="text">
+             <string>Calc. Rot. Mat.</string>
+            </property>
+           </widget>
+          </item>
          </layout>
         </widget>
+       </widget>
+       <widget class="QGroupBox" name="groupBox_NeedlePointCalibration">
+        <property name="geometry">
+         <rect>
+          <x>450</x>
+          <y>40</y>
+          <width>311</width>
+          <height>101</height>
+         </rect>
+        </property>
+        <property name="title">
+         <string>Needle Point Calibration</string>
+        </property>
+        <widget class="QWidget" name="gridLayoutWidget_7">
+         <property name="geometry">
+          <rect>
+           <x>0</x>
+           <y>30</y>
+           <width>307</width>
+           <height>61</height>
+          </rect>
+         </property>
+         <layout class="QGridLayout" name="gridLayout_7">
+          <item row="0" column="0">
+           <widget class="QLabel" name="label_NeedlePointIndicator">
+            <property name="text">
+             <string>Needle Point Indicator </string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="QPushButton" name="pushButton_CalibrateNeedlePoint">
+            <property name="text">
+             <string>Calib. Needle Point</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QComboBox" name="comboBox_NeedlePointIndicator"/>
+          </item>
+         </layout>
+        </widget>
+       </widget>
+       <widget class="QPushButton" name="pushButton_CalculateNDIKUKATransform">
+        <property name="geometry">
+         <rect>
+          <x>580</x>
+          <y>200</y>
+          <width>181</width>
+          <height>27</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>Calc. NDI KUKA Transform</string>
+        </property>
+       </widget>
+       <widget class="QPushButton" name="pushButton_CalibrateNeedleDirection">
+        <property name="geometry">
+         <rect>
+          <x>580</x>
+          <y>240</y>
+          <width>181</width>
+          <height>27</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>Calib. Needle Direction</string>
+        </property>
+       </widget>
+       <widget class="QLabel" name="label_MarkerNeedleWarning">
+        <property name="geometry">
+         <rect>
+          <x>20</x>
+          <y>10</y>
+          <width>431</width>
+          <height>31</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>Warning: Marker Needle Transform is used, which means 
+the NDI position that will be used is the position of needle point</string>
+        </property>
        </widget>
       </widget>
       <widget class="QWidget" name="tab_Environment">
@@ -3132,6 +3071,165 @@
         </layout>
        </widget>
       </widget>
+      <widget class="QWidget" name="tab_Calibration">
+       <attribute name="title">
+        <string>Calibration</string>
+       </attribute>
+       <widget class="QWidget" name="gridLayoutWidget_10">
+        <property name="geometry">
+         <rect>
+          <x>0</x>
+          <y>10</y>
+          <width>481</width>
+          <height>281</height>
+         </rect>
+        </property>
+        <layout class="QGridLayout" name="gridLayout_10">
+         <item row="1" column="3">
+          <widget class="QLineEdit" name="lineEdit_AxisVectorZ">
+           <property name="maximumSize">
+            <size>
+             <width>160</width>
+             <height>27</height>
+            </size>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="0">
+          <widget class="QLabel" name="label_AxisType">
+           <property name="text">
+            <string>Axis Type</string>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="0">
+          <widget class="QLabel" name="label_RotateDegree">
+           <property name="text">
+            <string>Rotate Degree</string>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="1">
+          <widget class="QLineEdit" name="lineEdit_RotateDegree">
+           <property name="maximumSize">
+            <size>
+             <width>160</width>
+             <height>27</height>
+            </size>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="0">
+          <widget class="QLabel" name="label_AxisVector">
+           <property name="text">
+            <string>Axis Vector</string>
+           </property>
+          </widget>
+         </item>
+         <item row="4" column="0">
+          <widget class="QPushButton" name="pushButton_ExecuteRotatePlan">
+           <property name="enabled">
+            <bool>false</bool>
+           </property>
+           <property name="text">
+            <string>Execute Rotate Plan</string>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="0">
+          <widget class="QPushButton" name="pushButton_VisualizeRotatePlan">
+           <property name="text">
+            <string>Visualize Rotate Plan</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="1">
+          <widget class="QComboBox" name="comboBox_AxisType">
+           <property name="maximumSize">
+            <size>
+             <width>266</width>
+             <height>27</height>
+            </size>
+           </property>
+           <item>
+            <property name="text">
+             <string>X</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>Y</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>Z</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>Custom</string>
+            </property>
+           </item>
+          </widget>
+         </item>
+         <item row="1" column="1">
+          <widget class="QLineEdit" name="lineEdit_AxisVectorX">
+           <property name="maximumSize">
+            <size>
+             <width>160</width>
+             <height>27</height>
+            </size>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="2">
+          <widget class="QLineEdit" name="lineEdit_AxisVectorY">
+           <property name="maximumSize">
+            <size>
+             <width>160</width>
+             <height>27</height>
+            </size>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+      </widget>
+      <widget class="QWidget" name="tab_Record">
+       <attribute name="title">
+        <string>Record</string>
+       </attribute>
+       <widget class="QWidget" name="gridLayoutWidget_8">
+        <property name="geometry">
+         <rect>
+          <x>20</x>
+          <y>30</y>
+          <width>581</width>
+          <height>41</height>
+         </rect>
+        </property>
+        <layout class="QGridLayout" name="gridLayout_8">
+         <item row="0" column="1">
+          <widget class="QLineEdit" name="lineEdit_PrefixMessage"/>
+         </item>
+         <item row="0" column="0">
+          <widget class="QLabel" name="label_PrefixMessage">
+           <property name="text">
+            <string>Prefix Message</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="2">
+          <widget class="QPushButton" name="pushButton_RecordKUKAFeedback">
+           <property name="text">
+            <string>Record KUKA Feedback</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+      </widget>
      </widget>
     </widget>
     <widget class="QWidget" name="tab_2">
@@ -3481,6 +3579,13 @@
           </property>
          </widget>
         </item>
+        <item row="0" column="3" colspan="3">
+         <widget class="QCheckBox" name="checkBox_UseMarkerNeedleTransform">
+          <property name="text">
+           <string>Use Marker Needle Transform</string>
+          </property>
+         </widget>
+        </item>
        </layout>
       </widget>
       <widget class="QGroupBox" name="groupBox_TrackingMode">
@@ -3645,7 +3750,7 @@
      <x>0</x>
      <y>0</y>
      <width>1002</width>
-     <height>21</height>
+     <height>25</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">

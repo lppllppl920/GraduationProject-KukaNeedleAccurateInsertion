@@ -215,6 +215,16 @@ Visualization Manager:
           Value: true
         flange:
           Value: true
+        link1:
+          Value: true
+        link2:
+          Value: true
+        link3:
+          Value: true
+        link4:
+          Value: true
+        link5:
+          Value: true
         link6:
           Value: true
         tip:
@@ -228,6 +238,15 @@ Visualization Manager:
       Show Names: true
       Tree:
         base_link:
+          link1:
+            link2:
+              link3:
+                link4:
+                  link5:
+                    link6:
+                      flange:
+                        tip:
+                          {}
           world:
             {}
       Update Interval: 0
@@ -247,7 +266,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/XYOrbit
-      Distance: 3.49567
+      Distance: 2.6567
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.06
         Stereo Focal Distance: 1
@@ -259,10 +278,10 @@ Visualization Manager:
         Z: 2.23518e-07
       Name: Current View
       Near Clip Distance: 0.01
-      Pitch: 0.594792
+      Pitch: 0.269792
       Target Frame: base_link
       Value: XYOrbit (rviz)
-      Yaw: 6.17177
+      Yaw: 2.08858
     Saved: ~
 Window Geometry:
   Displays:

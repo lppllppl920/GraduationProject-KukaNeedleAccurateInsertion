@@ -219,7 +219,8 @@ public slots:
 	// Called when tcpSocket_ in tcpthread_ is disconencted
 	void disconnected();
 	// Called when Controller emit sendTrajectory() signal
-	void executeTrajectory(const MotionPlan& motion_plan);signals:
+	void executeTrajectory(const MotionPlan& motion_plan);
+signals:
 	// Connected with tcpthread_.sendMessage()
 	// send a message to KRC4
 	void sendMessage(QString qs);
@@ -229,7 +230,6 @@ public slots:
 	// Connected with GUI, or higher level controller
 	void newFeedback(Feedback* fb);
 	void shutdownController();
-
 	void LastCommandComplete();
 
 private:
@@ -370,12 +370,13 @@ private:
 	double averageTime_;
 
 	int lastStamp_;
-
-	QThread *tcpThread_;
+	bool MotionComplete_;
+	int delayCounter_;
+	//QThread *tcpThread_;
 	// thread for ros spinning
 	ROSThread rosThread_;
 	// thread representing tcp port
-	TCPThread tcpObject_;
+	TCPThread tcpThread_;
 	// Model of robot
 	//  - KUKA KR6 R700 sixx is used here
 	Model robot_;

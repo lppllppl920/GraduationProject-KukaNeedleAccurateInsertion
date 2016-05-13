@@ -183,7 +183,8 @@
     <child link="flange"/>
   </joint>
   <joint name="tip_joint" type="fixed">
-    <origin rpy="1.0687349 -1.52199692 -2.44443834" xyz="0.0702 0.023006 0.332351"/>
+    <!--<origin rpy="1.0687349 -1.52199692 -2.44443834" xyz="0.0702 0.023006 0.332351"/>-->
+    <origin rpy="0 0 0" xyz="0.025364 0.040438 0.118494"/>
     <parent link="flange"/>
     <child link="tip"/>
   </joint>

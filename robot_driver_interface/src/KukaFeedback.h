@@ -23,6 +23,8 @@ public:
 public slots:
 	void ObtainJointFeedback(Feedback* feedback);
 	void LastCommandComplete();
+signals:
+	void closeWindow();
 
 public:
 	QReadWriteLock dtFeedbackLock_;

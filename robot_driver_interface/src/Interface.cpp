@@ -47,8 +47,12 @@ Interface::Interface(QMainWindow *parent) :
 			SLOT(executeMotionPlan()));
 	connect(pushButton_CalculateRotationMatrix, SIGNAL(clicked()), this,
 			SLOT(calculateRotationMatrix()));
-	connect(pushButton_NeedleCalibration, SIGNAL(clicked()), this,
-			SLOT(calibrateNeedle()));
+	connect(pushButton_NDIFeedbackMove, SIGNAL(clicked()), this,
+			SLOT(ndiFeedbackMove()));
+	connect(pushButton_CalibrateNeedlePoint, SIGNAL(clicked()), this, SLOT(calibrateNeedlePoint()));
+	connect(pushButton_CalculateNDIKUKATransform, SIGNAL(clicked()), this, SLOT(calculateNDIKUKATransform()));
+	connect(pushButton_CalibrateNeedleDirection, SIGNAL(clicked()), this, SLOT(calibrateNeedleDirection()));
+	connect(pushButton_RecordKUKAFeedback, SIGNAL(clicked()), this, SLOT(recordKUKAFeedback()));
 	// NDI related
 	connect(pushButton_ResetSystem, SIGNAL(clicked()), this,
 			SLOT(resetNDISystem()));
@@ -102,7 +106,7 @@ Interface::Interface(QMainWindow *parent) :
 			SLOT(selchangeRefPortHandle()));
 	connect(checkBox_HandleEnable, SIGNAL(clicked(bool)), this,
 			SLOT(portEnabled()));
-
+	connect(checkBox_UseMarkerNeedleTransform, SIGNAL(clicked(bool)), this, SLOT(useMarkerNeedleTransformChanged()));
 	// Others related
 	//connect(this, SIGNAL(sendTrajectory(const TrajectoryGoal&)), &dtController_,
 	//		SLOT(sendTrajectory(const TrajectoryGoal&)));
@@ -125,6 +129,9 @@ Interface::Interface(QMainWindow *parent) :
 			&dtController_,
 			SLOT(endEffectorPosCb(const InteractiveMarkerFeedbackConstPtr&)),
 			Qt::QueuedConnection);
+	connect(this, SIGNAL(executeMotionPlan_signal()), &dtController_, SLOT(executeMotionPlan()));
+
+	connect(&dtController_, SIGNAL(closeWindow()), this, SLOT(closeDialogWindow()));
 
 // KUKA related
 	// Set publisher for planned path display
@@ -142,12 +149,6 @@ Interface::Interface(QMainWindow *parent) :
 					visualization_msgs::InteractiveMarkerFeedback, Interface>(
 					"/rviz_moveit_motion_planning_display/robot_interaction_interactive_marker_topic/feedback",
 					10, &Interface::endEffectorPosCb, this);
-
-	// Set subscriber for Motion trajectory execution
-	//dtMotionTrajectorySubsriber_ = pdtNodeHandle_->subscribe<
-	//		control_msgs::FollowJointTrajectoryActionGoal, Interface>(
-	//		"/joint_trajectory_action/goal", 10, &Interface::trajectoryActionCb,
-	//		this);
 
 	dtPlanningSceneDiffPublisher_ = pdtNodeHandle_->advertise<
 			moveit_msgs::PlanningScene>("/planning_scene", 1);
@@ -224,12 +225,25 @@ Interface::Interface(QMainWindow *parent) :
 
 	bMotionComplete_ = false;
 
-	//dtController_.start();
 	dtControllerThread_ = new QThread;
 	dtController_.moveToThread(dtControllerThread_);
 	ROS_INFO("Controller thread starts...");
 	dtControllerThread_->start();
+	dtController_.pdtSubWindowWaitForExecution_ = &dtSubWindowWaitForExecution_;
 
+	// This shouldn't be enabled until the needle point is calibrated
+	pushButton_CalibrateNeedleDirection->setEnabled(false);
+	pushButton_NDIFeedbackMove->setEnabled(false);
+	pushButton_CalibrateNeedlePoint->setEnabled(false);
+	checkBox_UseMarkerNeedleTransform->setEnabled(false);
+	label_MarkerNeedleWarning->setHidden(true);
+	//ROS_INFO("Interface Thread: %lu", QThread::currentThreadId());
+
+	//Log file
+	pfOut_ = fopen("/home/lxt12/logfile_RobotInterface", "a+t");
+	if (pfOut_ == NULL) {
+		ROS_ERROR("Cannot open specified log file");
+	}
 }
 
 Interface::~Interface() {
@@ -240,7 +254,310 @@ Interface::~Interface() {
 }
 
 // Slots function
-void Interface::calibrateNeedle() {
+void Interface::recordKUKAFeedback() {
+	std::string strPrefix = lineEdit_PrefixMessage->text().toStdString();
+	std::stringstream strFeedbackData;
+
+	Axis feedback_axis;
+	feedback_axis = dtController_.getFeedbackAxis();
+	strFeedbackData << feedback_axis.A1 << "\r" << feedback_axis.A2 << "\r" << feedback_axis.A3 << "\r"
+			<< feedback_axis.A4 << "\r" << feedback_axis.A5 << "\r" << feedback_axis.A6;
+
+	std::string record = strPrefix + ": " + strFeedbackData.str();
+	fprintf(pfOut_, "%s\n", record.c_str());
+
+	ROS_INFO("KUKA feedback recorded successfully");
+}
+void Interface::calibrateNeedleDirection() {
+	//TODO: Someone points one position of the needle
+	//Then move this end of needle to this position
+	//Use smartpad's AB-2point method to calibrate the direction of the needle
+	pushButton_CalibrateNeedleDirection->setEnabled(false);
+	dtGetDataTimer_->stop();
+
+	if(!checkBox_UseMarkerNeedleTransform->isChecked()) {
+		ROS_ERROR("Cannot use Calibrate Needle Direction function when Use Marker Needle Transform is not checked");
+		dtGetDataTimer_->start(NDI_TIME_INTERVAL);
+		pushButton_CalibrateNeedleDirection->setEnabled(true);
+		return;
+	}
+
+	int nMarker = ASCIIToHex(
+			(char*) (comboBox_Handle->currentText().toStdString().c_str()), 2);
+	int nNeedle = ASCIIToHex(
+			(char*) (comboBox_NeedlePointIndicator->currentText().toStdString().c_str()), 2);
+
+	if(pdtCommandHandling_->pdtHandleInformation_[nMarker].dtXfrms.ulFlags != TRANSFORM_VALID ||
+			pdtCommandHandling_->pdtHandleInformation_[nNeedle].dtXfrms.ulFlags != TRANSFORM_VALID) {
+		ROS_ERROR("NDI tracking invalid");
+		dtGetDataTimer_->start(NDI_TIME_INTERVAL);
+		pushButton_CalibrateNeedleDirection->setEnabled(true);
+		return;
+	}
+
+	Axis feedback_axis;
+	Frame feedback_frame;
+
+	// Obtain current state of KUKA robot
+	feedback_axis = dtController_.getFeedbackAxis();
+	dtLastAxis_.set(feedback_axis);
+	pdtPlannar_->getModel().Axis2Frame(feedback_axis, feedback_frame);
+
+	// Set the target KUKA ABC pose to the current KUKA ABC pose
+	lineEdit_KUKA_A->setText(QString::number(feedback_frame.A));
+	lineEdit_KUKA_B->setText(QString::number(feedback_frame.B));
+	lineEdit_KUKA_C->setText(QString::number(feedback_frame.C));
+
+	// Derive the NDI position of the needle point indicator
+	if (!getSystemTransformData()) {
+		ROS_ERROR("Cannot get tool position data");
+		dtGetDataTimer_->start(NDI_TIME_INTERVAL);
+		pushButton_CalibrateNeedleDirection->setEnabled(true);
+		return;
+	}
+	lineEdit_NDI_X->setText(QString::number(pdtCommandHandling_->pdtHandleInformation_[nNeedle].dtXfrms.dtTranslation.fTx / 1000.0));
+	lineEdit_NDI_Y->setText(QString::number(pdtCommandHandling_->pdtHandleInformation_[nNeedle].dtXfrms.dtTranslation.fTx / 1000.0));
+	lineEdit_NDI_Z->setText(QString::number(pdtCommandHandling_->pdtHandleInformation_[nNeedle].dtXfrms.dtTranslation.fTx / 1000.0));
+
+	// Let KUKA move to the position that the needle point indicator pointed
+	ndiFeedbackMove();
+
+	dtGetDataTimer_->start(NDI_TIME_INTERVAL);
+	pushButton_CalibrateNeedleDirection->setEnabled(true);
+	ROS_INFO("Needle point is successfully moved to the specified position");
+}
+// This function should be called only when the positions that NDI and KUKA return represent the same point in the world coordinate
+void Interface::calculateNDIKUKATransform() {
+
+	dtGetDataTimer_->stop();
+	pushButton_CalculateNDIKUKATransform->setEnabled(false);
+
+	int nMarker = ASCIIToHex(
+			(char*) (comboBox_Handle->currentText().toStdString().c_str()), 2);
+
+	if(pdtCommandHandling_->pdtHandleInformation_[nMarker].dtXfrms.ulFlags != TRANSFORM_VALID) {
+		ROS_ERROR("NDI tracking invalid");
+		dtGetDataTimer_->start(NDI_TIME_INTERVAL);
+		pushButton_CalculateNDIKUKATransform->setEnabled(true);
+		return;
+	}
+	if (output_x->toPlainText().isEmpty() || output_y->toPlainText().isEmpty()
+			|| output_z->toPlainText().isEmpty()
+			|| output_a->toPlainText().isEmpty()
+			|| output_b->toPlainText().isEmpty()
+			|| output_c->toPlainText().isEmpty()) {
+		ROS_ERROR("KUKA feedback value is empty");
+		dtGetDataTimer_->start(NDI_TIME_INTERVAL);
+		pushButton_CalculateNDIKUKATransform->setEnabled(true);
+		return;
+	}
+
+	Axis feedback_axis;
+	Frame feedback_frame;
+
+	geometry_msgs::Pose current_pose, target_pose;
+	std::vector<double> euler_angle(3);
+
+	KDL::Rotation dtRotation;
+
+	std::vector<Eigen::RowVector3d> vecdtNDIPosition(75);
+	std::vector<Eigen::Vector3d> vecdtKUKAPosition(75);
+
+	// Obtain current state of KUKA robot
+	feedback_axis = dtController_.getFeedbackAxis();
+	dtLastAxis_.set(feedback_axis);
+	pdtPlannar_->getModel().Axis2Frame(feedback_axis, feedback_frame);
+
+	euler_angle[0] = feedback_frame.A / 180.0 * M_PI;
+	euler_angle[1] = feedback_frame.B / 180.0 * M_PI;
+	euler_angle[2] = feedback_frame.C / 180.0 * M_PI;
+
+	dtRotation = KDL::Rotation::RPY(euler_angle[2], euler_angle[1],
+			euler_angle[0]);
+	dtRotation.GetQuaternion(current_pose.orientation.x,
+			current_pose.orientation.y, current_pose.orientation.z,
+			current_pose.orientation.w);
+
+	current_pose.position.x = feedback_frame.X / 1000.0;
+	current_pose.position.y = feedback_frame.Y / 1000.0;
+	current_pose.position.z = feedback_frame.Z / 1000.0;
+
+	target_pose.orientation.x = current_pose.orientation.x;
+	target_pose.orientation.y = current_pose.orientation.y;
+	target_pose.orientation.z = current_pose.orientation.z;
+	target_pose.orientation.w = current_pose.orientation.w;
+
+	double incrDistance = 0.1;
+	int posCount = 0;
+	// We iterate KUKA positions to obtain corresponding NDI positions
+	for(int incrX = -2; incrX <= 2; incrX++) {
+		for(int incrY = -2; incrY <= 2; incrY++) {
+			for(int incrZ = -1; incrZ <= 1; incrZ++) {
+				target_pose.position.x = current_pose.position.x + incrX * incrDistance;
+				target_pose.position.y = current_pose.position.y + incrY * incrDistance;
+				target_pose.position.z = current_pose.position.z + incrZ * incrDistance;
+
+				bool Replan_flag = false;
+				do {
+					Replan_flag = false;
+					if (!dtController_.planTargetMotion(target_pose)) {
+						ROS_ERROR("Motion plan failed");
+						Replan_flag = true;
+						break;
+					}
+					dtSubWindowMotionPlanDecision_.exec();
+					if (dtSubWindowMotionPlanDecision_.nReturnValue_ == MOTION_PLAN_EXECUTE) {
+						emit executeMotionPlan_signal();
+
+					} else if (dtSubWindowMotionPlanDecision_.nReturnValue_
+							== MOTION_PLAN_REPLAN) {
+						Replan_flag = true;
+					} else {
+						pushButton_CalculateNDIKUKATransform->setEnabled(true);
+						dtGetDataTimer_->start(NDI_TIME_INTERVAL);
+						return;
+					}
+				} while (Replan_flag);
+
+				// If motion plan failed, continue with next target pose for KUKA
+				if(Replan_flag) {
+					continue;
+				}
+
+				dtSubWindowWaitForExecution_.exec();
+
+				feedback_axis = dtController_.getFeedbackAxis();
+				dtLastAxis_.set(feedback_axis);
+				pdtPlannar_->getModel().Axis2Frame(feedback_axis, feedback_frame);
+				vecdtKUKAPosition[posCount][0] = feedback_frame.X / 1000.0;
+				vecdtKUKAPosition[posCount][1] = feedback_frame.Y / 1000.0;
+				vecdtKUKAPosition[posCount][2] = feedback_frame.Z / 1000.0;
+
+				if (!getSystemTransformData()) {
+					ROS_ERROR("Cannot get tool position data");
+					continue;
+				}
+				vecdtNDIPosition[posCount][0] = lineEdit_Tx->text().toDouble();
+				vecdtNDIPosition[posCount][1] = lineEdit_Ty->text().toDouble();
+				vecdtNDIPosition[posCount][2] = lineEdit_Tz->text().toDouble();
+
+				posCount++;
+			}
+		}
+	}
+
+	Eigen::Vector3d dtKUKAAveragePosition(0,0,0);
+	Eigen::RowVector3d dtNDIAveragePosition(0,0,0);
+
+	for(int i = 0; i < posCount; i++) {
+		dtKUKAAveragePosition += vecdtKUKAPosition[i];
+		dtNDIAveragePosition += vecdtNDIPosition[i];
+	}
+	dtKUKAAveragePosition /= posCount;
+	dtNDIAveragePosition /= posCount;
+
+	Eigen::Matrix3d dtCovarianceMatrix = Eigen::Matrix3d::Zero();
+	for(int i = 0; i < posCount; i++) {
+		dtCovarianceMatrix += (vecdtKUKAPosition[i] - dtKUKAAveragePosition) * (vecdtNDIPosition[i] - dtNDIAveragePosition);
+	}
+	dtCovarianceMatrix /= posCount;
+
+	// Singular Value Decomposition A = U * S * V
+	Eigen::JacobiSVD<Eigen::Matrix3d> dtSVD(dtCovarianceMatrix, Eigen::ComputeThinU | Eigen::ComputeThinV);
+	Eigen::Matrix3d dtU = dtSVD.matrixU();
+	Eigen::Matrix3d dtV = dtSVD.matrixV();
+	Eigen::Vector3d dtSingularValues = dtSVD.singularValues();
+
+	Eigen::Matrix3d dtS;
+	if(dtCovarianceMatrix.determinant() > 0) {
+		dtS = Eigen::Matrix3d::Identity();
+	} else if(dtCovarianceMatrix.determinant() < 0){
+		dtS = Eigen::Matrix3d::Identity();
+		dtS.data()[8] = -1.0;
+	} else {
+		//Which means the rank is m-1
+		if(dtU.determinant() * dtV.determinant() == 1) {
+			dtS = Eigen::Matrix3d::Identity();
+		} else {
+			dtS = Eigen::Matrix3d::Identity();
+			dtS.data()[8] = -1.0;
+		}
+	}
+
+	// Derive rotation and translation result
+	Eigen::Matrix3d dtRotationMatrix = dtU * dtS * dtV;
+	Eigen::Vector3d dtTranslation = dtKUKAAveragePosition - dtRotationMatrix * dtNDIAveragePosition.transpose();
+
+	for(int i = 0; i < 9; i++) {
+		dtNDIKUKARotationMatrix_.data[i] = dtRotationMatrix.data()[i];
+	}
+	for(int i = 0; i < 3; i++) {
+		dtNDIKUKATranslationVector_.data[i] = dtTranslation.data()[i];
+	}
+
+	ROS_INFO(
+			"NDI and KUKA frame rotation matrix: \n%f, %f, %f \n%f, %f, %f \n%f, %f, %f\n",
+			dtNDIKUKARotationMatrix_.data[0], dtNDIKUKARotationMatrix_.data[1],
+			dtNDIKUKARotationMatrix_.data[2], dtNDIKUKARotationMatrix_.data[3],
+			dtNDIKUKARotationMatrix_.data[4], dtNDIKUKARotationMatrix_.data[5],
+			dtNDIKUKARotationMatrix_.data[6], dtNDIKUKARotationMatrix_.data[7],
+			dtNDIKUKARotationMatrix_.data[8]);
+
+	ROS_INFO("NDI and KUKA frame translation vector: \n%f, %f, %f\n", dtNDIKUKATranslationVector_.data[0],
+			dtNDIKUKATranslationVector_.data[1], dtNDIKUKATranslationVector_.data[2]);
+
+	pushButton_CalculateNDIKUKATransform->setEnabled(true);
+	dtGetDataTimer_->start(NDI_TIME_INTERVAL);
+	ROS_INFO("Calculate NDI & KUKA Transform succeed");
+}
+void Interface::calibrateNeedlePoint() {
+
+	dtGetDataTimer_->stop();
+	// After this command, we already got all the information that we need to use for calibrating
+	// the tranform matrix between Marker frame and needle point frame
+	if (!getSystemTransformData()) {
+		ROS_ERROR("Cannot get tool position data");
+		dtGetDataTimer_->start(NDI_TIME_INTERVAL);
+		return;
+	}
+
+	int nMarker = ASCIIToHex(
+			(char*) (comboBox_Handle->currentText().toStdString().c_str()), 2);
+	int nNeedle = ASCIIToHex(
+			(char*) (comboBox_NeedlePointIndicator->currentText().toStdString().c_str()), 2);
+
+	if(pdtCommandHandling_->pdtHandleInformation_[nMarker].dtXfrms.ulFlags != TRANSFORM_VALID ||
+			pdtCommandHandling_->pdtHandleInformation_[nNeedle].dtXfrms.ulFlags != TRANSFORM_VALID) {
+		ROS_ERROR("NDI tracking invalid");
+		dtGetDataTimer_->start(NDI_TIME_INTERVAL);
+		return;
+	}
+
+	QuatTransformation dtRefQuatXfrm, dtRefQuatXfrmInv, dtPortQuatXfrm;
+
+	dtRefQuatXfrm.dtRotation =
+			pdtCommandHandling_->pdtHandleInformation_[nMarker].dtXfrms.dtRotation;
+	dtRefQuatXfrm.dtTranslation =
+			pdtCommandHandling_->pdtHandleInformation_[nNeedle].dtXfrms.dtTranslation;
+	QuatInverseXfrm(&dtRefQuatXfrm, &dtRefQuatXfrmInv);
+
+	dtPortQuatXfrm.dtRotation =
+			pdtCommandHandling_->pdtHandleInformation_[nMarker].dtXfrms.dtRotation;
+	dtPortQuatXfrm.dtTranslation =
+			pdtCommandHandling_->pdtHandleInformation_[nMarker].dtXfrms.dtTranslation;
+	QuatCombineXfrms(&dtPortQuatXfrm, &dtRefQuatXfrmInv,
+			&dtMarkerNeedleTransform_);
+
+	ROS_INFO("Marker Needle Translation: X %f, Y %f, Z %f", dtMarkerNeedleTransform_.dtTranslation.fTx,
+			dtMarkerNeedleTransform_.dtTranslation.fTy, dtMarkerNeedleTransform_.dtTranslation.fTz);
+
+	dtGetDataTimer_->start(NDI_TIME_INTERVAL);
+	pushButton_CalibrateNeedleDirection->setEnabled(true);
+	checkBox_UseMarkerNeedleTransform->setEnabled(true);
+	ROS_INFO("Calibrate Needle Point succeed");
+
+}
+void Interface::ndiFeedbackMove() {
 	// TODO: After calibration, we need to change URDF file to save these settings
 	if (lineEdit_NDI_X->text().isEmpty() || lineEdit_NDI_Y->text().isEmpty()
 			|| lineEdit_NDI_Z->text().isEmpty()
@@ -260,13 +577,20 @@ void Interface::calibrateNeedle() {
 		return;
 	}
 
-	if (lineEdit_Tx->text().isEmpty() || lineEdit_Ty->text().isEmpty()
-			|| lineEdit_Tz->text().isEmpty()) {
-		ROS_ERROR("NDI tool position is missing");
+	int nMarker = ASCIIToHex(
+			(char*) (comboBox_Handle->currentText().toStdString().c_str()), 2);
+	int nNeedle = ASCIIToHex(
+			(char*) (comboBox_NeedlePointIndicator->currentText().toStdString().c_str()), 2);
+	if(!bUseMarkerNeedleTransform_ && pdtCommandHandling_->pdtHandleInformation_[nMarker].dtXfrms.ulFlags != TRANSFORM_VALID) {
+		ROS_ERROR("NDI tracking invalid");
+		return;
+	} else if(bUseMarkerNeedleTransform_ && (pdtCommandHandling_->pdtHandleInformation_[nMarker].dtXfrms.ulFlags != TRANSFORM_VALID ||
+			pdtCommandHandling_->pdtHandleInformation_[nNeedle].dtXfrms.ulFlags != TRANSFORM_VALID)) {
+		ROS_ERROR("NDI tracking invalid");
 		return;
 	}
 
-	pushButton_NeedleCalibration->setEnabled(false);
+	pushButton_NDIFeedbackMove->setEnabled(false);
 	dtGetDataTimer_->stop();
 
 	Axis feedback_axis;
@@ -314,25 +638,25 @@ void Interface::calibrateNeedle() {
 		Replan_flag = false;
 		if (!dtController_.planTargetMotion(target_pose)) {
 			ROS_ERROR("Motion plan failed");
-			pushButton_NeedleCalibration->setEnabled(true);
-			dtGetDataTimer_->start(1000);
+			pushButton_NDIFeedbackMove->setEnabled(true);
+			dtGetDataTimer_->start(NDI_TIME_INTERVAL);
 			return;
 		}
 		dtSubWindowMotionPlanDecision_.exec();
-//TODO: how to notify this function that the robot motion has completed
 		if (dtSubWindowMotionPlanDecision_.nReturnValue_ == MOTION_PLAN_EXECUTE) {
-			dtController_.executeMotionPlan();
+			emit executeMotionPlan_signal();
 
 		} else if (dtSubWindowMotionPlanDecision_.nReturnValue_
 				== MOTION_PLAN_REPLAN) {
 			Replan_flag = true;
 		} else {
-			pushButton_NeedleCalibration->setEnabled(true);
-			dtGetDataTimer_->start(1000);
+			pushButton_NDIFeedbackMove->setEnabled(true);
+			dtGetDataTimer_->start(NDI_TIME_INTERVAL);
 			return;
 		}
 	} while (Replan_flag);
 
+	dtSubWindowWaitForExecution_.exec();
 // Then move KUKA to specified XYZ reference point in NDI frame
 	feedback_axis = dtController_.getFeedbackAxis();
 	dtLastAxis_.set(feedback_axis);
@@ -349,8 +673,8 @@ void Interface::calibrateNeedle() {
 
 	if (!getSystemTransformData()) {
 		ROS_ERROR("Cannot get tool position data");
-		pushButton_NeedleCalibration->setEnabled(true);
-		dtGetDataTimer_->start(1000);
+		pushButton_NDIFeedbackMove->setEnabled(true);
+		dtGetDataTimer_->start(NDI_TIME_INTERVAL);
 		return;
 	}
 	NDI_delta_position.data[0] = NDI_reference_point[0]
@@ -362,10 +686,10 @@ void Interface::calibrateNeedle() {
 	KUKA_delta_position = Inverse_rotation_matrix * NDI_delta_position;
 
 	while (sqrt(
-			KUKA_delta_position.data[0] * KUKA_delta_position.data[0]
-					+ KUKA_delta_position.data[1] * KUKA_delta_position.data[1]
-					+ KUKA_delta_position.data[2] * KUKA_delta_position.data[2])
-			> 0.0003) {
+			NDI_delta_position.data[0] * NDI_delta_position.data[0]
+					+ NDI_delta_position.data[1] * NDI_delta_position.data[1]
+					+ NDI_delta_position.data[2] * NDI_delta_position.data[2])
+			> 0.0001) {
 
 		feedback_axis = dtController_.getFeedbackAxis();
 		dtLastAxis_.set(feedback_axis);
@@ -381,29 +705,31 @@ void Interface::calibrateNeedle() {
 			Replan_flag = false;
 			if (!dtController_.planTargetMotion(target_pose)) {
 				ROS_ERROR("Motion plan failed");
-				pushButton_NeedleCalibration->setEnabled(true);
-				dtGetDataTimer_->start(1000);
+				pushButton_NDIFeedbackMove->setEnabled(true);
+				dtGetDataTimer_->start(NDI_TIME_INTERVAL);
 				return;
 			}
 			dtSubWindowMotionPlanDecision_.exec();
 
 			if (dtSubWindowMotionPlanDecision_.nReturnValue_
 					== MOTION_PLAN_EXECUTE) {
-				dtController_.executeMotionPlan();
+				emit executeMotionPlan_signal();
 			} else if (dtSubWindowMotionPlanDecision_.nReturnValue_
 					== MOTION_PLAN_REPLAN) {
 				Replan_flag = true;
 			} else {
-				pushButton_NeedleCalibration->setEnabled(true);
-				dtGetDataTimer_->start(1000);
+				pushButton_NDIFeedbackMove->setEnabled(true);
+				dtGetDataTimer_->start(NDI_TIME_INTERVAL);
 				return;
 			}
 		} while (Replan_flag);
 
+		dtSubWindowWaitForExecution_.exec();
+
 		if (!getSystemTransformData()) {
 			ROS_ERROR("Cannot get tool position data");
-			pushButton_NeedleCalibration->setEnabled(true);
-			dtGetDataTimer_->start(1000);
+			pushButton_NDIFeedbackMove->setEnabled(true);
+			dtGetDataTimer_->start(NDI_TIME_INTERVAL);
 			return;
 		}
 
@@ -416,8 +742,9 @@ void Interface::calibrateNeedle() {
 		KUKA_delta_position = Inverse_rotation_matrix * NDI_delta_position;
 	}
 
-	pushButton_NeedleCalibration->setEnabled(true);
-	dtGetDataTimer_->start(1000);
+	dtGetDataTimer_->start(NDI_TIME_INTERVAL);
+	pushButton_NDIFeedbackMove->setEnabled(true);
+	ROS_INFO("NDI Feedback Move succeed");
 }
 //Calculate robotation matrix between NDI frame and KUKA frame
 void Interface::calculateRotationMatrix() {
@@ -432,14 +759,21 @@ void Interface::calculateRotationMatrix() {
 		ROS_ERROR("value of the delta pos is empty");
 		return;
 	}
-	if (lineEdit_Tx->text().isEmpty() || lineEdit_Ty->text().isEmpty()
-			|| lineEdit_Tz->text().isEmpty()) {
-		ROS_ERROR("NDI tool position is missing");
+
+	int nMarker = ASCIIToHex(
+			(char*) (comboBox_Handle->currentText().toStdString().c_str()), 2);
+	int nNeedle = ASCIIToHex(
+			(char*) (comboBox_NeedlePointIndicator->currentText().toStdString().c_str()), 2);
+	if(!bUseMarkerNeedleTransform_ && pdtCommandHandling_->pdtHandleInformation_[nMarker].dtXfrms.ulFlags != TRANSFORM_VALID) {
+		ROS_ERROR("NDI tracking invalid");
+		return;
+	} else if(bUseMarkerNeedleTransform_ && (pdtCommandHandling_->pdtHandleInformation_[nMarker].dtXfrms.ulFlags != TRANSFORM_VALID ||
+			pdtCommandHandling_->pdtHandleInformation_[nNeedle].dtXfrms.ulFlags != TRANSFORM_VALID)) {
+		ROS_ERROR("NDI tracking invalid");
 		return;
 	}
 
 	pushButton_CalculateRotationMatrix->setEnabled(false);
-
 	dtGetDataTimer_->stop();
 
 	Axis feedback_axis;
@@ -472,7 +806,7 @@ void Interface::calculateRotationMatrix() {
 	if (!getSystemTransformData()) {
 		ROS_ERROR("Cannot get tool position data");
 		pushButton_CalculateRotationMatrix->setEnabled(true);
-		dtGetDataTimer_->start(1000);
+		dtGetDataTimer_->start(NDI_TIME_INTERVAL);
 		return;
 	}
 	NDI_position_x[0] = lineEdit_Tx->text().toDouble() / 1000.0;
@@ -491,27 +825,29 @@ void Interface::calculateRotationMatrix() {
 		if (!dtController_.planTargetMotion(target_pose)) {
 			ROS_ERROR("Motion plan failed");
 			pushButton_CalculateRotationMatrix->setEnabled(true);
-			dtGetDataTimer_->start(1000);
+			dtGetDataTimer_->start(NDI_TIME_INTERVAL);
 			return;
 		}
 		dtSubWindowMotionPlanDecision_.exec();
 		ROS_ERROR("debug");
 		if (dtSubWindowMotionPlanDecision_.nReturnValue_ == MOTION_PLAN_EXECUTE) {
-			dtController_.executeMotionPlan();
+			emit executeMotionPlan_signal();
 		} else if (dtSubWindowMotionPlanDecision_.nReturnValue_
 				== MOTION_PLAN_REPLAN) {
 			Replan_flag = true;
 		} else {
 			pushButton_CalculateRotationMatrix->setEnabled(true);
-			dtGetDataTimer_->start(1000);
+			dtGetDataTimer_->start(NDI_TIME_INTERVAL);
 			return;
 		}
 	} while (Replan_flag);
 
+	dtSubWindowWaitForExecution_.exec();
+
 	if (!getSystemTransformData()) {
 		ROS_ERROR("Cannot get tool position data");
 		pushButton_CalculateRotationMatrix->setEnabled(true);
-		dtGetDataTimer_->start(1000);
+		dtGetDataTimer_->start(NDI_TIME_INTERVAL);
 		return;
 	}
 	NDI_position_x[1] = lineEdit_Tx->text().toDouble() / 1000.0;
@@ -529,27 +865,28 @@ void Interface::calculateRotationMatrix() {
 		if (!dtController_.planTargetMotion(target_pose)) {
 			ROS_ERROR("Motion plan failed");
 			pushButton_CalculateRotationMatrix->setEnabled(true);
-			dtGetDataTimer_->start(1000);
+			dtGetDataTimer_->start(NDI_TIME_INTERVAL);
 			return;
 		}
 		dtSubWindowMotionPlanDecision_.exec();
-
 		if (dtSubWindowMotionPlanDecision_.nReturnValue_ == MOTION_PLAN_EXECUTE) {
-			dtController_.executeMotionPlan();
+			emit executeMotionPlan_signal();
 		} else if (dtSubWindowMotionPlanDecision_.nReturnValue_
 				== MOTION_PLAN_REPLAN) {
 			Replan_flag = true;
 		} else {
 			pushButton_CalculateRotationMatrix->setEnabled(true);
-			dtGetDataTimer_->start(1000);
+			dtGetDataTimer_->start(NDI_TIME_INTERVAL);
 			return;
 		}
 	} while (Replan_flag);
 
-	if (!getSystemTransformData()) {
+	dtSubWindowWaitForExecution_.exec();
+
+	 if (!getSystemTransformData()) {
 		ROS_ERROR("Cannot get tool position data");
 		pushButton_CalculateRotationMatrix->setEnabled(true);
-		dtGetDataTimer_->start(1000);
+		dtGetDataTimer_->start(NDI_TIME_INTERVAL);
 		return;
 	}
 	NDI_position_x[2] = lineEdit_Tx->text().toDouble() / 1000.0;
@@ -567,27 +904,29 @@ void Interface::calculateRotationMatrix() {
 		if (!dtController_.planTargetMotion(target_pose)) {
 			ROS_ERROR("Motion plan failed");
 			pushButton_CalculateRotationMatrix->setEnabled(true);
-			dtGetDataTimer_->start(1000);
+			dtGetDataTimer_->start(NDI_TIME_INTERVAL);
 			return;
 		}
 		dtSubWindowMotionPlanDecision_.exec();
 
 		if (dtSubWindowMotionPlanDecision_.nReturnValue_ == MOTION_PLAN_EXECUTE) {
-			dtController_.executeMotionPlan();
+			emit executeMotionPlan_signal();
 		} else if (dtSubWindowMotionPlanDecision_.nReturnValue_
 				== MOTION_PLAN_REPLAN) {
 			Replan_flag = true;
 		} else {
 			pushButton_CalculateRotationMatrix->setEnabled(true);
-			dtGetDataTimer_->start(1000);
+			dtGetDataTimer_->start(NDI_TIME_INTERVAL);
 			return;
 		}
 	} while (Replan_flag);
 
+	dtSubWindowWaitForExecution_.exec();
+
 	if (!getSystemTransformData()) {
 		ROS_ERROR("Cannot get tool position data");
 		pushButton_CalculateRotationMatrix->setEnabled(true);
-		dtGetDataTimer_->start(1000);
+		dtGetDataTimer_->start(NDI_TIME_INTERVAL);
 		return;
 	}
 	NDI_position_x[3] = lineEdit_Tx->text().toDouble() / 1000.0;
@@ -626,9 +965,28 @@ void Interface::calculateRotationMatrix() {
 			dtNDIKUKARotationMatrix_.data[6], dtNDIKUKARotationMatrix_.data[7],
 			dtNDIKUKARotationMatrix_.data[8]);
 
-	dtGetDataTimer_->start(1000);
+	dtGetDataTimer_->start(NDI_TIME_INTERVAL);
+	pushButton_NDIFeedbackMove->setEnabled(true);
+	pushButton_CalibrateNeedlePoint->setEnabled(true);
+	ROS_INFO("Calculate Rotation Matrix succeed");
 }
-//call back function for GUI push button
+
+void Interface::closeDialogWindow() {
+	dtSubWindowWaitForExecution_.close();
+}
+
+void Interface::useMarkerNeedleTransformChanged() {
+	bUseMarkerNeedleTransform_ = checkBox_UseMarkerNeedleTransform->isChecked();
+
+	// Display warning message on the interface
+	if(bUseMarkerNeedleTransform_) {
+		label_MarkerNeedleWarning->setHidden(false);
+	} else {
+		label_MarkerNeedleWarning->setHidden(true);
+	}
+	ROS_INFO("Use Marker Needle Transform checkbox is clicked");
+}
+
 /*****************************************************************
  Name:				OnTrackingBut
 
@@ -866,6 +1224,7 @@ int Interface::activatePorts() {
 		comboBox_Reference->clear();
 
 		comboBox_Handle->clear();
+		comboBox_NeedlePointIndicator->clear();
 		lineEdit_Tx->clear();
 		lineEdit_Ty->clear();
 		lineEdit_Tz->clear();
@@ -899,11 +1258,13 @@ int Interface::activatePorts() {
 				comboBox_Port->addItem(QString(pszPortID));
 				comboBox_Reference->addItem(QString(pszPortID));
 				comboBox_Handle->addItem(QString(pszPortID));
+				comboBox_NeedlePointIndicator->addItem(QString(pszPortID));
 			} /* if */
 		} /* for */
 		comboBox_Port->setEnabled(true);
 		comboBox_Reference->setEnabled(true);
 		comboBox_Handle->setEnabled(true);
+		comboBox_NeedlePointIndicator->setEnabled(true);
 		// set to no reference tool
 		comboBox_Reference->setCurrentIndex(0);
 		setMode( MODE_ACTIVATED);
@@ -1010,12 +1371,15 @@ long Interface::getSystemTransformData() {
 	int nRow = -1;
 
 	Rotation dtEulerRot;
+	QuatTransformation dtNeedleTransform, dtMarkerTransform;
+
 
 	if (!bIsTracking_)
 		return 0;
 
 	bUse0x0800Option_ = checkBox_0x0800->isChecked();
 	nTrackingMode_ = radioButton_TXMode->isChecked() ? 0 : 1;
+
 	/*
 	 * if tracking mode is 0, we are asking for TX data, else we are
 	 * asking for BX data.
@@ -1076,26 +1440,36 @@ long Interface::getSystemTransformData() {
 
 		if (pdtCommandHandling_->pdtHandleInformation_[i].dtXfrms.ulFlags
 				== TRANSFORM_VALID) {
+
+			if(bUseMarkerNeedleTransform_) {
+				dtMarkerTransform.dtRotation = pdtCommandHandling_->pdtHandleInformation_[i].dtXfrms.dtRotation;
+				dtMarkerTransform.dtTranslation = pdtCommandHandling_->pdtHandleInformation_[i].dtXfrms.dtTranslation;
+				QuatCombineXfrms(&dtMarkerNeedleTransform_, &dtMarkerTransform, &dtNeedleTransform);
+			} else {
+				dtNeedleTransform.dtRotation = pdtCommandHandling_->pdtHandleInformation_[i].dtXfrms.dtRotation;
+				dtNeedleTransform.dtTranslation = pdtCommandHandling_->pdtHandleInformation_[i].dtXfrms.dtTranslation;
+			}
+
 			sprintf(pszTemp, "%.2f",
-					pdtCommandHandling_->pdtHandleInformation_[i].dtXfrms.dtTranslation.fTx);
+					dtNeedleTransform.dtTranslation.fTx);
 			lineEdit_Tx->setText(QString(pszTemp));
 			sprintf(pszTemp, "%.2f",
-					pdtCommandHandling_->pdtHandleInformation_[i].dtXfrms.dtTranslation.fTy);
+					dtNeedleTransform.dtTranslation.fTy);
 			lineEdit_Ty->setText(QString(pszTemp));
 			sprintf(pszTemp, "%.2f",
-					pdtCommandHandling_->pdtHandleInformation_[i].dtXfrms.dtTranslation.fTz);
+					dtNeedleTransform.dtTranslation.fTz);
 			lineEdit_Tz->setText(QString(pszTemp));
 			sprintf(pszTemp, "%.4f",
-					pdtCommandHandling_->pdtHandleInformation_[i].dtXfrms.dtRotation.fQ0);
+					dtNeedleTransform.dtRotation.fQ0);
 			lineEdit_Qo->setText(QString(pszTemp));
 			sprintf(pszTemp, "%.4f",
-					pdtCommandHandling_->pdtHandleInformation_[i].dtXfrms.dtRotation.fQx);
+					dtNeedleTransform.dtRotation.fQx);
 			lineEdit_Qx->setText(QString(pszTemp));
 			sprintf(pszTemp, "%.4f",
-					pdtCommandHandling_->pdtHandleInformation_[i].dtXfrms.dtRotation.fQy);
+					dtNeedleTransform.dtRotation.fQy);
 			lineEdit_Qy->setText(QString(pszTemp));
 			sprintf(pszTemp, "%.4f",
-					pdtCommandHandling_->pdtHandleInformation_[i].dtXfrms.dtRotation.fQz);
+					dtNeedleTransform.dtRotation.fQz);
 			lineEdit_Qz->setText(QString(pszTemp));
 			sprintf(pszTemp, "%.4f",
 					pdtCommandHandling_->pdtHandleInformation_[i].dtXfrms.fError);
@@ -1574,7 +1948,7 @@ void Interface::setMode(int nMode) {
 		break;
 	} /* case */
 	case MODE_TRACKING: {
-		dtGetDataTimer_->start(1000);
+		dtGetDataTimer_->start(NDI_TIME_INTERVAL);
 		bTrackingMode = true;
 		break;
 	} /* case */
@@ -1590,6 +1964,8 @@ void Interface::setMode(int nMode) {
 		//replace the original List to comboBox and lineEdit
 		comboBox_Handle->clear();
 		comboBox_Handle->setEnabled(false);
+		comboBox_NeedlePointIndicator->clear();
+		comboBox_NeedlePointIndicator->setEnabled(false);
 		lineEdit_Tx->clear();
 		lineEdit_Ty->clear();
 		lineEdit_Tz->clear();
@@ -2114,8 +2490,8 @@ void Interface::visualizeMotionPlan(
 }
 
 void Interface::shutdown() {
-	QApplication::exit();
-	ros::shutdown();
+	//QApplication::exit();
+	//ros::shutdown();
 }
 
 // Callback function

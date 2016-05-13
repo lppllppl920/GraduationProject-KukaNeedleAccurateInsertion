@@ -40,6 +40,8 @@ qt4_wrap_ui(UISUB6Srcs src/gui/robotInterface_COMPortTimeOut.ui)
 qt4_wrap_cpp(UISUB6MOCSrcs src/gui/ui_robotInterface_COMPortTimeOut.h)
 qt4_wrap_ui(UISUB7Srcs src/gui/robotInterface_MotionPlanDecision.ui)
 qt4_wrap_cpp(UISUB7MOCSrcs src/gui/ui_robotInterface_MotionPlanDecision.h)
+qt4_wrap_ui(UISUB8Srcs src/gui/robotInterface_WaitForExecution.ui)
+qt4_wrap_cpp(UISUB8MOCSrcs src/gui/ui_robotInterface_WaitForExecution.h)
 
 qt4_wrap_cpp(THREADMOCSrcs src/common/tcpthread.h)
 qt4_wrap_cpp(PLANMOCSrcs src/common/plannar.h)
@@ -56,6 +58,7 @@ qt4_wrap_cpp(ILLUMINATORFIRINGRATEMOCSrcs src/ndi/IlluminatorFiringRate.h)
 qt4_wrap_cpp(ROMFILEMOCSrcs src/ndi/ROMFileDlg.h)
 qt4_wrap_cpp(COMPORTTIMEOUTMOCSrcs src/ndi/COMPortTimeOut.h)
 qt4_wrap_cpp(MOTIONPLANDECISIONMOCSrcs src/MotionPlanDecision.h)
+qt4_wrap_cpp(WAITFOREXECUTIONMOCSrcs src/common/WaitForExecution.h)
 
 set(eigen_DIRS /usr/include/eigen3)
 set(orocos_kdl_DIRS /opt/ros/indigo/include)
@@ -85,6 +88,7 @@ add_executable(
     src/common/message.cpp
     src/common/tcpthread.cpp
     src/common/ROSThread.cpp
+    src/common/WaitForExecution.cpp
     src/ndi/Comm32Port.cpp
     src/ndi/CommandHandling.cpp
     src/ndi/Conversions.cpp
@@ -112,6 +116,8 @@ add_executable(
     ${UISUB6MOCSrcs}
     ${UISUB7Srcs}
     ${UISUB7MOCSrcs}
+    ${UISUB8Srcs}
+    ${UISUB8MOCSrcs}
     ${THREADMOCSrcs}
     ${ROSTHREADMOCSrcs}
     ${KUKAFEEDBACKMOCSrcs}
@@ -127,6 +133,7 @@ add_executable(
     ${ROMFILEMOCSrcs}
     ${COMPORTTIMEOUTMOCSrcs}
     ${MOTIONPLANDECISIONMOCSrcs}
+    ${WAITFOREXECUTIONMOCSrcs}
     )
 target_link_libraries(KRC4_control_async ${QT_LIBRARIES} ${catkin_LIBRARIES} QtNetwork QtXml QtSerialPort orocos-kdl kdl_parser roscpp rosconsole roscpp_serialization rostime interactive_markers)
 
