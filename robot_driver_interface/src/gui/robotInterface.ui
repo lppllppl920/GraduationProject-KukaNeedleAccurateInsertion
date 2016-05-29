@@ -24,7 +24,7 @@
      </rect>
     </property>
     <property name="currentIndex">
-     <number>0</number>
+     <number>1</number>
     </property>
     <widget class="QWidget" name="tab">
      <attribute name="title">
@@ -65,32 +65,6 @@
          </property>
          <property name="textInteractionFlags">
           <set>Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
-         </property>
-        </widget>
-       </item>
-       <item row="0" column="0" colspan="2">
-        <widget class="QLabel" name="label_Feedback">
-         <property name="minimumSize">
-          <size>
-           <width>146</width>
-           <height>40</height>
-          </size>
-         </property>
-         <property name="maximumSize">
-          <size>
-           <width>146</width>
-           <height>40</height>
-          </size>
-         </property>
-         <property name="font">
-          <font>
-           <pointsize>14</pointsize>
-           <weight>75</weight>
-           <bold>true</bold>
-          </font>
-         </property>
-         <property name="text">
-          <string>Feedback</string>
          </property>
         </widget>
        </item>
@@ -194,25 +168,6 @@
          </property>
          <property name="textInteractionFlags">
           <set>Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
-         </property>
-        </widget>
-       </item>
-       <item row="0" column="3">
-        <widget class="QPushButton" name="pause_button">
-         <property name="minimumSize">
-          <size>
-           <width>80</width>
-           <height>27</height>
-          </size>
-         </property>
-         <property name="maximumSize">
-          <size>
-           <width>80</width>
-           <height>27</height>
-          </size>
-         </property>
-         <property name="text">
-          <string>Pause</string>
          </property>
         </widget>
        </item>
@@ -585,44 +540,6 @@
          </property>
         </widget>
        </item>
-       <item row="0" column="5">
-        <widget class="QPushButton" name="terminate_buf_button">
-         <property name="minimumSize">
-          <size>
-           <width>81</width>
-           <height>27</height>
-          </size>
-         </property>
-         <property name="maximumSize">
-          <size>
-           <width>81</width>
-           <height>27</height>
-          </size>
-         </property>
-         <property name="text">
-          <string>Term</string>
-         </property>
-        </widget>
-       </item>
-       <item row="0" column="2">
-        <widget class="QPushButton" name="copy_button">
-         <property name="minimumSize">
-          <size>
-           <width>81</width>
-           <height>27</height>
-          </size>
-         </property>
-         <property name="maximumSize">
-          <size>
-           <width>81</width>
-           <height>27</height>
-          </size>
-         </property>
-         <property name="text">
-          <string>Copy</string>
-         </property>
-        </widget>
-       </item>
        <item row="1" column="3">
         <widget class="QTextEdit" name="output_z">
          <property name="minimumSize">
@@ -698,25 +615,6 @@
          </property>
         </widget>
        </item>
-       <item row="0" column="4">
-        <widget class="QPushButton" name="stop_button">
-         <property name="minimumSize">
-          <size>
-           <width>81</width>
-           <height>27</height>
-          </size>
-         </property>
-         <property name="maximumSize">
-          <size>
-           <width>81</width>
-           <height>27</height>
-          </size>
-         </property>
-         <property name="text">
-          <string>Stop</string>
-         </property>
-        </widget>
-       </item>
        <item row="0" column="8">
         <widget class="QTextEdit" name="output_seq">
          <property name="maximumSize">
@@ -752,6 +650,108 @@
          </property>
         </widget>
        </item>
+       <item row="0" column="6">
+        <widget class="QPushButton" name="terminate_buf_button">
+         <property name="minimumSize">
+          <size>
+           <width>81</width>
+           <height>27</height>
+          </size>
+         </property>
+         <property name="maximumSize">
+          <size>
+           <width>81</width>
+           <height>27</height>
+          </size>
+         </property>
+         <property name="text">
+          <string>Term</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="5">
+        <widget class="QPushButton" name="stop_button">
+         <property name="minimumSize">
+          <size>
+           <width>81</width>
+           <height>27</height>
+          </size>
+         </property>
+         <property name="maximumSize">
+          <size>
+           <width>81</width>
+           <height>27</height>
+          </size>
+         </property>
+         <property name="text">
+          <string>Stop</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="4">
+        <widget class="QPushButton" name="pause_button">
+         <property name="minimumSize">
+          <size>
+           <width>80</width>
+           <height>27</height>
+          </size>
+         </property>
+         <property name="maximumSize">
+          <size>
+           <width>80</width>
+           <height>27</height>
+          </size>
+         </property>
+         <property name="text">
+          <string>Pause</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="3">
+        <widget class="QPushButton" name="copy_button">
+         <property name="minimumSize">
+          <size>
+           <width>81</width>
+           <height>27</height>
+          </size>
+         </property>
+         <property name="maximumSize">
+          <size>
+           <width>81</width>
+           <height>27</height>
+          </size>
+         </property>
+         <property name="text">
+          <string>Copy</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="0" colspan="3">
+        <widget class="QLabel" name="label_Feedback">
+         <property name="minimumSize">
+          <size>
+           <width>146</width>
+           <height>40</height>
+          </size>
+         </property>
+         <property name="maximumSize">
+          <size>
+           <width>250</width>
+           <height>40</height>
+          </size>
+         </property>
+         <property name="font">
+          <font>
+           <pointsize>14</pointsize>
+           <weight>75</weight>
+           <bold>true</bold>
+          </font>
+         </property>
+         <property name="text">
+          <string>Feedback (mm, deg)</string>
+         </property>
+        </widget>
+       </item>
       </layout>
      </widget>
      <widget class="QTabWidget" name="tabWidget_Robot">
@@ -760,11 +760,11 @@
         <x>20</x>
         <y>0</y>
         <width>791</width>
-        <height>371</height>
+        <height>361</height>
        </rect>
       </property>
       <property name="currentIndex">
-       <number>5</number>
+       <number>1</number>
       </property>
       <widget class="QWidget" name="tab_PathPlanning">
        <attribute name="title">
@@ -776,15 +776,21 @@
           <x>0</x>
           <y>10</y>
           <width>781</width>
-          <height>321</height>
+          <height>311</height>
          </rect>
         </property>
         <layout class="QGridLayout" name="gridLayout" rowstretch="0,0,0,0,0,0,0,0,0" columnstretch="0,0,0,0,0,0">
          <item row="7" column="3">
           <widget class="QPushButton" name="pushButton_ConvertPosetoJoint">
+           <property name="minimumSize">
+            <size>
+             <width>157</width>
+             <height>27</height>
+            </size>
+           </property>
            <property name="maximumSize">
             <size>
-             <width>217</width>
+             <width>157</width>
              <height>27</height>
             </size>
            </property>
@@ -795,9 +801,15 @@
          </item>
          <item row="6" column="4">
           <widget class="QLabel" name="label_incrRotateC">
+           <property name="minimumSize">
+            <size>
+             <width>87</width>
+             <height>27</height>
+            </size>
+           </property>
            <property name="maximumSize">
             <size>
-             <width>108</width>
+             <width>87</width>
              <height>27</height>
             </size>
            </property>
@@ -808,9 +820,15 @@
          </item>
          <item row="2" column="4">
           <widget class="QLabel" name="label_incrTransY">
+           <property name="minimumSize">
+            <size>
+             <width>87</width>
+             <height>27</height>
+            </size>
+           </property>
            <property name="maximumSize">
             <size>
-             <width>108</width>
+             <width>87</width>
              <height>27</height>
             </size>
            </property>
@@ -821,9 +839,15 @@
          </item>
          <item row="5" column="4">
           <widget class="QLabel" name="label_incrRotateB">
+           <property name="minimumSize">
+            <size>
+             <width>87</width>
+             <height>27</height>
+            </size>
+           </property>
            <property name="maximumSize">
             <size>
-             <width>108</width>
+             <width>87</width>
              <height>27</height>
             </size>
            </property>
@@ -834,9 +858,15 @@
          </item>
          <item row="3" column="4">
           <widget class="QLabel" name="label_incrTransZ">
+           <property name="minimumSize">
+            <size>
+             <width>87</width>
+             <height>27</height>
+            </size>
+           </property>
            <property name="maximumSize">
             <size>
-             <width>108</width>
+             <width>87</width>
              <height>27</height>
             </size>
            </property>
@@ -850,9 +880,15 @@
            <property name="enabled">
             <bool>false</bool>
            </property>
+           <property name="minimumSize">
+            <size>
+             <width>157</width>
+             <height>27</height>
+            </size>
+           </property>
            <property name="maximumSize">
             <size>
-             <width>217</width>
+             <width>157</width>
              <height>27</height>
             </size>
            </property>
@@ -863,9 +899,15 @@
          </item>
          <item row="1" column="3">
           <widget class="QLineEdit" name="lineEdit_TransX">
+           <property name="minimumSize">
+            <size>
+             <width>157</width>
+             <height>27</height>
+            </size>
+           </property>
            <property name="maximumSize">
             <size>
-             <width>159</width>
+             <width>157</width>
              <height>27</height>
             </size>
            </property>
@@ -873,9 +915,15 @@
          </item>
          <item row="2" column="3">
           <widget class="QLineEdit" name="lineEdit_TransY">
+           <property name="minimumSize">
+            <size>
+             <width>157</width>
+             <height>27</height>
+            </size>
+           </property>
            <property name="maximumSize">
             <size>
-             <width>159</width>
+             <width>157</width>
              <height>27</height>
             </size>
            </property>
@@ -883,9 +931,15 @@
          </item>
          <item row="4" column="1">
           <widget class="QLineEdit" name="lineEdit_Joint4">
+           <property name="minimumSize">
+            <size>
+             <width>156</width>
+             <height>27</height>
+            </size>
+           </property>
            <property name="maximumSize">
             <size>
-             <width>160</width>
+             <width>156</width>
              <height>27</height>
             </size>
            </property>
@@ -893,6 +947,12 @@
          </item>
          <item row="1" column="0">
           <widget class="QLabel" name="label_Joint1">
+           <property name="minimumSize">
+            <size>
+             <width>111</width>
+             <height>27</height>
+            </size>
+           </property>
            <property name="maximumSize">
             <size>
              <width>111</width>
@@ -906,9 +966,15 @@
          </item>
          <item row="5" column="3">
           <widget class="QLineEdit" name="lineEdit_RotateB">
+           <property name="minimumSize">
+            <size>
+             <width>157</width>
+             <height>27</height>
+            </size>
+           </property>
            <property name="maximumSize">
             <size>
-             <width>159</width>
+             <width>157</width>
              <height>27</height>
             </size>
            </property>
@@ -916,6 +982,12 @@
          </item>
          <item row="5" column="0">
           <widget class="QLabel" name="label_Joint5">
+           <property name="minimumSize">
+            <size>
+             <width>111</width>
+             <height>27</height>
+            </size>
+           </property>
            <property name="maximumSize">
             <size>
              <width>111</width>
@@ -929,9 +1001,15 @@
          </item>
          <item row="5" column="1">
           <widget class="QLineEdit" name="lineEdit_Joint5">
+           <property name="minimumSize">
+            <size>
+             <width>156</width>
+             <height>27</height>
+            </size>
+           </property>
            <property name="maximumSize">
             <size>
-             <width>160</width>
+             <width>156</width>
              <height>27</height>
             </size>
            </property>
@@ -939,6 +1017,12 @@
          </item>
          <item row="6" column="0">
           <widget class="QLabel" name="label_Joint6">
+           <property name="minimumSize">
+            <size>
+             <width>111</width>
+             <height>27</height>
+            </size>
+           </property>
            <property name="maximumSize">
             <size>
              <width>111</width>
@@ -952,9 +1036,15 @@
          </item>
          <item row="5" column="2">
           <widget class="QLabel" name="label_RotateB">
+           <property name="minimumSize">
+            <size>
+             <width>57</width>
+             <height>27</height>
+            </size>
+           </property>
            <property name="maximumSize">
             <size>
-             <width>108</width>
+             <width>57</width>
              <height>27</height>
             </size>
            </property>
@@ -965,6 +1055,12 @@
          </item>
          <item row="2" column="0">
           <widget class="QLabel" name="label_Joint2">
+           <property name="minimumSize">
+            <size>
+             <width>111</width>
+             <height>27</height>
+            </size>
+           </property>
            <property name="maximumSize">
             <size>
              <width>111</width>
@@ -978,9 +1074,15 @@
          </item>
          <item row="2" column="1">
           <widget class="QLineEdit" name="lineEdit_Joint2">
+           <property name="minimumSize">
+            <size>
+             <width>156</width>
+             <height>27</height>
+            </size>
+           </property>
            <property name="maximumSize">
             <size>
-             <width>160</width>
+             <width>156</width>
              <height>27</height>
             </size>
            </property>
@@ -988,9 +1090,15 @@
          </item>
          <item row="3" column="2">
           <widget class="QLabel" name="label_TransZ">
+           <property name="minimumSize">
+            <size>
+             <width>57</width>
+             <height>27</height>
+            </size>
+           </property>
            <property name="maximumSize">
             <size>
-             <width>108</width>
+             <width>57</width>
              <height>27</height>
             </size>
            </property>
@@ -1001,9 +1109,15 @@
          </item>
          <item row="1" column="1">
           <widget class="QLineEdit" name="lineEdit_Joint1">
+           <property name="minimumSize">
+            <size>
+             <width>156</width>
+             <height>27</height>
+            </size>
+           </property>
            <property name="maximumSize">
             <size>
-             <width>160</width>
+             <width>156</width>
              <height>27</height>
             </size>
            </property>
@@ -1011,9 +1125,15 @@
          </item>
          <item row="4" column="3">
           <widget class="QLineEdit" name="lineEdit_RotateA">
+           <property name="minimumSize">
+            <size>
+             <width>157</width>
+             <height>27</height>
+            </size>
+           </property>
            <property name="maximumSize">
             <size>
-             <width>159</width>
+             <width>157</width>
              <height>27</height>
             </size>
            </property>
@@ -1021,9 +1141,15 @@
          </item>
          <item row="6" column="2">
           <widget class="QLabel" name="label_RotateC">
+           <property name="minimumSize">
+            <size>
+             <width>57</width>
+             <height>27</height>
+            </size>
+           </property>
            <property name="maximumSize">
             <size>
-             <width>108</width>
+             <width>57</width>
              <height>27</height>
             </size>
            </property>
@@ -1034,6 +1160,12 @@
          </item>
          <item row="4" column="0">
           <widget class="QLabel" name="label_Joint4">
+           <property name="minimumSize">
+            <size>
+             <width>111</width>
+             <height>27</height>
+            </size>
+           </property>
            <property name="maximumSize">
             <size>
              <width>111</width>
@@ -1047,9 +1179,15 @@
          </item>
          <item row="4" column="2">
           <widget class="QLabel" name="label_RotateA">
+           <property name="minimumSize">
+            <size>
+             <width>57</width>
+             <height>27</height>
+            </size>
+           </property>
            <property name="maximumSize">
             <size>
-             <width>108</width>
+             <width>57</width>
              <height>27</height>
             </size>
            </property>
@@ -1060,6 +1198,12 @@
          </item>
          <item row="3" column="0">
           <widget class="QLabel" name="label_Joint3">
+           <property name="minimumSize">
+            <size>
+             <width>111</width>
+             <height>27</height>
+            </size>
+           </property>
            <property name="maximumSize">
             <size>
              <width>111</width>
@@ -1073,9 +1217,15 @@
          </item>
          <item row="6" column="3">
           <widget class="QLineEdit" name="lineEdit_RotateC">
+           <property name="minimumSize">
+            <size>
+             <width>157</width>
+             <height>27</height>
+            </size>
+           </property>
            <property name="maximumSize">
             <size>
-             <width>159</width>
+             <width>157</width>
              <height>27</height>
             </size>
            </property>
@@ -1083,9 +1233,15 @@
          </item>
          <item row="6" column="1">
           <widget class="QLineEdit" name="lineEdit_Joint6">
+           <property name="minimumSize">
+            <size>
+             <width>156</width>
+             <height>27</height>
+            </size>
+           </property>
            <property name="maximumSize">
             <size>
-             <width>160</width>
+             <width>156</width>
              <height>27</height>
             </size>
            </property>
@@ -1093,9 +1249,15 @@
          </item>
          <item row="3" column="3">
           <widget class="QLineEdit" name="lineEdit_TransZ">
+           <property name="minimumSize">
+            <size>
+             <width>157</width>
+             <height>27</height>
+            </size>
+           </property>
            <property name="maximumSize">
             <size>
-             <width>159</width>
+             <width>157</width>
              <height>27</height>
             </size>
            </property>
@@ -1103,9 +1265,15 @@
          </item>
          <item row="2" column="2">
           <widget class="QLabel" name="label_TransY">
+           <property name="minimumSize">
+            <size>
+             <width>57</width>
+             <height>27</height>
+            </size>
+           </property>
            <property name="maximumSize">
             <size>
-             <width>108</width>
+             <width>57</width>
              <height>27</height>
             </size>
            </property>
@@ -1116,9 +1284,15 @@
          </item>
          <item row="1" column="2">
           <widget class="QLabel" name="label_TransX">
+           <property name="minimumSize">
+            <size>
+             <width>57</width>
+             <height>27</height>
+            </size>
+           </property>
            <property name="maximumSize">
             <size>
-             <width>108</width>
+             <width>57</width>
              <height>27</height>
             </size>
            </property>
@@ -1129,9 +1303,15 @@
          </item>
          <item row="3" column="1">
           <widget class="QLineEdit" name="lineEdit_Joint3">
+           <property name="minimumSize">
+            <size>
+             <width>156</width>
+             <height>27</height>
+            </size>
+           </property>
            <property name="maximumSize">
             <size>
-             <width>160</width>
+             <width>156</width>
              <height>27</height>
             </size>
            </property>
@@ -1139,9 +1319,15 @@
          </item>
          <item row="0" column="1">
           <widget class="QPushButton" name="pushButton_VisualizeJointPlan">
+           <property name="minimumSize">
+            <size>
+             <width>156</width>
+             <height>27</height>
+            </size>
+           </property>
            <property name="maximumSize">
             <size>
-             <width>271</width>
+             <width>156</width>
              <height>27</height>
             </size>
            </property>
@@ -1152,9 +1338,15 @@
          </item>
          <item row="0" column="3">
           <widget class="QPushButton" name="pushButton_VisualizePosePlan">
+           <property name="minimumSize">
+            <size>
+             <width>157</width>
+             <height>27</height>
+            </size>
+           </property>
            <property name="maximumSize">
             <size>
-             <width>271</width>
+             <width>157</width>
              <height>27</height>
             </size>
            </property>
@@ -1168,9 +1360,15 @@
            <property name="enabled">
             <bool>false</bool>
            </property>
+           <property name="minimumSize">
+            <size>
+             <width>156</width>
+             <height>27</height>
+            </size>
+           </property>
            <property name="maximumSize">
             <size>
-             <width>217</width>
+             <width>156</width>
              <height>27</height>
             </size>
            </property>
@@ -1181,10 +1379,16 @@
          </item>
          <item row="0" column="0">
           <widget class="QLabel" name="label_Target">
+           <property name="minimumSize">
+            <size>
+             <width>136</width>
+             <height>27</height>
+            </size>
+           </property>
            <property name="maximumSize">
             <size>
-             <width>111</width>
-             <height>41</height>
+             <width>136</width>
+             <height>27</height>
             </size>
            </property>
            <property name="font">
@@ -1195,15 +1399,21 @@
             </font>
            </property>
            <property name="text">
-            <string>Target</string>
+            <string>Target (m, deg)</string>
            </property>
           </widget>
          </item>
          <item row="1" column="4">
           <widget class="QLabel" name="label_incrTransX">
+           <property name="minimumSize">
+            <size>
+             <width>87</width>
+             <height>27</height>
+            </size>
+           </property>
            <property name="maximumSize">
             <size>
-             <width>108</width>
+             <width>87</width>
              <height>27</height>
             </size>
            </property>
@@ -1214,9 +1424,15 @@
          </item>
          <item row="4" column="4">
           <widget class="QLabel" name="label_incrRotateA">
+           <property name="minimumSize">
+            <size>
+             <width>87</width>
+             <height>27</height>
+            </size>
+           </property>
            <property name="maximumSize">
             <size>
-             <width>108</width>
+             <width>87</width>
              <height>27</height>
             </size>
            </property>
@@ -1227,9 +1443,15 @@
          </item>
          <item row="1" column="5">
           <widget class="QLineEdit" name="lineEdit_incrTransX">
+           <property name="minimumSize">
+            <size>
+             <width>156</width>
+             <height>27</height>
+            </size>
+           </property>
            <property name="maximumSize">
             <size>
-             <width>159</width>
+             <width>156</width>
              <height>27</height>
             </size>
            </property>
@@ -1237,9 +1459,15 @@
          </item>
          <item row="2" column="5">
           <widget class="QLineEdit" name="lineEdit_incrTransY">
+           <property name="minimumSize">
+            <size>
+             <width>156</width>
+             <height>27</height>
+            </size>
+           </property>
            <property name="maximumSize">
             <size>
-             <width>159</width>
+             <width>156</width>
              <height>27</height>
             </size>
            </property>
@@ -1247,9 +1475,15 @@
          </item>
          <item row="3" column="5">
           <widget class="QLineEdit" name="lineEdit_incrTransZ">
+           <property name="minimumSize">
+            <size>
+             <width>156</width>
+             <height>27</height>
+            </size>
+           </property>
            <property name="maximumSize">
             <size>
-             <width>159</width>
+             <width>156</width>
              <height>27</height>
             </size>
            </property>
@@ -1257,9 +1491,15 @@
          </item>
          <item row="4" column="5">
           <widget class="QLineEdit" name="lineEdit_incrRotateA">
+           <property name="minimumSize">
+            <size>
+             <width>156</width>
+             <height>27</height>
+            </size>
+           </property>
            <property name="maximumSize">
             <size>
-             <width>159</width>
+             <width>156</width>
              <height>27</height>
             </size>
            </property>
@@ -1267,9 +1507,15 @@
          </item>
          <item row="5" column="5">
           <widget class="QLineEdit" name="lineEdit_incrRotateB">
+           <property name="minimumSize">
+            <size>
+             <width>156</width>
+             <height>27</height>
+            </size>
+           </property>
            <property name="maximumSize">
             <size>
-             <width>159</width>
+             <width>156</width>
              <height>27</height>
             </size>
            </property>
@@ -1277,9 +1523,15 @@
          </item>
          <item row="6" column="5">
           <widget class="QLineEdit" name="lineEdit_incrRotateC">
+           <property name="minimumSize">
+            <size>
+             <width>156</width>
+             <height>27</height>
+            </size>
+           </property>
            <property name="maximumSize">
             <size>
-             <width>159</width>
+             <width>156</width>
              <height>27</height>
             </size>
            </property>
@@ -1287,9 +1539,15 @@
          </item>
          <item row="0" column="5">
           <widget class="QPushButton" name="pushButton_VisualizeIncrPosePlan">
+           <property name="minimumSize">
+            <size>
+             <width>156</width>
+             <height>27</height>
+            </size>
+           </property>
            <property name="maximumSize">
             <size>
-             <width>271</width>
+             <width>156</width>
              <height>27</height>
             </size>
            </property>
@@ -1300,9 +1558,15 @@
          </item>
          <item row="7" column="1">
           <widget class="QPushButton" name="pushButton_AddWaypoint">
+           <property name="minimumSize">
+            <size>
+             <width>156</width>
+             <height>27</height>
+            </size>
+           </property>
            <property name="maximumSize">
             <size>
-             <width>217</width>
+             <width>156</width>
              <height>27</height>
             </size>
            </property>
@@ -1316,243 +1580,1295 @@
       </widget>
       <widget class="QWidget" name="tab_NDICalibration">
        <attribute name="title">
-        <string>NDI Calibration</string>
+        <string>Calibration</string>
        </attribute>
-       <widget class="QGroupBox" name="groupBox_NDIFeedbackMove">
+       <widget class="QTabWidget" name="tabWidget">
         <property name="geometry">
          <rect>
-          <x>10</x>
-          <y>170</y>
-          <width>491</width>
-          <height>141</height>
+          <x>0</x>
+          <y>0</y>
+          <width>781</width>
+          <height>321</height>
          </rect>
         </property>
-        <property name="title">
-         <string>NDI Feedback Move (XYZ for NDI frame, ABC for KUKA frame)</string>
+        <property name="currentIndex">
+         <number>0</number>
         </property>
-        <widget class="QWidget" name="gridLayoutWidget_4">
-         <property name="geometry">
-          <rect>
-           <x>10</x>
-           <y>30</y>
-           <width>471</width>
-           <height>108</height>
-          </rect>
-         </property>
-         <layout class="QGridLayout" name="gridLayout_4">
-          <item row="0" column="0">
-           <widget class="QLabel" name="label_X">
-            <property name="text">
-             <string>X</string>
-            </property>
-           </widget>
-          </item>
-          <item row="0" column="1">
-           <widget class="QLabel" name="label_Y">
-            <property name="text">
-             <string>Y</string>
-            </property>
-           </widget>
-          </item>
-          <item row="0" column="2">
-           <widget class="QLabel" name="label_Z">
-            <property name="text">
-             <string>Z</string>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="0">
-           <widget class="QLineEdit" name="lineEdit_NDI_X"/>
-          </item>
-          <item row="1" column="2">
-           <widget class="QLineEdit" name="lineEdit_NDI_Z"/>
-          </item>
-          <item row="1" column="1">
-           <widget class="QLineEdit" name="lineEdit_NDI_Y"/>
-          </item>
-          <item row="2" column="0">
-           <widget class="QLabel" name="label_A">
-            <property name="text">
-             <string>A</string>
-            </property>
-           </widget>
-          </item>
-          <item row="2" column="1">
-           <widget class="QLabel" name="label_B">
-            <property name="text">
-             <string>B</string>
-            </property>
-           </widget>
-          </item>
-          <item row="2" column="2">
-           <widget class="QLabel" name="label_C">
-            <property name="text">
-             <string>C</string>
-            </property>
-           </widget>
-          </item>
-          <item row="3" column="0">
-           <widget class="QLineEdit" name="lineEdit_KUKA_A"/>
-          </item>
-          <item row="3" column="1">
-           <widget class="QLineEdit" name="lineEdit_KUKA_B"/>
-          </item>
-          <item row="3" column="2">
-           <widget class="QLineEdit" name="lineEdit_KUKA_C"/>
-          </item>
-          <item row="3" column="3">
-           <widget class="QPushButton" name="pushButton_NDIFeedbackMove">
-            <property name="text">
-             <string>NDI Feedback Move</string>
-            </property>
-           </widget>
-          </item>
-         </layout>
+        <widget class="QWidget" name="tab_NDIKUKAFrameCalibration">
+         <attribute name="title">
+          <string>NDI KUKA Frame Calibration</string>
+         </attribute>
+         <widget class="QGroupBox" name="groupBox_CalculateNDIKUKARotationTransform">
+          <property name="geometry">
+           <rect>
+            <x>0</x>
+            <y>0</y>
+            <width>431</width>
+            <height>91</height>
+           </rect>
+          </property>
+          <property name="title">
+           <string>Calculate NDI KUKA Rotation Transform (m)</string>
+          </property>
+          <widget class="QWidget" name="gridLayoutWidget_5">
+           <property name="geometry">
+            <rect>
+             <x>10</x>
+             <y>30</y>
+             <width>421</width>
+             <height>61</height>
+            </rect>
+           </property>
+           <layout class="QGridLayout" name="gridLayout_5">
+            <item row="0" column="0">
+             <widget class="QLabel" name="label_dX">
+              <property name="minimumSize">
+               <size>
+                <width>82</width>
+                <height>26</height>
+               </size>
+              </property>
+              <property name="maximumSize">
+               <size>
+                <width>82</width>
+                <height>26</height>
+               </size>
+              </property>
+              <property name="text">
+               <string>dX</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="1">
+             <widget class="QLabel" name="label_dY">
+              <property name="minimumSize">
+               <size>
+                <width>83</width>
+                <height>26</height>
+               </size>
+              </property>
+              <property name="maximumSize">
+               <size>
+                <width>83</width>
+                <height>26</height>
+               </size>
+              </property>
+              <property name="text">
+               <string>dY</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="2">
+             <widget class="QLabel" name="label_dZ">
+              <property name="minimumSize">
+               <size>
+                <width>82</width>
+                <height>26</height>
+               </size>
+              </property>
+              <property name="maximumSize">
+               <size>
+                <width>82</width>
+                <height>26</height>
+               </size>
+              </property>
+              <property name="text">
+               <string>dZ</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="0">
+             <widget class="QLineEdit" name="lineEdit_dX">
+              <property name="minimumSize">
+               <size>
+                <width>82</width>
+                <height>27</height>
+               </size>
+              </property>
+              <property name="maximumSize">
+               <size>
+                <width>82</width>
+                <height>27</height>
+               </size>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="1">
+             <widget class="QLineEdit" name="lineEdit_dY">
+              <property name="minimumSize">
+               <size>
+                <width>83</width>
+                <height>27</height>
+               </size>
+              </property>
+              <property name="maximumSize">
+               <size>
+                <width>83</width>
+                <height>27</height>
+               </size>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="2">
+             <widget class="QLineEdit" name="lineEdit_dZ">
+              <property name="minimumSize">
+               <size>
+                <width>82</width>
+                <height>27</height>
+               </size>
+              </property>
+              <property name="maximumSize">
+               <size>
+                <width>82</width>
+                <height>27</height>
+               </size>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="3">
+             <widget class="QPushButton" name="pushButton_CalculateNDIKUKARotation">
+              <property name="minimumSize">
+               <size>
+                <width>114</width>
+                <height>27</height>
+               </size>
+              </property>
+              <property name="maximumSize">
+               <size>
+                <width>154</width>
+                <height>27</height>
+               </size>
+              </property>
+              <property name="text">
+               <string>Calc. N. K. Rotation</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </widget>
+         <widget class="QGroupBox" name="groupBox_CalculateNDIKUKATransform">
+          <property name="geometry">
+           <rect>
+            <x>0</x>
+            <y>110</y>
+            <width>341</width>
+            <height>101</height>
+           </rect>
+          </property>
+          <property name="title">
+           <string>Calculate NDI KUKA Transform (m)</string>
+          </property>
+          <widget class="QWidget" name="gridLayoutWidget_9">
+           <property name="geometry">
+            <rect>
+             <x>10</x>
+             <y>30</y>
+             <width>331</width>
+             <height>62</height>
+            </rect>
+           </property>
+           <layout class="QGridLayout" name="gridLayout_9">
+            <item row="1" column="1">
+             <widget class="QPushButton" name="pushButton_CalculateNDIKUKATransform">
+              <property name="minimumSize">
+               <size>
+                <width>231</width>
+                <height>27</height>
+               </size>
+              </property>
+              <property name="maximumSize">
+               <size>
+                <width>231</width>
+                <height>27</height>
+               </size>
+              </property>
+              <property name="text">
+               <string>Calc. N. K. Transform</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="1">
+             <widget class="QLineEdit" name="lineEdit_incrDistance">
+              <property name="minimumSize">
+               <size>
+                <width>231</width>
+                <height>27</height>
+               </size>
+              </property>
+              <property name="maximumSize">
+               <size>
+                <width>231</width>
+                <height>27</height>
+               </size>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="0">
+             <widget class="QLabel" name="label_incrDistance">
+              <property name="minimumSize">
+               <size>
+                <width>92</width>
+                <height>27</height>
+               </size>
+              </property>
+              <property name="maximumSize">
+               <size>
+                <width>92</width>
+                <height>27</height>
+               </size>
+              </property>
+              <property name="text">
+               <string>Distance Step</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </widget>
         </widget>
-       </widget>
-       <widget class="QGroupBox" name="groupBox_CalculateRotationMatrix">
-        <property name="geometry">
-         <rect>
-          <x>10</x>
-          <y>50</y>
-          <width>401</width>
-          <height>91</height>
-         </rect>
-        </property>
-        <property name="title">
-         <string>Calculate Rotation Matrix (KUKA frame)</string>
-        </property>
-        <widget class="QWidget" name="gridLayoutWidget_5">
-         <property name="geometry">
-          <rect>
-           <x>10</x>
-           <y>30</y>
-           <width>391</width>
-           <height>52</height>
-          </rect>
-         </property>
-         <layout class="QGridLayout" name="gridLayout_5">
-          <item row="0" column="0">
-           <widget class="QLabel" name="label_dX">
-            <property name="text">
-             <string>dX</string>
-            </property>
-           </widget>
-          </item>
-          <item row="0" column="1">
-           <widget class="QLabel" name="label_dY">
-            <property name="text">
-             <string>dY</string>
-            </property>
-           </widget>
-          </item>
-          <item row="0" column="2">
-           <widget class="QLabel" name="label_dZ">
-            <property name="text">
-             <string>dZ</string>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="0">
-           <widget class="QLineEdit" name="lineEdit_dX"/>
-          </item>
-          <item row="1" column="1">
-           <widget class="QLineEdit" name="lineEdit_dY"/>
-          </item>
-          <item row="1" column="2">
-           <widget class="QLineEdit" name="lineEdit_dZ"/>
-          </item>
-          <item row="1" column="3">
-           <widget class="QPushButton" name="pushButton_CalculateRotationMatrix">
-            <property name="text">
-             <string>Calc. Rot. Mat.</string>
-            </property>
-           </widget>
-          </item>
-         </layout>
+        <widget class="QWidget" name="tab_KUKAEndEffectorCalibration">
+         <attribute name="title">
+          <string>NDI KUKA TCP Calibration</string>
+         </attribute>
+         <widget class="QGroupBox" name="groupBox_XYZ4PointCalibration">
+          <property name="geometry">
+           <rect>
+            <x>330</x>
+            <y>0</y>
+            <width>371</width>
+            <height>131</height>
+           </rect>
+          </property>
+          <property name="title">
+           <string>XYZ 4-Point Calibration</string>
+          </property>
+          <widget class="QWidget" name="gridLayoutWidget_15">
+           <property name="geometry">
+            <rect>
+             <x>0</x>
+             <y>30</y>
+             <width>351</width>
+             <height>95</height>
+            </rect>
+           </property>
+           <layout class="QGridLayout" name="gridLayout_15">
+            <item row="2" column="1">
+             <widget class="QComboBox" name="comboBox_KUKAPosition">
+              <property name="minimumSize">
+               <size>
+                <width>205</width>
+                <height>27</height>
+               </size>
+              </property>
+              <property name="maximumSize">
+               <size>
+                <width>205</width>
+                <height>27</height>
+               </size>
+              </property>
+              <item>
+               <property name="text">
+                <string>Position 1</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>Position 2</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>Position 3</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>Position 4</string>
+               </property>
+              </item>
+             </widget>
+            </item>
+            <item row="0" column="1">
+             <widget class="QPushButton" name="pushButton_AddOrUpdatePosition">
+              <property name="minimumSize">
+               <size>
+                <width>205</width>
+                <height>27</height>
+               </size>
+              </property>
+              <property name="maximumSize">
+               <size>
+                <width>205</width>
+                <height>27</height>
+               </size>
+              </property>
+              <property name="text">
+               <string>Add / Update</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="0">
+             <widget class="QPushButton" name="pushButton_XYZ4PointCalibrate">
+              <property name="minimumSize">
+               <size>
+                <width>135</width>
+                <height>27</height>
+               </size>
+              </property>
+              <property name="maximumSize">
+               <size>
+                <width>135</width>
+                <height>27</height>
+               </size>
+              </property>
+              <property name="text">
+               <string> Calibrate </string>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="0">
+             <widget class="QLabel" name="label_Position_3">
+              <property name="minimumSize">
+               <size>
+                <width>138</width>
+                <height>27</height>
+               </size>
+              </property>
+              <property name="maximumSize">
+               <size>
+                <width>138</width>
+                <height>27</height>
+               </size>
+              </property>
+              <property name="text">
+               <string>Position</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="1">
+             <widget class="QComboBox" name="comboBox_Transform">
+              <property name="minimumSize">
+               <size>
+                <width>205</width>
+                <height>27</height>
+               </size>
+              </property>
+              <property name="maximumSize">
+               <size>
+                <width>205</width>
+                <height>27</height>
+               </size>
+              </property>
+              <item>
+               <property name="text">
+                <string>Marker Flange Translation</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>TCP Flange Translation</string>
+               </property>
+              </item>
+             </widget>
+            </item>
+            <item row="1" column="0">
+             <widget class="QLabel" name="label_Transform">
+              <property name="text">
+               <string>Transform</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </widget>
+         <widget class="QGroupBox" name="groupBox_ABC2PointCalibration">
+          <property name="geometry">
+           <rect>
+            <x>0</x>
+            <y>0</y>
+            <width>291</width>
+            <height>141</height>
+           </rect>
+          </property>
+          <property name="title">
+           <string>ABC 2-Point Calibration</string>
+          </property>
+          <widget class="QPushButton" name="pushButton_CalculateTCPFlangeRotation">
+           <property name="geometry">
+            <rect>
+             <x>40</x>
+             <y>90</y>
+             <width>221</width>
+             <height>27</height>
+            </rect>
+           </property>
+           <property name="minimumSize">
+            <size>
+             <width>191</width>
+             <height>27</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>221</width>
+             <height>27</height>
+            </size>
+           </property>
+           <property name="text">
+            <string>Calic. TCP Flange Rotation</string>
+           </property>
+          </widget>
+          <widget class="QPushButton" name="pushButton_CalculateTCPMarkerTransform">
+           <property name="geometry">
+            <rect>
+             <x>40</x>
+             <y>50</y>
+             <width>221</width>
+             <height>27</height>
+            </rect>
+           </property>
+           <property name="minimumSize">
+            <size>
+             <width>221</width>
+             <height>27</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>221</width>
+             <height>27</height>
+            </size>
+           </property>
+           <property name="text">
+            <string>Calc. TCP Marker Transform</string>
+           </property>
+          </widget>
+         </widget>
         </widget>
-       </widget>
-       <widget class="QGroupBox" name="groupBox_NeedlePointCalibration">
-        <property name="geometry">
-         <rect>
-          <x>450</x>
-          <y>40</y>
-          <width>311</width>
-          <height>101</height>
-         </rect>
-        </property>
-        <property name="title">
-         <string>Needle Point Calibration</string>
-        </property>
-        <widget class="QWidget" name="gridLayoutWidget_7">
-         <property name="geometry">
-          <rect>
-           <x>0</x>
-           <y>30</y>
-           <width>307</width>
-           <height>61</height>
-          </rect>
-         </property>
-         <layout class="QGridLayout" name="gridLayout_7">
-          <item row="0" column="0">
-           <widget class="QLabel" name="label_NeedlePointIndicator">
-            <property name="text">
-             <string>Needle Point Indicator </string>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="1">
-           <widget class="QPushButton" name="pushButton_CalibrateNeedlePoint">
-            <property name="text">
-             <string>Calib. Needle Point</string>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="0">
-           <widget class="QComboBox" name="comboBox_NeedlePointIndicator"/>
-          </item>
-         </layout>
+        <widget class="QWidget" name="tab_KUKAEndEffectorMotion">
+         <attribute name="title">
+          <string>KUKA TCP Motion</string>
+         </attribute>
+         <widget class="QGroupBox" name="groupBox_NDIFeedbackMove">
+          <property name="geometry">
+           <rect>
+            <x>10</x>
+            <y>150</y>
+            <width>431</width>
+            <height>131</height>
+           </rect>
+          </property>
+          <property name="title">
+           <string>NDI Feedback Move(m, deg)</string>
+          </property>
+          <widget class="QWidget" name="gridLayoutWidget_7">
+           <property name="geometry">
+            <rect>
+             <x>0</x>
+             <y>30</y>
+             <width>421</width>
+             <height>101</height>
+            </rect>
+           </property>
+           <layout class="QGridLayout" name="gridLayout_7">
+            <item row="1" column="3">
+             <widget class="QLineEdit" name="lineEdit_NDI_Z_2">
+              <property name="minimumSize">
+               <size>
+                <width>83</width>
+                <height>23</height>
+               </size>
+              </property>
+              <property name="maximumSize">
+               <size>
+                <width>83</width>
+                <height>23</height>
+               </size>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="2">
+             <widget class="QLineEdit" name="lineEdit_NDI_Y_2">
+              <property name="minimumSize">
+               <size>
+                <width>83</width>
+                <height>23</height>
+               </size>
+              </property>
+              <property name="maximumSize">
+               <size>
+                <width>83</width>
+                <height>23</height>
+               </size>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="1">
+             <widget class="QLineEdit" name="lineEdit_NDI_X_2">
+              <property name="minimumSize">
+               <size>
+                <width>83</width>
+                <height>23</height>
+               </size>
+              </property>
+              <property name="maximumSize">
+               <size>
+                <width>83</width>
+                <height>23</height>
+               </size>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="3">
+             <widget class="QLabel" name="label_Z_2">
+              <property name="minimumSize">
+               <size>
+                <width>83</width>
+                <height>17</height>
+               </size>
+              </property>
+              <property name="maximumSize">
+               <size>
+                <width>83</width>
+                <height>17</height>
+               </size>
+              </property>
+              <property name="text">
+               <string>Z</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="2">
+             <widget class="QLabel" name="label_Y_2">
+              <property name="minimumSize">
+               <size>
+                <width>83</width>
+                <height>17</height>
+               </size>
+              </property>
+              <property name="maximumSize">
+               <size>
+                <width>83</width>
+                <height>17</height>
+               </size>
+              </property>
+              <property name="text">
+               <string>Y</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="1">
+             <widget class="QLabel" name="label_X_2">
+              <property name="minimumSize">
+               <size>
+                <width>83</width>
+                <height>17</height>
+               </size>
+              </property>
+              <property name="maximumSize">
+               <size>
+                <width>83</width>
+                <height>17</height>
+               </size>
+              </property>
+              <property name="text">
+               <string>X</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="0">
+             <widget class="QLabel" name="label_NDIFrame_2">
+              <property name="minimumSize">
+               <size>
+                <width>152</width>
+                <height>17</height>
+               </size>
+              </property>
+              <property name="maximumSize">
+               <size>
+                <width>152</width>
+                <height>17</height>
+               </size>
+              </property>
+              <property name="text">
+               <string>NDI Frame</string>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="3">
+             <widget class="QLabel" name="label_C_2">
+              <property name="minimumSize">
+               <size>
+                <width>83</width>
+                <height>17</height>
+               </size>
+              </property>
+              <property name="maximumSize">
+               <size>
+                <width>83</width>
+                <height>17</height>
+               </size>
+              </property>
+              <property name="text">
+               <string>C</string>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="2">
+             <widget class="QLabel" name="label_B_2">
+              <property name="minimumSize">
+               <size>
+                <width>83</width>
+                <height>17</height>
+               </size>
+              </property>
+              <property name="maximumSize">
+               <size>
+                <width>83</width>
+                <height>17</height>
+               </size>
+              </property>
+              <property name="text">
+               <string>B</string>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="1">
+             <widget class="QLabel" name="label_A_2">
+              <property name="minimumSize">
+               <size>
+                <width>83</width>
+                <height>17</height>
+               </size>
+              </property>
+              <property name="maximumSize">
+               <size>
+                <width>83</width>
+                <height>17</height>
+               </size>
+              </property>
+              <property name="text">
+               <string>A</string>
+              </property>
+             </widget>
+            </item>
+            <item row="3" column="3">
+             <widget class="QLineEdit" name="lineEdit_NDI_C_2">
+              <property name="minimumSize">
+               <size>
+                <width>83</width>
+                <height>23</height>
+               </size>
+              </property>
+              <property name="maximumSize">
+               <size>
+                <width>83</width>
+                <height>24</height>
+               </size>
+              </property>
+             </widget>
+            </item>
+            <item row="3" column="2">
+             <widget class="QLineEdit" name="lineEdit_NDI_B_2">
+              <property name="minimumSize">
+               <size>
+                <width>83</width>
+                <height>23</height>
+               </size>
+              </property>
+              <property name="maximumSize">
+               <size>
+                <width>83</width>
+                <height>24</height>
+               </size>
+              </property>
+             </widget>
+            </item>
+            <item row="3" column="1">
+             <widget class="QLineEdit" name="lineEdit_NDI_A_2">
+              <property name="minimumSize">
+               <size>
+                <width>83</width>
+                <height>23</height>
+               </size>
+              </property>
+              <property name="maximumSize">
+               <size>
+                <width>83</width>
+                <height>24</height>
+               </size>
+              </property>
+             </widget>
+            </item>
+            <item row="3" column="0">
+             <widget class="QPushButton" name="pushButton_NDIFeedbackMove">
+              <property name="minimumSize">
+               <size>
+                <width>152</width>
+                <height>23</height>
+               </size>
+              </property>
+              <property name="maximumSize">
+               <size>
+                <width>152</width>
+                <height>24</height>
+               </size>
+              </property>
+              <property name="text">
+               <string>NDI Feedback Move</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="0">
+             <widget class="QPushButton" name="pushButton_CopyCurrentTCPState">
+              <property name="minimumSize">
+               <size>
+                <width>152</width>
+                <height>23</height>
+               </size>
+              </property>
+              <property name="maximumSize">
+               <size>
+                <width>152</width>
+                <height>23</height>
+               </size>
+              </property>
+              <property name="text">
+               <string>Copy TCP State</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </widget>
+         <widget class="QGroupBox" name="groupBox_NDIFeedbackParallelMove">
+          <property name="geometry">
+           <rect>
+            <x>10</x>
+            <y>0</y>
+            <width>551</width>
+            <height>141</height>
+           </rect>
+          </property>
+          <property name="title">
+           <string>NDI Feedback Parallel Move(m, deg)</string>
+          </property>
+          <widget class="QWidget" name="gridLayoutWidget_4">
+           <property name="geometry">
+            <rect>
+             <x>0</x>
+             <y>30</y>
+             <width>521</width>
+             <height>111</height>
+            </rect>
+           </property>
+           <layout class="QGridLayout" name="gridLayout_4">
+            <item row="1" column="3">
+             <widget class="QLineEdit" name="lineEdit_NDI_Z">
+              <property name="minimumSize">
+               <size>
+                <width>96</width>
+                <height>27</height>
+               </size>
+              </property>
+              <property name="maximumSize">
+               <size>
+                <width>96</width>
+                <height>27</height>
+               </size>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="2">
+             <widget class="QLineEdit" name="lineEdit_NDI_Y">
+              <property name="minimumSize">
+               <size>
+                <width>95</width>
+                <height>27</height>
+               </size>
+              </property>
+              <property name="maximumSize">
+               <size>
+                <width>95</width>
+                <height>27</height>
+               </size>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="1">
+             <widget class="QLineEdit" name="lineEdit_NDI_X">
+              <property name="minimumSize">
+               <size>
+                <width>96</width>
+                <height>27</height>
+               </size>
+              </property>
+              <property name="maximumSize">
+               <size>
+                <width>96</width>
+                <height>27</height>
+               </size>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="3">
+             <widget class="QLabel" name="label_Z">
+              <property name="minimumSize">
+               <size>
+                <width>83</width>
+                <height>17</height>
+               </size>
+              </property>
+              <property name="maximumSize">
+               <size>
+                <width>83</width>
+                <height>17</height>
+               </size>
+              </property>
+              <property name="text">
+               <string>Z</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="2">
+             <widget class="QLabel" name="label_Y">
+              <property name="minimumSize">
+               <size>
+                <width>83</width>
+                <height>17</height>
+               </size>
+              </property>
+              <property name="maximumSize">
+               <size>
+                <width>83</width>
+                <height>17</height>
+               </size>
+              </property>
+              <property name="text">
+               <string>Y</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="1">
+             <widget class="QLabel" name="label_X">
+              <property name="minimumSize">
+               <size>
+                <width>83</width>
+                <height>17</height>
+               </size>
+              </property>
+              <property name="maximumSize">
+               <size>
+                <width>83</width>
+                <height>17</height>
+               </size>
+              </property>
+              <property name="text">
+               <string>X</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="0">
+             <widget class="QLabel" name="label_NDIFrame">
+              <property name="minimumSize">
+               <size>
+                <width>152</width>
+                <height>17</height>
+               </size>
+              </property>
+              <property name="maximumSize">
+               <size>
+                <width>152</width>
+                <height>17</height>
+               </size>
+              </property>
+              <property name="text">
+               <string>NDI Frame</string>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="0">
+             <widget class="QLabel" name="label_KUKAFrame">
+              <property name="minimumSize">
+               <size>
+                <width>152</width>
+                <height>17</height>
+               </size>
+              </property>
+              <property name="maximumSize">
+               <size>
+                <width>152</width>
+                <height>17</height>
+               </size>
+              </property>
+              <property name="text">
+               <string>KUKA Frame</string>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="3">
+             <widget class="QLabel" name="label_C">
+              <property name="minimumSize">
+               <size>
+                <width>83</width>
+                <height>17</height>
+               </size>
+              </property>
+              <property name="maximumSize">
+               <size>
+                <width>83</width>
+                <height>17</height>
+               </size>
+              </property>
+              <property name="text">
+               <string>C</string>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="2">
+             <widget class="QLabel" name="label_B">
+              <property name="minimumSize">
+               <size>
+                <width>83</width>
+                <height>17</height>
+               </size>
+              </property>
+              <property name="maximumSize">
+               <size>
+                <width>83</width>
+                <height>17</height>
+               </size>
+              </property>
+              <property name="text">
+               <string>B</string>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="1">
+             <widget class="QLabel" name="label_A">
+              <property name="minimumSize">
+               <size>
+                <width>83</width>
+                <height>17</height>
+               </size>
+              </property>
+              <property name="maximumSize">
+               <size>
+                <width>83</width>
+                <height>17</height>
+               </size>
+              </property>
+              <property name="text">
+               <string>A</string>
+              </property>
+             </widget>
+            </item>
+            <item row="3" column="3">
+             <widget class="QLineEdit" name="lineEdit_KUKA_C">
+              <property name="minimumSize">
+               <size>
+                <width>96</width>
+                <height>27</height>
+               </size>
+              </property>
+              <property name="maximumSize">
+               <size>
+                <width>96</width>
+                <height>27</height>
+               </size>
+              </property>
+             </widget>
+            </item>
+            <item row="3" column="2">
+             <widget class="QLineEdit" name="lineEdit_KUKA_B">
+              <property name="minimumSize">
+               <size>
+                <width>95</width>
+                <height>27</height>
+               </size>
+              </property>
+              <property name="maximumSize">
+               <size>
+                <width>95</width>
+                <height>27</height>
+               </size>
+              </property>
+             </widget>
+            </item>
+            <item row="3" column="1">
+             <widget class="QLineEdit" name="lineEdit_KUKA_A">
+              <property name="minimumSize">
+               <size>
+                <width>96</width>
+                <height>27</height>
+               </size>
+              </property>
+              <property name="maximumSize">
+               <size>
+                <width>96</width>
+                <height>27</height>
+               </size>
+              </property>
+             </widget>
+            </item>
+            <item row="3" column="0">
+             <widget class="QPushButton" name="pushButton_NDIFeedbackParallelMove">
+              <property name="minimumSize">
+               <size>
+                <width>214</width>
+                <height>27</height>
+               </size>
+              </property>
+              <property name="maximumSize">
+               <size>
+                <width>214</width>
+                <height>27</height>
+               </size>
+              </property>
+              <property name="text">
+               <string>NDI Feedback Parallel Move</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="0">
+             <widget class="QPushButton" name="pushButton_CopyCurrentTCPXYZKUKAABC">
+              <property name="minimumSize">
+               <size>
+                <width>214</width>
+                <height>27</height>
+               </size>
+              </property>
+              <property name="maximumSize">
+               <size>
+                <width>214</width>
+                <height>27</height>
+               </size>
+              </property>
+              <property name="text">
+               <string>Copy TCP XYZ and KUKA ABC</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </widget>
         </widget>
-       </widget>
-       <widget class="QPushButton" name="pushButton_CalculateNDIKUKATransform">
-        <property name="geometry">
-         <rect>
-          <x>580</x>
-          <y>200</y>
-          <width>181</width>
-          <height>27</height>
-         </rect>
-        </property>
-        <property name="text">
-         <string>Calc. NDI KUKA Transform</string>
-        </property>
-       </widget>
-       <widget class="QPushButton" name="pushButton_CalibrateNeedleDirection">
-        <property name="geometry">
-         <rect>
-          <x>580</x>
-          <y>240</y>
-          <width>181</width>
-          <height>27</height>
-         </rect>
-        </property>
-        <property name="text">
-         <string>Calib. Needle Direction</string>
-        </property>
-       </widget>
-       <widget class="QLabel" name="label_MarkerNeedleWarning">
-        <property name="geometry">
-         <rect>
-          <x>20</x>
-          <y>10</y>
-          <width>431</width>
-          <height>31</height>
-         </rect>
-        </property>
-        <property name="text">
-         <string>Warning: Marker Needle Transform is used, which means 
-the NDI position that will be used is the position of needle point</string>
-        </property>
+        <widget class="QWidget" name="tab_DeprecatedCalibration">
+         <attribute name="title">
+          <string>Deprecated Calibration</string>
+         </attribute>
+         <widget class="QWidget" name="gridLayoutWidget_10">
+          <property name="geometry">
+           <rect>
+            <x>0</x>
+            <y>0</y>
+            <width>481</width>
+            <height>211</height>
+           </rect>
+          </property>
+          <layout class="QGridLayout" name="gridLayout_10">
+           <item row="1" column="3">
+            <widget class="QLineEdit" name="lineEdit_AxisVectorZ">
+             <property name="minimumSize">
+              <size>
+               <width>101</width>
+               <height>27</height>
+              </size>
+             </property>
+             <property name="maximumSize">
+              <size>
+               <width>101</width>
+               <height>27</height>
+              </size>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="0">
+            <widget class="QLabel" name="label_AxisType">
+             <property name="minimumSize">
+              <size>
+               <width>159</width>
+               <height>27</height>
+              </size>
+             </property>
+             <property name="maximumSize">
+              <size>
+               <width>159</width>
+               <height>27</height>
+              </size>
+             </property>
+             <property name="text">
+              <string>Axis Type</string>
+             </property>
+            </widget>
+           </item>
+           <item row="2" column="0">
+            <widget class="QLabel" name="label_RotateDegree">
+             <property name="minimumSize">
+              <size>
+               <width>159</width>
+               <height>27</height>
+              </size>
+             </property>
+             <property name="maximumSize">
+              <size>
+               <width>159</width>
+               <height>27</height>
+              </size>
+             </property>
+             <property name="text">
+              <string>Rotate Degree</string>
+             </property>
+            </widget>
+           </item>
+           <item row="2" column="1">
+            <widget class="QLineEdit" name="lineEdit_RotateDegree">
+             <property name="minimumSize">
+              <size>
+               <width>101</width>
+               <height>27</height>
+              </size>
+             </property>
+             <property name="maximumSize">
+              <size>
+               <width>101</width>
+               <height>27</height>
+              </size>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="0">
+            <widget class="QLabel" name="label_AxisVector">
+             <property name="minimumSize">
+              <size>
+               <width>159</width>
+               <height>27</height>
+              </size>
+             </property>
+             <property name="maximumSize">
+              <size>
+               <width>159</width>
+               <height>27</height>
+              </size>
+             </property>
+             <property name="text">
+              <string>Axis Vector</string>
+             </property>
+            </widget>
+           </item>
+           <item row="4" column="0">
+            <widget class="QPushButton" name="pushButton_ExecuteRotatePlan">
+             <property name="enabled">
+              <bool>false</bool>
+             </property>
+             <property name="minimumSize">
+              <size>
+               <width>159</width>
+               <height>27</height>
+              </size>
+             </property>
+             <property name="maximumSize">
+              <size>
+               <width>159</width>
+               <height>27</height>
+              </size>
+             </property>
+             <property name="text">
+              <string>Execute Rotate Plan</string>
+             </property>
+            </widget>
+           </item>
+           <item row="3" column="0">
+            <widget class="QPushButton" name="pushButton_VisualizeRotatePlan">
+             <property name="minimumSize">
+              <size>
+               <width>159</width>
+               <height>27</height>
+              </size>
+             </property>
+             <property name="maximumSize">
+              <size>
+               <width>159</width>
+               <height>27</height>
+              </size>
+             </property>
+             <property name="text">
+              <string>Visualize Rotate Plan</string>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="1">
+            <widget class="QComboBox" name="comboBox_AxisType">
+             <property name="minimumSize">
+              <size>
+               <width>101</width>
+               <height>27</height>
+              </size>
+             </property>
+             <property name="maximumSize">
+              <size>
+               <width>101</width>
+               <height>27</height>
+              </size>
+             </property>
+             <item>
+              <property name="text">
+               <string>X</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>Y</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>Z</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>Custom</string>
+              </property>
+             </item>
+            </widget>
+           </item>
+           <item row="1" column="1">
+            <widget class="QLineEdit" name="lineEdit_AxisVectorX">
+             <property name="minimumSize">
+              <size>
+               <width>101</width>
+               <height>27</height>
+              </size>
+             </property>
+             <property name="maximumSize">
+              <size>
+               <width>101</width>
+               <height>27</height>
+              </size>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="2">
+            <widget class="QLineEdit" name="lineEdit_AxisVectorY">
+             <property name="minimumSize">
+              <size>
+               <width>100</width>
+               <height>27</height>
+              </size>
+             </property>
+             <property name="maximumSize">
+              <size>
+               <width>100</width>
+               <height>27</height>
+              </size>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+        </widget>
        </widget>
       </widget>
       <widget class="QWidget" name="tab_Environment">
@@ -1783,25 +3099,6 @@ the NDI position that will be used is the position of needle point</string>
            </item>
           </widget>
          </item>
-         <item row="0" column="1">
-          <widget class="QPushButton" name="pushButton_Do">
-           <property name="minimumSize">
-            <size>
-             <width>266</width>
-             <height>27</height>
-            </size>
-           </property>
-           <property name="maximumSize">
-            <size>
-             <width>266</width>
-             <height>27</height>
-            </size>
-           </property>
-           <property name="text">
-            <string>Do</string>
-           </property>
-          </widget>
-         </item>
          <item row="2" column="2">
           <widget class="QLabel" name="label_Dimension_Y_Height">
            <property name="minimumSize">
@@ -1859,17 +3156,17 @@ the NDI position that will be used is the position of needle point</string>
            </property>
           </widget>
          </item>
-         <item row="0" column="0">
+         <item row="0" column="0" colspan="2">
           <widget class="QLabel" name="label_CollisionObject">
            <property name="minimumSize">
             <size>
-             <width>161</width>
+             <width>433</width>
              <height>41</height>
             </size>
            </property>
            <property name="maximumSize">
             <size>
-             <width>161</width>
+             <width>433</width>
              <height>41</height>
             </size>
            </property>
@@ -1881,7 +3178,7 @@ the NDI position that will be used is the position of needle point</string>
             </font>
            </property>
            <property name="text">
-            <string>Collision Object</string>
+            <string>Collision Object (m)</string>
            </property>
           </widget>
          </item>
@@ -1901,6 +3198,96 @@ the NDI position that will be used is the position of needle point</string>
            </property>
           </widget>
          </item>
+         <item row="0" column="3">
+          <widget class="QPushButton" name="pushButton_Do">
+           <property name="minimumSize">
+            <size>
+             <width>266</width>
+             <height>27</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>266</width>
+             <height>27</height>
+            </size>
+           </property>
+           <property name="text">
+            <string>Do</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+      </widget>
+      <widget class="QWidget" name="tab_Record">
+       <attribute name="title">
+        <string>Record</string>
+       </attribute>
+       <widget class="QWidget" name="gridLayoutWidget_8">
+        <property name="geometry">
+         <rect>
+          <x>20</x>
+          <y>30</y>
+          <width>581</width>
+          <height>41</height>
+         </rect>
+        </property>
+        <layout class="QGridLayout" name="gridLayout_8">
+         <item row="0" column="1">
+          <widget class="QLineEdit" name="lineEdit_PrefixMessage">
+           <property name="minimumSize">
+            <size>
+             <width>289</width>
+             <height>27</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>289</width>
+             <height>27</height>
+            </size>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="0">
+          <widget class="QLabel" name="label_PrefixMessage">
+           <property name="minimumSize">
+            <size>
+             <width>103</width>
+             <height>27</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>103</width>
+             <height>27</height>
+            </size>
+           </property>
+           <property name="text">
+            <string>Prefix Message</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="2">
+          <widget class="QPushButton" name="pushButton_RecordKUKAFeedback">
+           <property name="minimumSize">
+            <size>
+             <width>175</width>
+             <height>27</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>175</width>
+             <height>27</height>
+            </size>
+           </property>
+           <property name="text">
+            <string>Record KUKA Feedback</string>
+           </property>
+          </widget>
+         </item>
         </layout>
        </widget>
       </widget>
@@ -1914,160 +3301,10 @@ the NDI position that will be used is the position of needle point</string>
           <x>0</x>
           <y>10</y>
           <width>781</width>
-          <height>321</height>
+          <height>311</height>
          </rect>
         </property>
         <layout class="QGridLayout" name="gridLayout_3" rowstretch="0,0,0,0,0,0,0" columnstretch="0,0,0,0,0,0,0,0,0,0,0">
-         <item row="3" column="2" colspan="2">
-          <widget class="QLabel" name="label_Joint2_4">
-           <property name="minimumSize">
-            <size>
-             <width>80</width>
-             <height>22</height>
-            </size>
-           </property>
-           <property name="maximumSize">
-            <size>
-             <width>80</width>
-             <height>22</height>
-            </size>
-           </property>
-           <property name="text">
-            <string>Joint2</string>
-           </property>
-          </widget>
-         </item>
-         <item row="1" column="8">
-          <widget class="QLabel" name="label_S">
-           <property name="minimumSize">
-            <size>
-             <width>62</width>
-             <height>23</height>
-            </size>
-           </property>
-           <property name="maximumSize">
-            <size>
-             <width>62</width>
-             <height>23</height>
-            </size>
-           </property>
-           <property name="text">
-            <string>S</string>
-           </property>
-          </widget>
-         </item>
-         <item row="5" column="1">
-          <widget class="QComboBox" name="comboBox_style">
-           <property name="minimumSize">
-            <size>
-             <width>80</width>
-             <height>27</height>
-            </size>
-           </property>
-           <property name="maximumSize">
-            <size>
-             <width>80</width>
-             <height>27</height>
-            </size>
-           </property>
-           <item>
-            <property name="text">
-             <string>PTP</string>
-            </property>
-           </item>
-           <item>
-            <property name="text">
-             <string>LIN</string>
-            </property>
-           </item>
-           <item>
-            <property name="text">
-             <string>CIRC</string>
-            </property>
-           </item>
-          </widget>
-         </item>
-         <item row="6" column="5">
-          <widget class="QPushButton" name="send_config_button">
-           <property name="minimumSize">
-            <size>
-             <width>80</width>
-             <height>25</height>
-            </size>
-           </property>
-           <property name="maximumSize">
-            <size>
-             <width>80</width>
-             <height>25</height>
-            </size>
-           </property>
-           <property name="text">
-            <string>Config.</string>
-           </property>
-          </widget>
-         </item>
-         <item row="6" column="4">
-          <widget class="QTextEdit" name="input_config">
-           <property name="minimumSize">
-            <size>
-             <width>80</width>
-             <height>27</height>
-            </size>
-           </property>
-           <property name="maximumSize">
-            <size>
-             <width>80</width>
-             <height>27</height>
-            </size>
-           </property>
-           <property name="acceptDrops">
-            <bool>false</bool>
-           </property>
-           <property name="verticalScrollBarPolicy">
-            <enum>Qt::ScrollBarAlwaysOff</enum>
-           </property>
-           <property name="horizontalScrollBarPolicy">
-            <enum>Qt::ScrollBarAlwaysOff</enum>
-           </property>
-           <property name="tabChangesFocus">
-            <bool>true</bool>
-           </property>
-          </widget>
-         </item>
-         <item row="2" column="1">
-          <widget class="QTextEdit" name="input_x">
-           <property name="enabled">
-            <bool>true</bool>
-           </property>
-           <property name="minimumSize">
-            <size>
-             <width>80</width>
-             <height>27</height>
-            </size>
-           </property>
-           <property name="maximumSize">
-            <size>
-             <width>80</width>
-             <height>27</height>
-            </size>
-           </property>
-           <property name="acceptDrops">
-            <bool>false</bool>
-           </property>
-           <property name="autoFillBackground">
-            <bool>false</bool>
-           </property>
-           <property name="verticalScrollBarPolicy">
-            <enum>Qt::ScrollBarAlwaysOff</enum>
-           </property>
-           <property name="horizontalScrollBarPolicy">
-            <enum>Qt::ScrollBarAlwaysOff</enum>
-           </property>
-           <property name="tabChangesFocus">
-            <bool>true</bool>
-           </property>
-          </widget>
-         </item>
          <item row="5" column="6">
           <widget class="QPushButton" name="send_frame_button">
            <property name="minimumSize">
@@ -2262,6 +3499,461 @@ the NDI position that will be used is the position of needle point</string>
            </property>
            <property name="text">
             <string>To Axis</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="4">
+          <widget class="QLabel" name="labe_TransZ_2">
+           <property name="minimumSize">
+            <size>
+             <width>80</width>
+             <height>23</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>80</width>
+             <height>23</height>
+            </size>
+           </property>
+           <property name="text">
+            <string>TransZ</string>
+           </property>
+          </widget>
+         </item>
+         <item row="6" column="0">
+          <widget class="QLabel" name="label_Config">
+           <property name="minimumSize">
+            <size>
+             <width>60</width>
+             <height>27</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>60</width>
+             <height>27</height>
+            </size>
+           </property>
+           <property name="text">
+            <string>Config.</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="6">
+          <widget class="QLabel" name="label_RotateB_3">
+           <property name="minimumSize">
+            <size>
+             <width>80</width>
+             <height>23</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>80</width>
+             <height>23</height>
+            </size>
+           </property>
+           <property name="text">
+            <string>RotateB</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="7">
+          <widget class="QLabel" name="label_RotateC_3">
+           <property name="minimumSize">
+            <size>
+             <width>80</width>
+             <height>23</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>80</width>
+             <height>23</height>
+            </size>
+           </property>
+           <property name="text">
+            <string>RotateC</string>
+           </property>
+          </widget>
+         </item>
+         <item row="5" column="10">
+          <widget class="QPushButton" name="debug_button">
+           <property name="minimumSize">
+            <size>
+             <width>58</width>
+             <height>15</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>58</width>
+             <height>15</height>
+            </size>
+           </property>
+           <property name="font">
+            <font>
+             <pointsize>8</pointsize>
+             <weight>75</weight>
+             <italic>true</italic>
+             <bold>true</bold>
+             <underline>true</underline>
+            </font>
+           </property>
+           <property name="text">
+            <string>DEBUG</string>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="1">
+          <widget class="QLabel" name="label_Joint1_4">
+           <property name="minimumSize">
+            <size>
+             <width>80</width>
+             <height>22</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>80</width>
+             <height>22</height>
+            </size>
+           </property>
+           <property name="text">
+            <string>Joint1</string>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="4">
+          <widget class="QLabel" name="label_Joint3_4">
+           <property name="minimumSize">
+            <size>
+             <width>80</width>
+             <height>22</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>80</width>
+             <height>22</height>
+            </size>
+           </property>
+           <property name="text">
+            <string>Joint3</string>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="5">
+          <widget class="QLabel" name="label_Joint4_4">
+           <property name="minimumSize">
+            <size>
+             <width>80</width>
+             <height>22</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>80</width>
+             <height>22</height>
+            </size>
+           </property>
+           <property name="text">
+            <string>Joint4</string>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="6">
+          <widget class="QLabel" name="label_Joint5_4">
+           <property name="minimumSize">
+            <size>
+             <width>80</width>
+             <height>22</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>80</width>
+             <height>22</height>
+            </size>
+           </property>
+           <property name="text">
+            <string>Joint5</string>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="7">
+          <widget class="QLabel" name="label_Joint6_4">
+           <property name="minimumSize">
+            <size>
+             <width>80</width>
+             <height>22</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>80</width>
+             <height>22</height>
+            </size>
+           </property>
+           <property name="text">
+            <string>Joint6</string>
+           </property>
+          </widget>
+         </item>
+         <item row="4" column="7">
+          <widget class="QTextEdit" name="input_a6">
+           <property name="minimumSize">
+            <size>
+             <width>80</width>
+             <height>27</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>80</width>
+             <height>27</height>
+            </size>
+           </property>
+           <property name="acceptDrops">
+            <bool>false</bool>
+           </property>
+           <property name="verticalScrollBarPolicy">
+            <enum>Qt::ScrollBarAlwaysOff</enum>
+           </property>
+           <property name="horizontalScrollBarPolicy">
+            <enum>Qt::ScrollBarAlwaysOff</enum>
+           </property>
+           <property name="tabChangesFocus">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="7">
+          <widget class="QTextEdit" name="input_c">
+           <property name="minimumSize">
+            <size>
+             <width>80</width>
+             <height>27</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>80</width>
+             <height>27</height>
+            </size>
+           </property>
+           <property name="acceptDrops">
+            <bool>false</bool>
+           </property>
+           <property name="autoFillBackground">
+            <bool>false</bool>
+           </property>
+           <property name="verticalScrollBarPolicy">
+            <enum>Qt::ScrollBarAlwaysOff</enum>
+           </property>
+           <property name="horizontalScrollBarPolicy">
+            <enum>Qt::ScrollBarAlwaysOff</enum>
+           </property>
+           <property name="tabChangesFocus">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+         <item row="4" column="6">
+          <widget class="QTextEdit" name="input_a5">
+           <property name="minimumSize">
+            <size>
+             <width>80</width>
+             <height>27</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>80</width>
+             <height>27</height>
+            </size>
+           </property>
+           <property name="acceptDrops">
+            <bool>false</bool>
+           </property>
+           <property name="verticalScrollBarPolicy">
+            <enum>Qt::ScrollBarAlwaysOff</enum>
+           </property>
+           <property name="horizontalScrollBarPolicy">
+            <enum>Qt::ScrollBarAlwaysOff</enum>
+           </property>
+           <property name="tabChangesFocus">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+         <item row="5" column="0">
+          <widget class="QLabel" name="label_Style">
+           <property name="minimumSize">
+            <size>
+             <width>60</width>
+             <height>27</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>60</width>
+             <height>27</height>
+            </size>
+           </property>
+           <property name="text">
+            <string>Style</string>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="2" colspan="2">
+          <widget class="QLabel" name="label_Joint2_4">
+           <property name="minimumSize">
+            <size>
+             <width>80</width>
+             <height>22</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>80</width>
+             <height>22</height>
+            </size>
+           </property>
+           <property name="text">
+            <string>Joint2</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="8">
+          <widget class="QLabel" name="label_S">
+           <property name="minimumSize">
+            <size>
+             <width>62</width>
+             <height>23</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>62</width>
+             <height>23</height>
+            </size>
+           </property>
+           <property name="text">
+            <string>S</string>
+           </property>
+          </widget>
+         </item>
+         <item row="5" column="1">
+          <widget class="QComboBox" name="comboBox_style">
+           <property name="minimumSize">
+            <size>
+             <width>80</width>
+             <height>27</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>80</width>
+             <height>27</height>
+            </size>
+           </property>
+           <item>
+            <property name="text">
+             <string>PTP</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>LIN</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>CIRC</string>
+            </property>
+           </item>
+          </widget>
+         </item>
+         <item row="6" column="5">
+          <widget class="QPushButton" name="send_config_button">
+           <property name="minimumSize">
+            <size>
+             <width>80</width>
+             <height>25</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>80</width>
+             <height>25</height>
+            </size>
+           </property>
+           <property name="text">
+            <string>Config.</string>
+           </property>
+          </widget>
+         </item>
+         <item row="6" column="4">
+          <widget class="QTextEdit" name="input_config">
+           <property name="minimumSize">
+            <size>
+             <width>80</width>
+             <height>27</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>80</width>
+             <height>27</height>
+            </size>
+           </property>
+           <property name="acceptDrops">
+            <bool>false</bool>
+           </property>
+           <property name="verticalScrollBarPolicy">
+            <enum>Qt::ScrollBarAlwaysOff</enum>
+           </property>
+           <property name="horizontalScrollBarPolicy">
+            <enum>Qt::ScrollBarAlwaysOff</enum>
+           </property>
+           <property name="tabChangesFocus">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="1">
+          <widget class="QTextEdit" name="input_x">
+           <property name="enabled">
+            <bool>true</bool>
+           </property>
+           <property name="minimumSize">
+            <size>
+             <width>80</width>
+             <height>27</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>80</width>
+             <height>27</height>
+            </size>
+           </property>
+           <property name="acceptDrops">
+            <bool>false</bool>
+           </property>
+           <property name="autoFillBackground">
+            <bool>false</bool>
+           </property>
+           <property name="verticalScrollBarPolicy">
+            <enum>Qt::ScrollBarAlwaysOff</enum>
+           </property>
+           <property name="horizontalScrollBarPolicy">
+            <enum>Qt::ScrollBarAlwaysOff</enum>
+           </property>
+           <property name="tabChangesFocus">
+            <bool>true</bool>
            </property>
           </widget>
          </item>
@@ -2578,112 +4270,6 @@ the NDI position that will be used is the position of needle point</string>
            </property>
           </widget>
          </item>
-         <item row="4" column="7">
-          <widget class="QTextEdit" name="input_a6">
-           <property name="minimumSize">
-            <size>
-             <width>80</width>
-             <height>27</height>
-            </size>
-           </property>
-           <property name="maximumSize">
-            <size>
-             <width>80</width>
-             <height>27</height>
-            </size>
-           </property>
-           <property name="acceptDrops">
-            <bool>false</bool>
-           </property>
-           <property name="verticalScrollBarPolicy">
-            <enum>Qt::ScrollBarAlwaysOff</enum>
-           </property>
-           <property name="horizontalScrollBarPolicy">
-            <enum>Qt::ScrollBarAlwaysOff</enum>
-           </property>
-           <property name="tabChangesFocus">
-            <bool>true</bool>
-           </property>
-          </widget>
-         </item>
-         <item row="2" column="7">
-          <widget class="QTextEdit" name="input_c">
-           <property name="minimumSize">
-            <size>
-             <width>80</width>
-             <height>27</height>
-            </size>
-           </property>
-           <property name="maximumSize">
-            <size>
-             <width>80</width>
-             <height>27</height>
-            </size>
-           </property>
-           <property name="acceptDrops">
-            <bool>false</bool>
-           </property>
-           <property name="autoFillBackground">
-            <bool>false</bool>
-           </property>
-           <property name="verticalScrollBarPolicy">
-            <enum>Qt::ScrollBarAlwaysOff</enum>
-           </property>
-           <property name="horizontalScrollBarPolicy">
-            <enum>Qt::ScrollBarAlwaysOff</enum>
-           </property>
-           <property name="tabChangesFocus">
-            <bool>true</bool>
-           </property>
-          </widget>
-         </item>
-         <item row="4" column="6">
-          <widget class="QTextEdit" name="input_a5">
-           <property name="minimumSize">
-            <size>
-             <width>80</width>
-             <height>27</height>
-            </size>
-           </property>
-           <property name="maximumSize">
-            <size>
-             <width>80</width>
-             <height>27</height>
-            </size>
-           </property>
-           <property name="acceptDrops">
-            <bool>false</bool>
-           </property>
-           <property name="verticalScrollBarPolicy">
-            <enum>Qt::ScrollBarAlwaysOff</enum>
-           </property>
-           <property name="horizontalScrollBarPolicy">
-            <enum>Qt::ScrollBarAlwaysOff</enum>
-           </property>
-           <property name="tabChangesFocus">
-            <bool>true</bool>
-           </property>
-          </widget>
-         </item>
-         <item row="5" column="0">
-          <widget class="QLabel" name="label_Style">
-           <property name="minimumSize">
-            <size>
-             <width>60</width>
-             <height>27</height>
-            </size>
-           </property>
-           <property name="maximumSize">
-            <size>
-             <width>60</width>
-             <height>27</height>
-            </size>
-           </property>
-           <property name="text">
-            <string>Style</string>
-           </property>
-          </widget>
-         </item>
          <item row="2" column="8">
           <widget class="QTextEdit" name="input_s">
            <property name="minimumSize">
@@ -2703,33 +4289,6 @@ the NDI position that will be used is the position of needle point</string>
            </property>
            <property name="horizontalScrollBarPolicy">
             <enum>Qt::ScrollBarAlwaysOff</enum>
-           </property>
-          </widget>
-         </item>
-         <item row="0" column="0" colspan="2">
-          <widget class="QLabel" name="label_Command">
-           <property name="minimumSize">
-            <size>
-             <width>146</width>
-             <height>40</height>
-            </size>
-           </property>
-           <property name="maximumSize">
-            <size>
-             <width>146</width>
-             <height>40</height>
-            </size>
-           </property>
-           <property name="font">
-            <font>
-             <family>Ubuntu</family>
-             <pointsize>14</pointsize>
-             <weight>75</weight>
-             <bold>true</bold>
-            </font>
-           </property>
-           <property name="text">
-            <string>Command</string>
            </property>
           </widget>
          </item>
@@ -2869,367 +4428,54 @@ the NDI position that will be used is the position of needle point</string>
            </property>
           </widget>
          </item>
-         <item row="1" column="4">
-          <widget class="QLabel" name="labe_TransZ_2">
+         <item row="0" column="0" colspan="3">
+          <widget class="QLabel" name="label_Command">
            <property name="minimumSize">
             <size>
-             <width>80</width>
-             <height>23</height>
+             <width>146</width>
+             <height>40</height>
             </size>
            </property>
            <property name="maximumSize">
             <size>
-             <width>80</width>
-             <height>23</height>
-            </size>
-           </property>
-           <property name="text">
-            <string>TransZ</string>
-           </property>
-          </widget>
-         </item>
-         <item row="6" column="0">
-          <widget class="QLabel" name="label_Config">
-           <property name="minimumSize">
-            <size>
-             <width>60</width>
-             <height>27</height>
-            </size>
-           </property>
-           <property name="maximumSize">
-            <size>
-             <width>60</width>
-             <height>27</height>
-            </size>
-           </property>
-           <property name="text">
-            <string>Config.</string>
-           </property>
-          </widget>
-         </item>
-         <item row="1" column="6">
-          <widget class="QLabel" name="label_RotateB_3">
-           <property name="minimumSize">
-            <size>
-             <width>80</width>
-             <height>23</height>
-            </size>
-           </property>
-           <property name="maximumSize">
-            <size>
-             <width>80</width>
-             <height>23</height>
-            </size>
-           </property>
-           <property name="text">
-            <string>RotateB</string>
-           </property>
-          </widget>
-         </item>
-         <item row="1" column="7">
-          <widget class="QLabel" name="label_RotateC_3">
-           <property name="minimumSize">
-            <size>
-             <width>80</width>
-             <height>23</height>
-            </size>
-           </property>
-           <property name="maximumSize">
-            <size>
-             <width>80</width>
-             <height>23</height>
-            </size>
-           </property>
-           <property name="text">
-            <string>RotateC</string>
-           </property>
-          </widget>
-         </item>
-         <item row="5" column="10">
-          <widget class="QPushButton" name="debug_button">
-           <property name="minimumSize">
-            <size>
-             <width>58</width>
-             <height>15</height>
-            </size>
-           </property>
-           <property name="maximumSize">
-            <size>
-             <width>58</width>
-             <height>15</height>
+             <width>186</width>
+             <height>51</height>
             </size>
            </property>
            <property name="font">
             <font>
-             <pointsize>8</pointsize>
+             <family>Ubuntu</family>
+             <pointsize>14</pointsize>
              <weight>75</weight>
-             <italic>true</italic>
              <bold>true</bold>
-             <underline>true</underline>
             </font>
            </property>
            <property name="text">
-            <string>DEBUG</string>
-           </property>
-          </widget>
-         </item>
-         <item row="3" column="1">
-          <widget class="QLabel" name="label_Joint1_4">
-           <property name="minimumSize">
-            <size>
-             <width>80</width>
-             <height>22</height>
-            </size>
-           </property>
-           <property name="maximumSize">
-            <size>
-             <width>80</width>
-             <height>22</height>
-            </size>
-           </property>
-           <property name="text">
-            <string>Joint1</string>
-           </property>
-          </widget>
-         </item>
-         <item row="3" column="4">
-          <widget class="QLabel" name="label_Joint3_4">
-           <property name="minimumSize">
-            <size>
-             <width>80</width>
-             <height>22</height>
-            </size>
-           </property>
-           <property name="maximumSize">
-            <size>
-             <width>80</width>
-             <height>22</height>
-            </size>
-           </property>
-           <property name="text">
-            <string>Joint3</string>
-           </property>
-          </widget>
-         </item>
-         <item row="3" column="5">
-          <widget class="QLabel" name="label_Joint4_4">
-           <property name="minimumSize">
-            <size>
-             <width>80</width>
-             <height>22</height>
-            </size>
-           </property>
-           <property name="maximumSize">
-            <size>
-             <width>80</width>
-             <height>22</height>
-            </size>
-           </property>
-           <property name="text">
-            <string>Joint4</string>
-           </property>
-          </widget>
-         </item>
-         <item row="3" column="6">
-          <widget class="QLabel" name="label_Joint5_4">
-           <property name="minimumSize">
-            <size>
-             <width>80</width>
-             <height>22</height>
-            </size>
-           </property>
-           <property name="maximumSize">
-            <size>
-             <width>80</width>
-             <height>22</height>
-            </size>
-           </property>
-           <property name="text">
-            <string>Joint5</string>
-           </property>
-          </widget>
-         </item>
-         <item row="3" column="7">
-          <widget class="QLabel" name="label_Joint6_4">
-           <property name="minimumSize">
-            <size>
-             <width>80</width>
-             <height>22</height>
-            </size>
-           </property>
-           <property name="maximumSize">
-            <size>
-             <width>80</width>
-             <height>22</height>
-            </size>
-           </property>
-           <property name="text">
-            <string>Joint6</string>
+            <string>Command (mm, deg)</string>
            </property>
           </widget>
          </item>
         </layout>
        </widget>
       </widget>
-      <widget class="QWidget" name="tab_Calibration">
-       <attribute name="title">
-        <string>Calibration</string>
-       </attribute>
-       <widget class="QWidget" name="gridLayoutWidget_10">
-        <property name="geometry">
-         <rect>
-          <x>0</x>
-          <y>10</y>
-          <width>481</width>
-          <height>281</height>
-         </rect>
-        </property>
-        <layout class="QGridLayout" name="gridLayout_10">
-         <item row="1" column="3">
-          <widget class="QLineEdit" name="lineEdit_AxisVectorZ">
-           <property name="maximumSize">
-            <size>
-             <width>160</width>
-             <height>27</height>
-            </size>
-           </property>
-          </widget>
-         </item>
-         <item row="0" column="0">
-          <widget class="QLabel" name="label_AxisType">
-           <property name="text">
-            <string>Axis Type</string>
-           </property>
-          </widget>
-         </item>
-         <item row="2" column="0">
-          <widget class="QLabel" name="label_RotateDegree">
-           <property name="text">
-            <string>Rotate Degree</string>
-           </property>
-          </widget>
-         </item>
-         <item row="2" column="1">
-          <widget class="QLineEdit" name="lineEdit_RotateDegree">
-           <property name="maximumSize">
-            <size>
-             <width>160</width>
-             <height>27</height>
-            </size>
-           </property>
-          </widget>
-         </item>
-         <item row="1" column="0">
-          <widget class="QLabel" name="label_AxisVector">
-           <property name="text">
-            <string>Axis Vector</string>
-           </property>
-          </widget>
-         </item>
-         <item row="4" column="0">
-          <widget class="QPushButton" name="pushButton_ExecuteRotatePlan">
-           <property name="enabled">
-            <bool>false</bool>
-           </property>
-           <property name="text">
-            <string>Execute Rotate Plan</string>
-           </property>
-          </widget>
-         </item>
-         <item row="3" column="0">
-          <widget class="QPushButton" name="pushButton_VisualizeRotatePlan">
-           <property name="text">
-            <string>Visualize Rotate Plan</string>
-           </property>
-          </widget>
-         </item>
-         <item row="0" column="1">
-          <widget class="QComboBox" name="comboBox_AxisType">
-           <property name="maximumSize">
-            <size>
-             <width>266</width>
-             <height>27</height>
-            </size>
-           </property>
-           <item>
-            <property name="text">
-             <string>X</string>
-            </property>
-           </item>
-           <item>
-            <property name="text">
-             <string>Y</string>
-            </property>
-           </item>
-           <item>
-            <property name="text">
-             <string>Z</string>
-            </property>
-           </item>
-           <item>
-            <property name="text">
-             <string>Custom</string>
-            </property>
-           </item>
-          </widget>
-         </item>
-         <item row="1" column="1">
-          <widget class="QLineEdit" name="lineEdit_AxisVectorX">
-           <property name="maximumSize">
-            <size>
-             <width>160</width>
-             <height>27</height>
-            </size>
-           </property>
-          </widget>
-         </item>
-         <item row="1" column="2">
-          <widget class="QLineEdit" name="lineEdit_AxisVectorY">
-           <property name="maximumSize">
-            <size>
-             <width>160</width>
-             <height>27</height>
-            </size>
-           </property>
-          </widget>
-         </item>
-        </layout>
-       </widget>
-      </widget>
-      <widget class="QWidget" name="tab_Record">
-       <attribute name="title">
-        <string>Record</string>
-       </attribute>
-       <widget class="QWidget" name="gridLayoutWidget_8">
-        <property name="geometry">
-         <rect>
-          <x>20</x>
-          <y>30</y>
-          <width>581</width>
-          <height>41</height>
-         </rect>
-        </property>
-        <layout class="QGridLayout" name="gridLayout_8">
-         <item row="0" column="1">
-          <widget class="QLineEdit" name="lineEdit_PrefixMessage"/>
-         </item>
-         <item row="0" column="0">
-          <widget class="QLabel" name="label_PrefixMessage">
-           <property name="text">
-            <string>Prefix Message</string>
-           </property>
-          </widget>
-         </item>
-         <item row="0" column="2">
-          <widget class="QPushButton" name="pushButton_RecordKUKAFeedback">
-           <property name="text">
-            <string>Record KUKA Feedback</string>
-           </property>
-          </widget>
-         </item>
-        </layout>
-       </widget>
-      </widget>
+     </widget>
+     <widget class="QLabel" name="label_MarkerNeedleWarning">
+      <property name="geometry">
+       <rect>
+        <x>820</x>
+        <y>80</y>
+        <width>171</width>
+        <height>241</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Warning: Marker Needle
+ Transform is used, which 
+means the NDI position 
+that will be used is the 
+position multiplying 
+Marker Needle Transform</string>
+      </property>
      </widget>
     </widget>
     <widget class="QWidget" name="tab_2">
@@ -3427,11 +4673,11 @@ the NDI position that will be used is the position of needle point</string>
         <x>20</x>
         <y>180</y>
         <width>961</width>
-        <height>271</height>
+        <height>351</height>
        </rect>
       </property>
       <property name="title">
-       <string>Tracking Information</string>
+       <string>Tracking Information (mm)</string>
       </property>
       <widget class="QWidget" name="gridLayoutWidget_13">
        <property name="geometry">
@@ -3439,150 +4685,237 @@ the NDI position that will be used is the position of needle point</string>
          <x>0</x>
          <y>30</y>
          <width>961</width>
-         <height>91</height>
+         <height>118</height>
         </rect>
        </property>
        <layout class="QGridLayout" name="gridLayout_13">
-        <item row="0" column="1">
-         <widget class="QComboBox" name="comboBox_Handle"/>
-        </item>
-        <item row="1" column="2">
-         <widget class="QLabel" name="label_Tz">
-          <property name="text">
-           <string>Tz</string>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="4">
-         <widget class="QLabel" name="label_Qx">
-          <property name="text">
-           <string>Qx</string>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="3">
-         <widget class="QLabel" name="label_Qo">
-          <property name="text">
-           <string>Qo</string>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="7">
+        <item row="1" column="9">
          <widget class="QLabel" name="label_Error">
           <property name="text">
            <string>Error</string>
           </property>
          </widget>
         </item>
-        <item row="1" column="6">
-         <widget class="QLabel" name="label_Qz">
-          <property name="text">
-           <string>Qz</string>
-          </property>
-         </widget>
+        <item row="0" column="5">
+         <widget class="QComboBox" name="comboBox_Indicator"/>
         </item>
-        <item row="1" column="0">
-         <widget class="QLabel" name="label_Tx">
-          <property name="text">
-           <string>Tx</string>
-          </property>
-         </widget>
-        </item>
-        <item row="0" column="0">
-         <widget class="QLabel" name="label_Handle">
-          <property name="text">
-           <string>Handle</string>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="1">
-         <widget class="QLabel" name="label_Ty">
-          <property name="text">
-           <string>Ty</string>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="8">
-         <widget class="QLabel" name="label_Status">
-          <property name="text">
-           <string>Status</string>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="5">
-         <widget class="QLabel" name="label_Qy">
-          <property name="text">
-           <string>Qy</string>
-          </property>
-         </widget>
-        </item>
-        <item row="2" column="0">
-         <widget class="QLineEdit" name="lineEdit_Tx">
-          <property name="readOnly">
-           <bool>true</bool>
-          </property>
-         </widget>
-        </item>
-        <item row="2" column="1">
+        <item row="2" column="3">
          <widget class="QLineEdit" name="lineEdit_Ty">
           <property name="readOnly">
            <bool>true</bool>
           </property>
          </widget>
         </item>
-        <item row="2" column="2">
+        <item row="2" column="4">
          <widget class="QLineEdit" name="lineEdit_Tz">
           <property name="readOnly">
            <bool>true</bool>
           </property>
          </widget>
         </item>
-        <item row="2" column="3">
+        <item row="2" column="5">
          <widget class="QLineEdit" name="lineEdit_Qo">
           <property name="readOnly">
            <bool>true</bool>
           </property>
          </widget>
         </item>
-        <item row="2" column="4">
-         <widget class="QLineEdit" name="lineEdit_Qx">
+        <item row="3" column="8">
+         <widget class="QLineEdit" name="lineEdit_Qz_2">
           <property name="readOnly">
            <bool>true</bool>
           </property>
          </widget>
         </item>
-        <item row="2" column="5">
-         <widget class="QLineEdit" name="lineEdit_Qy">
+        <item row="3" column="3">
+         <widget class="QLineEdit" name="lineEdit_Ty_2">
           <property name="readOnly">
            <bool>true</bool>
           </property>
          </widget>
         </item>
-        <item row="2" column="6">
-         <widget class="QLineEdit" name="lineEdit_Qz">
+        <item row="1" column="8">
+         <widget class="QLabel" name="label_Qz">
+          <property name="text">
+           <string>Qz</string>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="2">
+         <widget class="QLineEdit" name="lineEdit_Tx">
           <property name="readOnly">
            <bool>true</bool>
           </property>
          </widget>
         </item>
-        <item row="2" column="7">
-         <widget class="QLineEdit" name="lineEdit_Error">
-          <property name="readOnly">
-           <bool>true</bool>
-          </property>
-         </widget>
-        </item>
-        <item row="2" column="8">
+        <item row="2" column="10">
          <widget class="QLineEdit" name="lineEdit_Status">
           <property name="readOnly">
            <bool>true</bool>
           </property>
          </widget>
         </item>
-        <item row="0" column="3" colspan="3">
-         <widget class="QCheckBox" name="checkBox_UseMarkerNeedleTransform">
+        <item row="1" column="4">
+         <widget class="QLabel" name="label_Tz">
           <property name="text">
-           <string>Use Marker Needle Transform</string>
+           <string>Tz</string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="6">
+         <widget class="QLabel" name="label_Qx">
+          <property name="text">
+           <string>Qx</string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="5">
+         <widget class="QLabel" name="label_Qo">
+          <property name="text">
+           <string>Qo</string>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="4">
+         <widget class="QLabel" name="label_Indicator">
+          <property name="text">
+           <string>Indicator</string>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="2">
+         <widget class="QLineEdit" name="lineEdit_Tx_2">
+          <property name="readOnly">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="9">
+         <widget class="QLineEdit" name="lineEdit_Error_2">
+          <property name="readOnly">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="6">
+         <widget class="QLineEdit" name="lineEdit_Qx_2">
+          <property name="readOnly">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="1">
+         <widget class="QCheckBox" name="checkBox_UseTCPMarkerTransform">
+          <property name="text">
+           <string>T. M. Trsfm.</string>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="10">
+         <widget class="QLineEdit" name="lineEdit_Status_2">
+          <property name="readOnly">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="5">
+         <widget class="QLineEdit" name="lineEdit_Qo_2">
+          <property name="readOnly">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="4">
+         <widget class="QLineEdit" name="lineEdit_Tz_2">
+          <property name="readOnly">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="7">
+         <widget class="QLineEdit" name="lineEdit_Qy_2">
+          <property name="readOnly">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="7">
+         <widget class="QLabel" name="label_Qy">
+          <property name="text">
+           <string>Qy</string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="3">
+         <widget class="QLabel" name="label_Ty">
+          <property name="text">
+           <string>Ty</string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="10">
+         <widget class="QLabel" name="label_Status">
+          <property name="text">
+           <string>Status</string>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="8">
+         <widget class="QLineEdit" name="lineEdit_Qz">
+          <property name="readOnly">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="9">
+         <widget class="QLineEdit" name="lineEdit_Error">
+          <property name="readOnly">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="6">
+         <widget class="QLineEdit" name="lineEdit_Qx">
+          <property name="readOnly">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="7">
+         <widget class="QLineEdit" name="lineEdit_Qy">
+          <property name="readOnly">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="2">
+         <widget class="QLabel" name="label_Tx">
+          <property name="text">
+           <string>Tx</string>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="0">
+         <widget class="QLabel" name="label_Marker_2">
+          <property name="text">
+           <string>Marker</string>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="0">
+         <widget class="QLabel" name="label_Indicator_2">
+          <property name="text">
+           <string>Indicator</string>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="3">
+         <widget class="QComboBox" name="comboBox_Marker"/>
+        </item>
+        <item row="0" column="2">
+         <widget class="QLabel" name="label_Marker">
+          <property name="text">
+           <string>Marker</string>
           </property>
          </widget>
         </item>
@@ -3592,7 +4925,7 @@ the NDI position that will be used is the position of needle point</string>
        <property name="geometry">
         <rect>
          <x>0</x>
-         <y>130</y>
+         <y>210</y>
          <width>361</width>
          <height>131</height>
         </rect>
@@ -3638,7 +4971,7 @@ the NDI position that will be used is the position of needle point</string>
        <property name="geometry">
         <rect>
          <x>380</x>
-         <y>130</y>
+         <y>210</y>
          <width>211</width>
          <height>131</height>
         </rect>
@@ -3683,7 +5016,7 @@ the NDI position that will be used is the position of needle point</string>
        <property name="geometry">
         <rect>
          <x>610</x>
-         <y>130</y>
+         <y>210</y>
          <width>361</width>
          <height>131</height>
         </rect>

@@ -27,14 +27,19 @@ Controller::Controller(std::string group_name) :
 	// This is to notify that the last motion command has been executed
 	connect(&dtPlannar_, SIGNAL(shutdownController()), this, SIGNAL(shutdown()),
 			Qt::QueuedConnection);
-	connect(&dtPlannar_, SIGNAL(newFeedback(Feedback* )), &dtKukaFeedbackReceiver_,
-			SLOT(ObtainJointFeedback(Feedback* )), Qt::QueuedConnection);
-	connect(&dtPlannar_, SIGNAL(LastCommandComplete()), &dtKukaFeedbackReceiver_,
-			SLOT(LastCommandComplete()), Qt::QueuedConnection);
+	connect(&dtPlannar_, SIGNAL(newFeedback(Feedback* )),
+			&dtKukaFeedbackReceiver_, SLOT(ObtainJointFeedback(Feedback* )),
+			Qt::QueuedConnection);
+	connect(&dtPlannar_, SIGNAL(LastCommandComplete()),
+			&dtKukaFeedbackReceiver_, SLOT(LastCommandComplete()),
+			Qt::QueuedConnection);
 	// Send Trajectory to plannar_ object
 	connect(this, SIGNAL(sendTrajectorySignal(const MotionPlan&)), &dtPlannar_,
 			SLOT(executeTrajectory(const MotionPlan&)), Qt::QueuedConnection);
-	connect(&dtKukaFeedbackReceiver_, SIGNAL(closeWindow()), this, SIGNAL(closeWindow()), Qt::QueuedConnection);
+	connect(&dtKukaFeedbackReceiver_, SIGNAL(closeWindow()), this,
+			SIGNAL(closeWindow()), Qt::QueuedConnection);
+	connect(this, SIGNAL(changeMotionCompleteDelayTime(double)), &dtPlannar_,
+			SLOT(changeMotionCompleteDelayTime(double)), Qt::QueuedConnection);
 
 	// Settings for MoveGroup
 	pdtMoveGroup_ = boost::make_shared<moveit::planning_interface::MoveGroup>(
@@ -94,7 +99,7 @@ Controller::~Controller() {
 }
 
 void Controller::closeDialogWindow() {
-	if(pdtSubWindowWaitForExecution_!=NULL) {
+	if (pdtSubWindowWaitForExecution_ != NULL) {
 		ROS_INFO("Close dialog window");
 		pdtSubWindowWaitForExecution_->close();
 	}
@@ -105,10 +110,11 @@ void Controller::newFeedbackReceived(Feedback* feedback) {
 }
 
 // Obtain motion plan based on target pose
-bool Controller::planTargetMotion(geometry_msgs::Pose target_pose) {
+bool Controller::planTargetMotion(geometry_msgs::Pose target_pose,
+		const std::string end_effector_link) {
 
 	pdtMoveGroup_->clearPoseTarget();
-	pdtMoveGroup_->setPoseTarget(target_pose);
+	pdtMoveGroup_->setPoseTarget(target_pose, end_effector_link);
 	pdtMoveGroup_->setStartState(*pdtMoveGroup_->getCurrentState());
 
 	bPlanSuccess_ = pdtMoveGroup_->plan(dtMotionPlan_);
@@ -117,10 +123,10 @@ bool Controller::planTargetMotion(geometry_msgs::Pose target_pose) {
 	return bPlanSuccess_;
 }
 
-bool Controller::planTargetPoseMotion() {
+bool Controller::planTargetPoseMotion(const std::string end_effector_link) {
 
 	pdtMoveGroup_->clearPoseTarget();
-	pdtMoveGroup_->setPoseTarget(dtTargetPose_);
+	pdtMoveGroup_->setPoseTarget(dtTargetPose_, end_effector_link);
 	pdtMoveGroup_->setStartState(*pdtMoveGroup_->getCurrentState());
 
 	bPlanSuccess_ = pdtMoveGroup_->plan(dtMotionPlan_);
@@ -153,10 +159,11 @@ bool Controller::planTargetJointsMotion() {
 	return bPlanSuccess_;
 }
 // Obtain motion plan based on target Affine matrix
-bool Controller::planTargetMotion(Eigen::Affine3d target_affine) {
+bool Controller::planTargetMotion(Eigen::Affine3d target_affine,
+		const std::string end_effector_link) {
 
 	pdtMoveGroup_->clearPoseTarget();
-	pdtMoveGroup_->setPoseTarget(target_affine);
+	pdtMoveGroup_->setPoseTarget(target_affine, end_effector_link);
 	pdtMoveGroup_->setStartState(*pdtMoveGroup_->getCurrentState());
 
 	bPlanSuccess_ = pdtMoveGroup_->plan(dtMotionPlan_);
@@ -164,10 +171,10 @@ bool Controller::planTargetMotion(Eigen::Affine3d target_affine) {
 
 	return bPlanSuccess_;
 }
-bool Controller::planTargetAffineMotion() {
+bool Controller::planTargetAffineMotion(const std::string end_effector_link) {
 
 	pdtMoveGroup_->clearPoseTarget();
-	pdtMoveGroup_->setPoseTarget(dtTargetAffine_);
+	pdtMoveGroup_->setPoseTarget(dtTargetAffine_, end_effector_link);
 	pdtMoveGroup_->setStartState(*pdtMoveGroup_->getCurrentState());
 
 	bPlanSuccess_ = pdtMoveGroup_->plan(dtMotionPlan_);
@@ -197,11 +204,11 @@ bool Controller::executeMotionPlan(
 	ROS_INFO("Trajectory sended");
 	/*while (!dtKukaFeedbackReceiver_.bLastCommandComplete_) {
 
-	}
-	ROS_INFO("Motion plan executed successfully");
-	dtKukaFeedbackReceiver_.dtLastCommandCompleteLock_.lockForWrite();
-	dtKukaFeedbackReceiver_.bLastCommandComplete_ = false;
-	dtKukaFeedbackReceiver_.dtLastCommandCompleteLock_.unlock();*/
+	 }
+	 ROS_INFO("Motion plan executed successfully");
+	 dtKukaFeedbackReceiver_.dtLastCommandCompleteLock_.lockForWrite();
+	 dtKukaFeedbackReceiver_.bLastCommandComplete_ = false;
+	 dtKukaFeedbackReceiver_.dtLastCommandCompleteLock_.unlock();*/
 	return true;
 #endif
 
@@ -225,11 +232,11 @@ bool Controller::executeMotionPlan() {
 	ROS_INFO("Trajectory sended");
 	/*while (!dtKukaFeedbackReceiver_.bLastCommandComplete_) {
 
-	}
-	ROS_INFO("Motion plan executed successfully");
-	dtKukaFeedbackReceiver_.dtLastCommandCompleteLock_.lockForWrite();
-	dtKukaFeedbackReceiver_.bLastCommandComplete_ = false;
-	dtKukaFeedbackReceiver_.dtLastCommandCompleteLock_.unlock();*/
+	 }
+	 ROS_INFO("Motion plan executed successfully");
+	 dtKukaFeedbackReceiver_.dtLastCommandCompleteLock_.lockForWrite();
+	 dtKukaFeedbackReceiver_.bLastCommandComplete_ = false;
+	 dtKukaFeedbackReceiver_.dtLastCommandCompleteLock_.unlock();*/
 	return true;
 #endif
 
@@ -254,11 +261,11 @@ bool Controller::asyncExecuteMotionPlan(
 	emit sendTrajectorySignal((const MotionPlan) motion_plan);
 	/*while (!dtKukaFeedbackReceiver_.bLastCommandComplete_) {
 
-	}
-	ROS_INFO("Motion plan executed successfully");
-	dtKukaFeedbackReceiver_.dtLastCommandCompleteLock_.lockForWrite();
-	dtKukaFeedbackReceiver_.bLastCommandComplete_ = false;
-	dtKukaFeedbackReceiver_.dtLastCommandCompleteLock_.unlock();*/
+	 }
+	 ROS_INFO("Motion plan executed successfully");
+	 dtKukaFeedbackReceiver_.dtLastCommandCompleteLock_.lockForWrite();
+	 dtKukaFeedbackReceiver_.bLastCommandComplete_ = false;
+	 dtKukaFeedbackReceiver_.dtLastCommandCompleteLock_.unlock();*/
 	return true;
 #endif
 }
@@ -280,11 +287,11 @@ bool Controller::asyncExecuteMotionPlan() {
 	emit sendTrajectorySignal((const MotionPlan) dtMotionPlan_);
 	/*while (!dtKukaFeedbackReceiver_.bLastCommandComplete_) {
 
-	}
-	ROS_INFO("Motion plan executed successfully");
-	dtKukaFeedbackReceiver_.dtLastCommandCompleteLock_.lockForWrite();
-	dtKukaFeedbackReceiver_.bLastCommandComplete_ = false;
-	dtKukaFeedbackReceiver_.dtLastCommandCompleteLock_.unlock();*/
+	 }
+	 ROS_INFO("Motion plan executed successfully");
+	 dtKukaFeedbackReceiver_.dtLastCommandCompleteLock_.lockForWrite();
+	 dtKukaFeedbackReceiver_.bLastCommandComplete_ = false;
+	 dtKukaFeedbackReceiver_.dtLastCommandCompleteLock_.unlock();*/
 	return true;
 #endif
 }
@@ -338,11 +345,11 @@ void Controller::visualizeExecutePlanCb() {
 			emit sendTrajectorySignal((const MotionPlan) temp_plan);
 			/*while (!dtKukaFeedbackReceiver_.bLastCommandComplete_) {
 
-			}
-			ROS_INFO("Motion plan executed successfully");
-			dtKukaFeedbackReceiver_.dtLastCommandCompleteLock_.lockForWrite();
-			dtKukaFeedbackReceiver_.bLastCommandComplete_ = false;
-			dtKukaFeedbackReceiver_.dtLastCommandCompleteLock_.unlock();*/
+			 }
+			 ROS_INFO("Motion plan executed successfully");
+			 dtKukaFeedbackReceiver_.dtLastCommandCompleteLock_.lockForWrite();
+			 dtKukaFeedbackReceiver_.bLastCommandComplete_ = false;
+			 dtKukaFeedbackReceiver_.dtLastCommandCompleteLock_.unlock();*/
 #endif
 		} else {
 			// This one ensures that no unreachable motion command will be sent to Kuka,

@@ -12,6 +12,7 @@
 #define MOTION_PLAN_EXECUTE 0
 #define MOTION_PLAN_REPLAN 1
 #define MOTION_PLAN_CANCEL 2
+#define MOTION_PLAN_FAIL 3
 
 class MotionPlanDecision: public QDialog, private Ui::SubWindow_PlanDecision {
 Q_OBJECT

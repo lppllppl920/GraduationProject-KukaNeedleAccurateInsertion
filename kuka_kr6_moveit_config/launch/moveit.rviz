@@ -5,7 +5,9 @@ Panels:
     Property Tree Widget:
       Expanded:
         - /MotionPlanning1
-        - /MotionPlanning1/Planned Path1
+        - /MotionPlanning1/Scene Robot1
+        - /MotionPlanning1/Planning Request1
+        - /TF1
       Splitter Ratio: 0.74256
     Tree Height: 353
   - Class: rviz/Help
@@ -41,7 +43,7 @@ Visualization Manager:
       Move Group Namespace: ""
       MoveIt_Goal_Tolerance: 0
       MoveIt_Planning_Attempts: 10
-      MoveIt_Planning_Time: 5
+      MoveIt_Planning_Time: 20
       MoveIt_Use_Constraint_Aware_IK: true
       MoveIt_Warehouse_Host: 127.0.0.1
       MoveIt_Warehouse_Port: 33829
@@ -127,23 +129,23 @@ Visualization Manager:
         TextHeight: 0.08
       Planning Request:
         Colliding Link Color: 255; 0; 0
-        Goal State Alpha: 1
+        Goal State Alpha: 0.5
         Goal State Color: 250; 128; 0
-        Interactive Marker Size: 0
+        Interactive Marker Size: 0.2
         Joint Violation Color: 255; 0; 255
-        Planning Group: manipulator
+        Planning Group: flange
         Query Goal State: true
         Query Start State: false
         Show Workspace: false
-        Start State Alpha: 1
+        Start State Alpha: 0.5
         Start State Color: 0; 255; 0
-      Planning Scene Topic: /move_group/monitored_planning_scene
+      Planning Scene Topic: move_group/monitored_planning_scene
       Robot Description: robot_description
       Scene Geometry:
         Scene Alpha: 1
         Scene Color: 50; 230; 50
         Scene Display Time: 0.2
-        Show Scene Geometry: true
+        Show Scene Geometry: false
         Voxel Coloring: Z-Axis
         Voxel Rendering: Occupied Voxels
       Scene Robot:
@@ -202,7 +204,7 @@ Visualization Manager:
             Alpha: 1
             Show Axes: false
             Show Trail: false
-        Robot Alpha: 0.5
+        Robot Alpha: 1
         Show Robot Collision: false
         Show Robot Visual: true
       Value: true
@@ -214,16 +216,6 @@ Visualization Manager:
         base_link:
           Value: true
         flange:
-          Value: true
-        link1:
-          Value: true
-        link2:
-          Value: true
-        link3:
-          Value: true
-        link4:
-          Value: true
-        link5:
           Value: true
         link6:
           Value: true
@@ -238,15 +230,6 @@ Visualization Manager:
       Show Names: true
       Tree:
         base_link:
-          link1:
-            link2:
-              link3:
-                link4:
-                  link5:
-                    link6:
-                      flange:
-                        tip:
-                          {}
           world:
             {}
       Update Interval: 0
@@ -266,36 +249,36 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/XYOrbit
-      Distance: 2.6567
+      Distance: 1.56559
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.06
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: 1.02318
-        Y: -0.128075
-        Z: 2.23518e-07
+        X: 0.352141
+        Y: 0.133118
+        Z: 1.04309e-07
       Name: Current View
       Near Clip Distance: 0.01
-      Pitch: 0.269792
+      Pitch: 0.374797
       Target Frame: base_link
       Value: XYOrbit (rviz)
-      Yaw: 2.08858
+      Yaw: 5.19495
     Saved: ~
 Window Geometry:
   Displays:
     collapsed: true
-  Height: 1056
+  Height: 1028
   Help:
     collapsed: false
   Hide Left Dock: true
-  Hide Right Dock: false
+  Hide Right Dock: true
   Motion Planning:
     collapsed: true
-  QMainWindow State: 000000ff00000000fd0000000100000000000002b1000003befc0200000005fb000000100044006900730070006c006100790073000000002800000202000000dd00fffffffb0000000800480065006c00700000000342000000bb0000007600fffffffb0000000a0056006900650077007300000003b0000000b0000000b000fffffffb0000000c00430061006d00650072006100000002ff000001610000000000000000fb0000001e004d006f00740069006f006e00200050006c0061006e006e0069006e00670000000230000001b6000001ab00ffffff0000073f000003da00000001000000020000000100000002fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
+  QMainWindow State: 000000ff00000000fd0000000100000000000002b1000003dafc0200000005fb000000100044006900730070006c00610079007300000000280000021e000000dd00fffffffb0000000800480065006c00700000000342000000bb0000007600fffffffb0000000a0056006900650077007300000003b0000000b0000000b000fffffffb0000000c00430061006d00650072006100000002ff000001610000000000000000fb0000001e004d006f00740069006f006e00200050006c0061006e006e0069006e0067000000024c000001b6000001ab00ffffff0000039f000003be00000001000000020000000100000002fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
   Views:
     collapsed: false
-  Width: 1855
-  X: 65
-  Y: 24
+  Width: 927
+  X: 912
+  Y: 14

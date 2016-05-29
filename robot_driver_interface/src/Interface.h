@@ -24,9 +24,13 @@
 #include "ndi/COMPortTimeOut.h"
 #include "MotionPlanDecision.h"
 #include "WaitForExecution.h"
+#include "WaitForIndicatorPlaced.h"
+#include "EulerQuaternionConversion.h"
 #include "controller.h"
 
-#define NDI_TIME_INTERVAL 200
+#define NDI_TIME_INTERVAL 2000
+#define NDI_FRAME_COUNT 20
+#define MAX_MOVE_ANGLE 3
 
 using namespace visualization_msgs;
 using namespace interactive_markers;
@@ -57,6 +61,10 @@ public:
 // NDI related
 	void setMode(int Mode);
 	int activatePorts();
+	void XYZNPointMethod(std::vector<Frame> &KUKAFrames,
+			Eigen::Vector3d &TCPTranslation);
+	int PlanAndExecuteTargetMotion(geometry_msgs::Pose target_pose,
+			std::string end_effector_link);
 public slots:
 	void newFeedbackReceived(Feedback* feedback);
 	void shutdown();
@@ -84,19 +92,29 @@ public slots:
 	void on_terminate_buf_button_clicked();
 	void on_convert_button_clicked();
 	void calculateRotationMatrix();
+	bool ndiFeedbackParallelMove();
 	void ndiFeedbackMove();
-	void calibrateNeedlePoint();
+	void calculateTCPMarkerTransform();
 	void calculateNDIKUKATransform();
-	void calibrateNeedleDirection();
 	void recordKUKAFeedback();
+	void ABC2PointCalibrate();
+	void AddorUpdatePosition();
+	void XYZ4PointCalibrate();
+	void showSelectedKUKAPosition();
 	void closeDialogWindow();
+	void copyCurrentTCPState();
+	void copyCurrentTCPXYZKUKAABC();
 	//NDI related
+	bool getNDIFramesAverage(int nMarker, int nNeedle,
+			QuatTransformation& dtMarker, QuatTransformation& dtNDINeedlePoint,
+			bool bCalculateABC, int nMaxFramesCount);
 	void resetNDISystem();
 	void initializeNDISystem();
 	void activateHandles();
 	void trackingButton();
 	int startTracking();
 	int stopTracking();
+	long getSystemTransformData(bool bUpdateGUI);
 	long getSystemTransformData();
 	long comPortTimeout();
 	void settingsComportsettings();
@@ -112,9 +130,10 @@ public slots:
 	void optionsIlluminatorfiringrate();
 	void optionsProgramoptions();
 	void portEnabled();
-	void useMarkerNeedleTransformChanged();
+	void useTCPMarkerTransformChanged();
 	void reInitializeSystem();
-	void clearTransformData();
+	void clearMarkerTransformData();
+	void clearIndicatorTransformData();
 	void optionsProgramoptions_OK();
 	void settingsComPortSettings_OK();
 	void optionsIlluminatorfiringrate_OK();
@@ -123,8 +142,9 @@ signals:
 // Send trajectory to controller object
 	void addWaypointsSignal();
 	void visualizeExecutePlan();
-	void endEffectorPos(const InteractiveMarkerFeedbackConstPtr &feedback);
 	void executeMotionPlan_signal();
+	void endEffectorPos(const InteractiveMarkerFeedbackConstPtr &feedback);
+	void changeMotionCompleteDelayTime(double delay_time);
 
 private:
 	boost::shared_ptr<ros::NodeHandle> pdtNodeHandle_;
@@ -166,6 +186,15 @@ private:
 		X = 0, Y = 1, Z = 2, Custom = 3
 	};
 
+	enum {
+		NDIKUKARotation = 0,
+		TCPFlangeRotation = 1,
+		MarkerFlangeTranslation = 2,
+		TCPFlangeTranslation = 3,
+		NDIKUKATransform = 4,
+		TCPMarkerTransform = 5
+	};
+
 // NDI related
 
 	boost::shared_ptr<CommandHandling> pdtCommandHandling_; /* point to the command handling class */
@@ -201,11 +230,10 @@ private:
 	ROMFileDlg dtSubWindowROMFile_;
 	MotionPlanDecision dtSubWindowMotionPlanDecision_;
 	WaitForExecution dtSubWindowWaitForExecution_;
+	WaitForIndicatorPlaced dtSubWindowWaitForIndicatorPlaced_;
 
 	QTimer *dtGetDataTimer_;
 
-	KDL::Rotation dtNDIKUKARotationMatrix_;
-	KDL::Vector dtNDIKUKATranslationVector_;
 	bool bMotionComplete_;
 
 	Controller dtController_;
@@ -213,11 +241,31 @@ private:
 
 	Frame dtFrameFeedback_;
 
-	QuatTransformation dtMarkerNeedleTransform_;
-	bool bUseMarkerNeedleTransform_;
+	QuatTransformation dtTCPMarkerTransform_;
+	bool bUseTCPMarkerTransform_;
 
 	FILE *pfOut_;
 
+	std::vector<Frame> vecdtKUKAFrames_;
+	std::vector<bool> vecbFramesUpdated_;
+//------------------------------------------------------------------------------------------------------------------
+// Transformation between coordinates (the first coordinate is the down part, the second coordinate is the up part) (all in meter unit)
+//------------------------------------------------------------------------------------------------------------------
+	// R_NDI^KUKA and P_NDI^KUKA
+	Eigen::Matrix3d dtNDIKUKARotationMatrix_;
+	Eigen::Vector3d dtNDIKUKATranslationVector_;
+	// R_TCP^Flange and P_TCP^Flange
+	Eigen::Matrix3d dtTCPFlangeRotationMatrix_;
+	Eigen::Vector3d dtTCPFlangeTranslationVector_;
+	// R_TCP^Marker and P_TCP^Marker
+	Eigen::Matrix3d dtTCPMarkerRotationMatrix_;
+	Eigen::Vector3d dtTCPMarkerTranslationVector_;
+	// R_Marker^Flange and P_Marker^Flange
+	Eigen::Matrix3d dtMarkerFlangeRotationMatrix_;
+	Eigen::Vector3d dtMarkerFlangeTranslationVector_;
+
+	std::vector<bool> vecbCalibrationToDoList_;
+	bool bTCPMarkerFlip_;
 };
 
 void addWaypointsCb_global(const InteractiveMarkerFeedbackConstPtr &feedback);

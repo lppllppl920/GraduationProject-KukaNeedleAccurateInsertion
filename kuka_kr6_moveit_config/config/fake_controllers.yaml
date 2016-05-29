@@ -7,3 +7,11 @@ controller_list:
       - joint4
       - joint5
       - joint6
+  - name: fake_flange_controller
+    joints:
+      - joint1
+      - joint2
+      - joint3
+      - joint4
+      - joint5
+      - joint6

@@ -104,8 +104,10 @@ struct Frame {
 	// add each component of the two frames
 	Frame& operator+(const Frame& right);
 
+	Frame& operator=(const Frame& right);
+
 	// Frame constructor, with offset of cartesian position
-	Frame(Frame& f, float x_add = 0.0, float y_add = 0.0, float z_add = 0.0);
+	Frame(const Frame& f, float x_add = 0.0, float y_add = 0.0, float z_add = 0.0);
 
 	// Default Frame constructor, with default value set to $H_POS
 	Frame(float x = DEFAULT_X, float y = DEFAULT_Y, float z = DEFAULT_Z,
@@ -228,7 +230,7 @@ public:
 	// output is passed through reference parameter &f
 	// if return false, something went wrong
 	bool Axis2Frame(Axis &a, Frame &f);
-
+	bool Axis2Frame_flange(Axis &a, Frame &f);
 	// Convertion from Frame to Axis
 	// output is passed through reference Axis &a
 	// Axis &a_init used as initial point for iteration
@@ -276,14 +278,14 @@ private:
 
 	// KDL::Chain from root to intersetion point of A4, A5 and A6
 	// for calculating Pos.S
-	KDL::Chain chain_rot_;
+	KDL::Chain chain_flange_;
 
 	// Path and filename for URDF description
 	std::string filename;
 
 	// Solver pointers for conversion between Axis, Frame, Pos
 	KDL::ChainFkSolverPos_recursive* fkSolver_;
-	KDL::ChainFkSolverPos_recursive* fkSolver_rot_;
+	KDL::ChainFkSolverPos_recursive* fkSolver_flange_;
 	KDL::ChainIkSolverPos_LMA* ikSolver_;
 };
 

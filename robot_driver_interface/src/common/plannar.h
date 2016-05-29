@@ -65,6 +65,9 @@
 #include "message.h"
 #include "tcpthread.h"
 #include "ROSThread.h"
+
+#define MOTION_COMPLETE_LARGE_DELAY 180
+#define MOTION_COMPLETE_SMALL_DELAY 60
 // --------------------------------------------------------------------------
 // Plannar class
 //  - publicly inherited from QObect, for signal-slot connection between main
@@ -220,6 +223,8 @@ public slots:
 	void disconnected();
 	// Called when Controller emit sendTrajectory() signal
 	void executeTrajectory(const MotionPlan& motion_plan);
+	// Change motion complete waiting time
+	void changeMotionCompleteDelayTime(double delay_time);
 signals:
 	// Connected with tcpthread_.sendMessage()
 	// send a message to KRC4
@@ -372,6 +377,8 @@ private:
 	int lastStamp_;
 	bool MotionComplete_;
 	int delayCounter_;
+
+	double motion_complete_delay_;
 	//QThread *tcpThread_;
 	// thread for ros spinning
 	ROSThread rosThread_;

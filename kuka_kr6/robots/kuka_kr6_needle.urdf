@@ -116,22 +116,55 @@
   </link>
   <link name="flange">
     <visual>
-      <origin rpy="0 0 0.3275285" xyz="0.05 0 0.1661755"/>
+      <origin rpy="0 0 3.14159265" xyz="0 0 0"/>
       <geometry>
-        <box size="0.15 0.1 0.332351"/>
+        <mesh filename="package://kuka_kr6/robots/needle_container.STL"/>
       </geometry>
       <material name="silver">
         <color rgba="0.75 0.75 0.75 1"/>
       </material>
     </visual>
     <collision>
-      <origin rpy="0 0 0.3275285" xyz="0.05 0 0.1661755"/>
+      <origin rpy="0 0 3.14159265" xyz="0 0 0"/>
       <geometry>
-        <box size="0.15 0.1 0.332351"/>
+        <mesh filename="package://kuka_kr6/robots/needle_container_collision.STL"/>
       </geometry>
       <material name="silver"/>
     </collision>
   </link>
+  <!--  <visual>
+      <origin rpy="0 0 0" xyz="0 0.13 -0.13"/>
+      <geometry>
+        <box size="0.16 0.1 0.30"/>
+      </geometry>
+      <material name="silver">
+        <color rgba="0.75 0.75 0.75 1"/>
+      </material>
+    </visual>
+    <collision>
+      <origin rpy="0 0 0" xyz="0 0.13 -0.13"/>
+      <geometry>
+        <box size="0.16 0.1 0.30"/>
+      </geometry>
+      <material name="silver"/>
+    </collision> 
+
+    <visual>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="package://kuka_kr6/robots/NeedleContainer.stl"/>
+      </geometry>
+      <material name="silver">
+        <color rgba="0.75 0.75 0.75 1"/>
+      </material>
+    </visual>
+    <collision>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="package://kuka_kr6/robots/NeedleContainer.stl"/>
+      </geometry>
+      <material name="silver"/>
+    </collision>-->
   <link name="tip"/>
   <!-- end of link list -->
   <!-- joint list -->
@@ -183,8 +216,7 @@
     <child link="flange"/>
   </joint>
   <joint name="tip_joint" type="fixed">
-    <!--<origin rpy="1.0687349 -1.52199692 -2.44443834" xyz="0.0702 0.023006 0.332351"/>-->
-    <origin rpy="0 0 0" xyz="0.025364 0.040438 0.118494"/>
+    <origin rpy="0 1.562434 -0.774395" xyz="0.004377 0.184704 0.031893"/>
     <parent link="flange"/>
     <child link="tip"/>
   </joint>

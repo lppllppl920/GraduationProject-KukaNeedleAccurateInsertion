@@ -47,16 +47,18 @@ public:
 
 // Motion planning related function
 	void addWaypoints(geometry_msgs::Pose waypoint_pose);
-	bool planTargetMotion(geometry_msgs::Pose target_pose);
 	bool planTargetMotion(std::map<std::string, double> target_joints);
-	bool planTargetMotion(Eigen::Affine3d target_affine);
+	bool planTargetMotion(geometry_msgs::Pose target_pose,
+			const std::string end_effector_link = "tip");
+	bool planTargetMotion(Eigen::Affine3d target_affine,
+			const std::string end_effector_link = "tip");
 	bool executeMotionPlan(
 			moveit::planning_interface::MoveGroup::Plan motion_plan);
 	bool asyncExecuteMotionPlan(
 			moveit::planning_interface::MoveGroup::Plan motion_plan);
 	bool planTargetJointsMotion();
-	bool planTargetPoseMotion();
-	bool planTargetAffineMotion();
+	bool planTargetPoseMotion(const std::string end_effector_link = "tip");
+	bool planTargetAffineMotion(const std::string end_effector_link = "tip");
 
 	bool asyncExecuteMotionPlan();
 	void visualizeMotionPlan();
@@ -86,8 +88,8 @@ signals:
 	void newFeedback(Feedback* feedback);
 	void visualizeMotionPlan(MotionPlan motion_plan);
 	void sendTrajectorySignal(const MotionPlan& motion_plan);
+	void changeMotionCompleteDelayTime(double delay_time);
 	void closeWindow();
-
 
 public:
 // Motion

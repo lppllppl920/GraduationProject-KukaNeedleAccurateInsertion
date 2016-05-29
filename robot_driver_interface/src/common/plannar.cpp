@@ -50,6 +50,7 @@ Plannar::Plannar() :
 	lastStamp_ = -1;
 	MotionComplete_ = false;
 	delayCounter_ = 0;
+	motion_complete_delay_ = 180;
 
 	lastAxis_ = Axis(0, 0, 0, 0, 0, 0);
 }
@@ -186,6 +187,11 @@ void Plannar::appendCommandList(Command* cmd) {
 	}
 }
 
+void Plannar::changeMotionCompleteDelayTime(double delay_time) {
+	ROS_INFO("Motion complete delay time changed to %f feedback", delay_time);
+	motion_complete_delay_ = delay_time;
+}
+
 void Plannar::updateQueueStatus(Feedback* fb) {
 	// for debugging
 //    checkStatusTurn(fb);
@@ -219,7 +225,7 @@ void Plannar::updateQueueStatus(Feedback* fb) {
 	emit newFeedback(fb);
 	if (!MotionComplete_ && lastStamp_ == fb->getStamp() && fb->getBufferExtreme() == Feedback::Extreme::Empty && fb->getText() == "Timer Feedback") {
 		delayCounter_++;
-		if(delayCounter_ >= 600) {
+		if(delayCounter_ >= motion_complete_delay_) {
 			ROS_INFO("Plannar: Last command complete, stamp is %d", lastStamp_);
 			emit LastCommandComplete();
 			delayCounter_ = 0;

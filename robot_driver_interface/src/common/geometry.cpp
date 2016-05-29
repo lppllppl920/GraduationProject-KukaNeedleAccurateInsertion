@@ -20,7 +20,18 @@ Frame& Frame::operator+(const Frame& right) {
 	return *this;
 }
 
-Frame::Frame(Frame& f, float x_add, float y_add, float z_add) {
+Frame& Frame::operator=(const Frame& right){
+	X = right.X;
+	Y = right.Y;
+	Z = right.Z;
+	A = right.A;
+	B = right.B;
+	C = right.C;
+
+	return *this;
+}
+
+Frame::Frame(const Frame& f, float x_add, float y_add, float z_add) {
 	X = f.X + x_add;
 	Y = f.Y + y_add;
 	Z = f.Z + z_add;
@@ -28,7 +39,6 @@ Frame::Frame(Frame& f, float x_add, float y_add, float z_add) {
 	B = f.B;
 	C = f.C;
 }
-
 Frame::Frame(float x, float y, float z, float a, float b, float c) {
 	X = x;
 	Y = y;
@@ -158,14 +168,14 @@ Model::Model(std::string fn) :
 		// kdl::tree -> kdl::chain
 		std::string rootLink = "base_link";
 		std::string tipLink = "tip";
-		std::string rot_center = "link6";
+		std::string flangeLink = "flange";
 		if (!tree_.getChain(rootLink, tipLink, chain_)) {
 			std::cout
 					<< "Model::Model: Failed to get chain from kdl tree, check root/tip link"
 					<< std::endl;
 			valid_ = false;
 		}
-		if (!tree_.getChain(rootLink, rot_center, chain_rot_)) {
+		if (!tree_.getChain(rootLink, flangeLink, chain_flange_)) {
 			std::cout
 					<< "Model::Model: Failed to get chain from kdl tree, check root/rot link"
 					<< std::endl;
@@ -181,13 +191,13 @@ Model::~Model() {
 	std::cout << "Model Deconstructing..." << std::endl;
 	delete ikSolver_;
 	delete fkSolver_;
-	delete fkSolver_rot_;
+	delete fkSolver_flange_;
 }
 
 void Model::setupSolver() {
 	if (valid_) {
 		fkSolver_ = new KDL::ChainFkSolverPos_recursive(chain_);
-		fkSolver_rot_ = new KDL::ChainFkSolverPos_recursive(chain_rot_);
+		fkSolver_flange_ = new KDL::ChainFkSolverPos_recursive(chain_flange_);
 		ikSolver_ = new KDL::ChainIkSolverPos_LMA(chain_);
 		std::cout << "Model::setupSolver: OK" << std::endl;
 	} else
@@ -209,6 +219,47 @@ bool Model::Axis2Frame(Axis &a, Frame &f) {
 
 		// Forward Solver
 		ret_val = fkSolver_->JntToCart(jnt_q, tipFrame);
+		if (ret_val < 0) {
+			std::cout
+					<< "Model::Axis2Frame: JntToCart error, Frame set to Home value"
+					<< std::endl;
+			f.set();
+			return false;
+		}
+
+		// Cast into old format
+		f.X = tipFrame.p.data[0] * 1000.0;
+		f.Y = tipFrame.p.data[1] * 1000.0;
+		f.Z = tipFrame.p.data[2] * 1000.0;
+		double r, p, y;
+		tipFrame.M.GetRPY(r, p, y);
+		f.C = (float) r * 180.0 / M_PI;
+		f.B = (float) p * 180.0 / M_PI;
+		f.A = (float) y * 180.0 / M_PI;
+
+		return true;
+	} else {
+		std::cout << "Model::Axis2Frame: Failed, solver invalid" << std::endl;
+		f.set();
+		return false;
+	}
+}
+
+bool Model::Axis2Frame_flange(Axis &a, Frame &f) {
+	int ret_val = 0;
+	if (valid_) {
+		// Init KDL variables
+		KDL::JntArray jnt_q = KDL::JntArray(6);
+		KDL::Frame tipFrame;
+		jnt_q(0) = a.A1 / 180.0 * M_PI;
+		jnt_q(1) = a.A2 / 180.0 * M_PI;
+		jnt_q(2) = a.A3 / 180.0 * M_PI;
+		jnt_q(3) = a.A4 / 180.0 * M_PI;
+		jnt_q(4) = a.A5 / 180.0 * M_PI;
+		jnt_q(5) = a.A6 / 180.0 * M_PI;
+
+		// Forward Solver
+		ret_val = fkSolver_flange_->JntToCart(jnt_q, tipFrame);
 		if (ret_val < 0) {
 			std::cout
 					<< "Model::Axis2Frame: JntToCart error, Frame set to Home value"
@@ -296,7 +347,7 @@ bool Model::Axis2Pos(Axis &a, Pos &p) {
 
 		// Forward Solver
 		ret_val1 = fkSolver_->JntToCart(jnt_q, tipFrame);
-		ret_val2 = fkSolver_rot_->JntToCart(jnt_q, rotFrame);
+		ret_val2 = fkSolver_flange_->JntToCart(jnt_q, rotFrame);
 
 		if (ret_val1 < 0 || ret_val2 < 0) {
 			std::cout

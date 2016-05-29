@@ -5,4 +5,4 @@ moveit_setup_assistant_config:
   SRDF:
     relative_path: config/kuka_kr6.srdf
   CONFIG:
-    generated_timestamp: 1459404556
+    generated_timestamp: 1463758888
