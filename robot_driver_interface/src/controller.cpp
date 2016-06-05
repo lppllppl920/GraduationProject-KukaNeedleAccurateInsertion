@@ -202,13 +202,6 @@ bool Controller::executeMotionPlan(
 	ROS_INFO("Controller thread: %lu", QThread::currentThreadId());
 	emit sendTrajectorySignal((const MotionPlan) motion_plan);
 	ROS_INFO("Trajectory sended");
-	/*while (!dtKukaFeedbackReceiver_.bLastCommandComplete_) {
-
-	 }
-	 ROS_INFO("Motion plan executed successfully");
-	 dtKukaFeedbackReceiver_.dtLastCommandCompleteLock_.lockForWrite();
-	 dtKukaFeedbackReceiver_.bLastCommandComplete_ = false;
-	 dtKukaFeedbackReceiver_.dtLastCommandCompleteLock_.unlock();*/
 	return true;
 #endif
 
@@ -230,13 +223,6 @@ bool Controller::executeMotionPlan() {
 	ROS_INFO("Controller thread: %lu", QThread::currentThreadId());
 	emit sendTrajectorySignal((const MotionPlan) dtMotionPlan_);
 	ROS_INFO("Trajectory sended");
-	/*while (!dtKukaFeedbackReceiver_.bLastCommandComplete_) {
-
-	 }
-	 ROS_INFO("Motion plan executed successfully");
-	 dtKukaFeedbackReceiver_.dtLastCommandCompleteLock_.lockForWrite();
-	 dtKukaFeedbackReceiver_.bLastCommandComplete_ = false;
-	 dtKukaFeedbackReceiver_.dtLastCommandCompleteLock_.unlock();*/
 	return true;
 #endif
 
@@ -259,13 +245,6 @@ bool Controller::asyncExecuteMotionPlan(
 	dtKukaFeedbackReceiver_.dtLastCommandCompleteLock_.unlock();
 
 	emit sendTrajectorySignal((const MotionPlan) motion_plan);
-	/*while (!dtKukaFeedbackReceiver_.bLastCommandComplete_) {
-
-	 }
-	 ROS_INFO("Motion plan executed successfully");
-	 dtKukaFeedbackReceiver_.dtLastCommandCompleteLock_.lockForWrite();
-	 dtKukaFeedbackReceiver_.bLastCommandComplete_ = false;
-	 dtKukaFeedbackReceiver_.dtLastCommandCompleteLock_.unlock();*/
 	return true;
 #endif
 }
@@ -285,13 +264,6 @@ bool Controller::asyncExecuteMotionPlan() {
 	dtKukaFeedbackReceiver_.dtLastCommandCompleteLock_.unlock();
 
 	emit sendTrajectorySignal((const MotionPlan) dtMotionPlan_);
-	/*while (!dtKukaFeedbackReceiver_.bLastCommandComplete_) {
-
-	 }
-	 ROS_INFO("Motion plan executed successfully");
-	 dtKukaFeedbackReceiver_.dtLastCommandCompleteLock_.lockForWrite();
-	 dtKukaFeedbackReceiver_.bLastCommandComplete_ = false;
-	 dtKukaFeedbackReceiver_.dtLastCommandCompleteLock_.unlock();*/
 	return true;
 #endif
 }
@@ -308,7 +280,6 @@ void Controller::stopMotion() {
 }
 void Controller::addWaypoints(geometry_msgs::Pose waypoint_pose) {
 	ROS_INFO("Controller: add %d th way point", ++nWaypointCount_);
-	//ROS_INFO("Controller: Thread %d", QThread::currentThreadId());
 	vecdtWaypoints_.push_back(waypoint_pose);
 }
 void Controller::addWaypointsCb() {
@@ -343,13 +314,6 @@ void Controller::visualizeExecutePlanCb() {
 			dtKukaFeedbackReceiver_.dtLastCommandCompleteLock_.unlock();
 
 			emit sendTrajectorySignal((const MotionPlan) temp_plan);
-			/*while (!dtKukaFeedbackReceiver_.bLastCommandComplete_) {
-
-			 }
-			 ROS_INFO("Motion plan executed successfully");
-			 dtKukaFeedbackReceiver_.dtLastCommandCompleteLock_.lockForWrite();
-			 dtKukaFeedbackReceiver_.bLastCommandComplete_ = false;
-			 dtKukaFeedbackReceiver_.dtLastCommandCompleteLock_.unlock();*/
 #endif
 		} else {
 			// This one ensures that no unreachable motion command will be sent to Kuka,

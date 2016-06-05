@@ -26,66 +26,54 @@ Eigen::Affine3d createRotationMatrix(float ax, float ay, float az) {
 	return rz * ry * rx;
 }
 
-Eigen::Quaterniond Euler2Quaternion(double ax, double ay, double az) {
-	Eigen::AngleAxisd rollAngle(ax, Eigen::Vector3d(1, 0, 0));
-	Eigen::AngleAxisd yawAngle(ay, Eigen::Vector3d(0, 1, 0));
-	Eigen::AngleAxisd pitchAngle(az, Eigen::Vector3d(0, 0, 1));
-
-	Eigen::Quaterniond q = pitchAngle * yawAngle * rollAngle;
-
-	return q;
+// order: x, y, z, w
+Eigen::Vector4d Euler2Quaternion(double ax, double ay, double az) {
+	Eigen::Vector4d result;
+	KDL::Rotation kdl_rotation = KDL::Rotation::RPY(ax, ay, az);
+	kdl_rotation.GetQuaternion(result.data()[0], result.data()[1], result.data()[2], result.data()[3]);
+	return result;
 }
 
-Eigen::Quaterniond Euler2Quaternion(float ax, float ay, float az) {
-	Eigen::AngleAxisd rollAngle(ax, Eigen::Vector3d(1, 0, 0));
-	Eigen::AngleAxisd yawAngle(ay, Eigen::Vector3d(0, 1, 0));
-	Eigen::AngleAxisd pitchAngle(az, Eigen::Vector3d(0, 0, 1));
-
-	Eigen::Quaterniond q = pitchAngle * yawAngle * rollAngle;
-
-	return q;
+Eigen::Vector4d Euler2Quaternion(float ax, float ay, float az) {
+	Eigen::Vector4d result;
+	KDL::Rotation kdl_rotation = KDL::Rotation::RPY(ax, ay, az);
+	kdl_rotation.GetQuaternion(result.data()[0], result.data()[1], result.data()[2], result.data()[3]);
+	return result;
 }
 
+// order: A, B, C
 Eigen::Vector3d Quaternion2Euler(double x, double y, double z, double w) {
-	Eigen::Quaterniond q;
-	q.x() = x;
-	q.y() = y;
-	q.z() = z;
-	q.w() = w;
-
-	Eigen::Matrix3d rotation = q.toRotationMatrix();
-	return rotation.eulerAngles(2, 1, 0);
-
+	KDL::Rotation kdl_rotation = KDL::Rotation::Quaternion(x, y, z, w);
+	Eigen::Vector3d result;
+	kdl_rotation.GetRPY(result.data()[2], result.data()[1], result.data()[0]);
+	return result;
 }
 
 Eigen::Vector3d Quaternion2Euler(float x, float y, float z, float w) {
-	Eigen::Quaterniond q;
-	q.x() = x;
-	q.y() = y;
-	q.z() = z;
-	q.w() = w;
-
-	Eigen::Matrix3d rotation = q.toRotationMatrix();
-	return rotation.eulerAngles(2, 1, 0);
-
+	KDL::Rotation kdl_rotation = KDL::Rotation::Quaternion(x, y, z, w);
+	Eigen::Vector3d result;
+	kdl_rotation.GetRPY(result.data()[2], result.data()[1], result.data()[0]);
+	return result;
 }
 
 Eigen::Matrix3d createRotationMatrix(double x, double y, double z, double w) {
-	Eigen::Quaterniond q;
-	q.x() = x;
-	q.y() = y;
-	q.z() = z;
-	q.w() = w;
-
-	return q.toRotationMatrix();
+	KDL::Rotation kdl_rotaion = KDL::Rotation::Quaternion(x, y, z, w);
+	Eigen::Matrix3d result;
+	for(int i = 0; i < 9; i++) {
+		result.data()[i] = kdl_rotaion.data[i];
+	}
+	result.transposeInPlace();
+	return result;
 }
 
 Eigen::Matrix3d createRotationMatrix(float x, float y, float z, float w) {
-	Eigen::Quaterniond q;
-	q.x() = x;
-	q.y() = y;
-	q.z() = z;
-	q.w() = w;
+	KDL::Rotation kdl_rotaion = KDL::Rotation::Quaternion(x, y, z, w);
+	Eigen::Matrix3d result;
+	for(int i = 0; i < 9; i++) {
+		result.data()[i] = kdl_rotaion.data[i];
+	}
+	result.transposeInPlace();
+	return result;
 
-	return q.toRotationMatrix();
+
 }

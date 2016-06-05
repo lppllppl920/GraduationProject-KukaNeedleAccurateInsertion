@@ -29,8 +29,15 @@
 #include "controller.h"
 
 #define NDI_TIME_INTERVAL 2000
-#define NDI_FRAME_COUNT 20
+#define NDI_FRAME_COUNT 30
 #define MAX_MOVE_ANGLE 3
+#define MINIMUM_PARALLEL_MOVE_THRESHOLD 0.1
+
+#define USE_FIXED_NDI_KUKA_ROTATION
+#define USE_FIXED_MARKER_FLANGE_TRANSLATION
+#define USE_FIXED_NDI_KUKA_TRANSFORM
+#define USE_FIXED_TCP_MARKER_TRANSFORM
+#define USE_FIXED_TCP_FLANGE_ROTATION
 
 using namespace visualization_msgs;
 using namespace interactive_markers;
@@ -266,6 +273,8 @@ private:
 
 	std::vector<bool> vecbCalibrationToDoList_;
 	bool bTCPMarkerFlip_;
+
+	double dParallelMoveThreshold_;
 };
 
 void addWaypointsCb_global(const InteractiveMarkerFeedbackConstPtr &feedback);

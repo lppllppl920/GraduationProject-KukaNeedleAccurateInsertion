@@ -216,10 +216,11 @@
     <child link="flange"/>
   </joint>
   <joint name="tip_joint" type="fixed">
-    <origin rpy="0 1.562434 -0.774395" xyz="0.004377 0.184704 0.031893"/>
+    <origin rpy="-2.399379 1.594174 0.576253" xyz="0.005189830 0.171790068 0.026065161"/>
     <parent link="flange"/>
     <child link="tip"/>
   </joint>
+
   <!-- end of joint list  -->
   <!-- ROS base_link to World Coordinates transform -->
   <link name="world"/>

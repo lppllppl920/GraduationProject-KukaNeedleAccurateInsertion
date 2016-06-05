@@ -52,6 +52,9 @@
 #include <QHash>
 #include <QApplication>
 #include <ros/ros.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <netinet/tcp.h>
 
 // Max length of feedbackQueue
 #define QUEUE_MAXLEN 2048

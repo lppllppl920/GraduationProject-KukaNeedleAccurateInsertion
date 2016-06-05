@@ -49,6 +49,19 @@ void TCPThread::newConnect() {
 			Qt::QueuedConnection);
 	connect(tcpSocket_, SIGNAL(disconnected()), this, SLOT(destroyConnect()),
 			Qt::QueuedConnection);
+
+	int enableKeepAlive = 1;
+	int fd = tcpSocket_->socketDescriptor();
+	setsockopt(fd, SOL_SOCKET, SO_KEEPALIVE, &enableKeepAlive, sizeof(enableKeepAlive));
+
+	int maxIdle = 20; /* seconds */
+	setsockopt(fd, IPPROTO_TCP, TCP_KEEPIDLE, &maxIdle, sizeof(maxIdle));
+
+	int count = 3;  // send up to 3 keepalive packets out, then disconnect if no response
+	setsockopt(fd, SOL_TCP, TCP_KEEPCNT, &count, sizeof(count));
+
+	int interval = 2;   // send a keepalive packet out every 2 seconds (after the 5 second idle period)
+	setsockopt(fd, SOL_TCP, TCP_KEEPINTVL, &interval, sizeof(interval));
 }
 
 void TCPThread::destroyConnect() {

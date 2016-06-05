@@ -24,7 +24,7 @@
      </rect>
     </property>
     <property name="currentIndex">
-     <number>1</number>
+     <number>0</number>
     </property>
     <widget class="QWidget" name="tab">
      <attribute name="title">
@@ -742,7 +742,7 @@
          </property>
          <property name="font">
           <font>
-           <pointsize>14</pointsize>
+           <pointsize>12</pointsize>
            <weight>75</weight>
            <bold>true</bold>
           </font>
@@ -764,7 +764,7 @@
        </rect>
       </property>
       <property name="currentIndex">
-       <number>1</number>
+       <number>4</number>
       </property>
       <widget class="QWidget" name="tab_PathPlanning">
        <attribute name="title">
@@ -1393,13 +1393,13 @@
            </property>
            <property name="font">
             <font>
-             <pointsize>14</pointsize>
+             <pointsize>12</pointsize>
              <weight>75</weight>
              <bold>true</bold>
             </font>
            </property>
            <property name="text">
-            <string>Target (m, deg)</string>
+            <string>Target (mm, deg)</string>
            </property>
           </widget>
          </item>
@@ -1592,7 +1592,7 @@
          </rect>
         </property>
         <property name="currentIndex">
-         <number>0</number>
+         <number>3</number>
         </property>
         <widget class="QWidget" name="tab_NDIKUKAFrameCalibration">
          <attribute name="title">
@@ -1608,7 +1608,7 @@
            </rect>
           </property>
           <property name="title">
-           <string>Calculate NDI KUKA Rotation Transform (m)</string>
+           <string>Calculate NDI KUKA Rotation Transform (mm)</string>
           </property>
           <widget class="QWidget" name="gridLayoutWidget_5">
            <property name="geometry">
@@ -1757,7 +1757,7 @@
            </rect>
           </property>
           <property name="title">
-           <string>Calculate NDI KUKA Transform (m)</string>
+           <string>Calculate NDI KUKA Transform (mm)</string>
           </property>
           <widget class="QWidget" name="gridLayoutWidget_9">
            <property name="geometry">
@@ -2060,7 +2060,7 @@
            </rect>
           </property>
           <property name="title">
-           <string>NDI Feedback Move(m, deg)</string>
+           <string>NDI Feedback Move(mm, deg)</string>
           </property>
           <widget class="QWidget" name="gridLayoutWidget_7">
            <property name="geometry">
@@ -2352,7 +2352,7 @@
            </rect>
           </property>
           <property name="title">
-           <string>NDI Feedback Parallel Move(m, deg)</string>
+           <string>NDI Feedback Parallel Move(mm, deg)</string>
           </property>
           <widget class="QWidget" name="gridLayoutWidget_4">
            <property name="geometry">
@@ -3172,13 +3172,13 @@
            </property>
            <property name="font">
             <font>
-             <pointsize>14</pointsize>
+             <pointsize>12</pointsize>
              <weight>75</weight>
              <bold>true</bold>
             </font>
            </property>
            <property name="text">
-            <string>Collision Object (m)</string>
+            <string>Collision Object (mm)</string>
            </property>
           </widget>
          </item>
@@ -4445,7 +4445,7 @@
            <property name="font">
             <font>
              <family>Ubuntu</family>
-             <pointsize>14</pointsize>
+             <pointsize>12</pointsize>
              <weight>75</weight>
              <bold>true</bold>
             </font>

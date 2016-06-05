@@ -692,7 +692,7 @@ public:
         label_Feedback->setMinimumSize(QSize(146, 40));
         label_Feedback->setMaximumSize(QSize(250, 40));
         QFont font;
-        font.setPointSize(14);
+        font.setPointSize(12);
         font.setBold(true);
         font.setWeight(75);
         label_Feedback->setFont(font);
@@ -2064,7 +2064,7 @@ public:
         label_Command->setMaximumSize(QSize(186, 51));
         QFont font2;
         font2.setFamily(QString::fromUtf8("Ubuntu"));
-        font2.setPointSize(14);
+        font2.setPointSize(12);
         font2.setBold(true);
         font2.setWeight(75);
         label_Command->setFont(font2);
@@ -2522,9 +2522,9 @@ public:
 
         retranslateUi(MainWindow);
 
-        tabWidget_Device->setCurrentIndex(1);
-        tabWidget_Robot->setCurrentIndex(1);
-        tabWidget->setCurrentIndex(0);
+        tabWidget_Device->setCurrentIndex(0);
+        tabWidget_Robot->setCurrentIndex(4);
+        tabWidget->setCurrentIndex(3);
 
 
         QMetaObject::connectSlotsByName(MainWindow);
@@ -2576,18 +2576,18 @@ public:
         pushButton_VisualizeJointPlan->setText(QApplication::translate("MainWindow", "Joint Plan", 0, QApplication::UnicodeUTF8));
         pushButton_VisualizePosePlan->setText(QApplication::translate("MainWindow", "Pose Plan", 0, QApplication::UnicodeUTF8));
         pushButton_ExecuteWaypointsPlan->setText(QApplication::translate("MainWindow", "Exe. Multi. Targt.", 0, QApplication::UnicodeUTF8));
-        label_Target->setText(QApplication::translate("MainWindow", "Target (m, deg)", 0, QApplication::UnicodeUTF8));
+        label_Target->setText(QApplication::translate("MainWindow", "Target (mm, deg)", 0, QApplication::UnicodeUTF8));
         label_incrTransX->setText(QApplication::translate("MainWindow", "Incr. TransX", 0, QApplication::UnicodeUTF8));
         label_incrRotateA->setText(QApplication::translate("MainWindow", "Incr. RotateA", 0, QApplication::UnicodeUTF8));
         pushButton_VisualizeIncrPosePlan->setText(QApplication::translate("MainWindow", "Incr. Pose Plan", 0, QApplication::UnicodeUTF8));
         pushButton_AddWaypoint->setText(QApplication::translate("MainWindow", "Add Waypoint", 0, QApplication::UnicodeUTF8));
         tabWidget_Robot->setTabText(tabWidget_Robot->indexOf(tab_PathPlanning), QApplication::translate("MainWindow", "Path Planning", 0, QApplication::UnicodeUTF8));
-        groupBox_CalculateNDIKUKARotationTransform->setTitle(QApplication::translate("MainWindow", "Calculate NDI KUKA Rotation Transform (m)", 0, QApplication::UnicodeUTF8));
+        groupBox_CalculateNDIKUKARotationTransform->setTitle(QApplication::translate("MainWindow", "Calculate NDI KUKA Rotation Transform (mm)", 0, QApplication::UnicodeUTF8));
         label_dX->setText(QApplication::translate("MainWindow", "dX", 0, QApplication::UnicodeUTF8));
         label_dY->setText(QApplication::translate("MainWindow", "dY", 0, QApplication::UnicodeUTF8));
         label_dZ->setText(QApplication::translate("MainWindow", "dZ", 0, QApplication::UnicodeUTF8));
         pushButton_CalculateNDIKUKARotation->setText(QApplication::translate("MainWindow", "Calc. N. K. Rotation", 0, QApplication::UnicodeUTF8));
-        groupBox_CalculateNDIKUKATransform->setTitle(QApplication::translate("MainWindow", "Calculate NDI KUKA Transform (m)", 0, QApplication::UnicodeUTF8));
+        groupBox_CalculateNDIKUKATransform->setTitle(QApplication::translate("MainWindow", "Calculate NDI KUKA Transform (mm)", 0, QApplication::UnicodeUTF8));
         pushButton_CalculateNDIKUKATransform->setText(QApplication::translate("MainWindow", "Calc. N. K. Transform", 0, QApplication::UnicodeUTF8));
         label_incrDistance->setText(QApplication::translate("MainWindow", "Distance Step", 0, QApplication::UnicodeUTF8));
         tabWidget->setTabText(tabWidget->indexOf(tab_NDIKUKAFrameCalibration), QApplication::translate("MainWindow", "NDI KUKA Frame Calibration", 0, QApplication::UnicodeUTF8));
@@ -2612,7 +2612,7 @@ public:
         pushButton_CalculateTCPFlangeRotation->setText(QApplication::translate("MainWindow", "Calic. TCP Flange Rotation", 0, QApplication::UnicodeUTF8));
         pushButton_CalculateTCPMarkerTransform->setText(QApplication::translate("MainWindow", "Calc. TCP Marker Transform", 0, QApplication::UnicodeUTF8));
         tabWidget->setTabText(tabWidget->indexOf(tab_KUKAEndEffectorCalibration), QApplication::translate("MainWindow", "NDI KUKA TCP Calibration", 0, QApplication::UnicodeUTF8));
-        groupBox_NDIFeedbackMove->setTitle(QApplication::translate("MainWindow", "NDI Feedback Move(m, deg)", 0, QApplication::UnicodeUTF8));
+        groupBox_NDIFeedbackMove->setTitle(QApplication::translate("MainWindow", "NDI Feedback Move(mm, deg)", 0, QApplication::UnicodeUTF8));
         label_Z_2->setText(QApplication::translate("MainWindow", "Z", 0, QApplication::UnicodeUTF8));
         label_Y_2->setText(QApplication::translate("MainWindow", "Y", 0, QApplication::UnicodeUTF8));
         label_X_2->setText(QApplication::translate("MainWindow", "X", 0, QApplication::UnicodeUTF8));
@@ -2622,7 +2622,7 @@ public:
         label_A_2->setText(QApplication::translate("MainWindow", "A", 0, QApplication::UnicodeUTF8));
         pushButton_NDIFeedbackMove->setText(QApplication::translate("MainWindow", "NDI Feedback Move", 0, QApplication::UnicodeUTF8));
         pushButton_CopyCurrentTCPState->setText(QApplication::translate("MainWindow", "Copy TCP State", 0, QApplication::UnicodeUTF8));
-        groupBox_NDIFeedbackParallelMove->setTitle(QApplication::translate("MainWindow", "NDI Feedback Parallel Move(m, deg)", 0, QApplication::UnicodeUTF8));
+        groupBox_NDIFeedbackParallelMove->setTitle(QApplication::translate("MainWindow", "NDI Feedback Parallel Move(mm, deg)", 0, QApplication::UnicodeUTF8));
         label_Z->setText(QApplication::translate("MainWindow", "Z", 0, QApplication::UnicodeUTF8));
         label_Y->setText(QApplication::translate("MainWindow", "Y", 0, QApplication::UnicodeUTF8));
         label_X->setText(QApplication::translate("MainWindow", "X", 0, QApplication::UnicodeUTF8));
@@ -2667,7 +2667,7 @@ public:
         label_Dimension_Y_Height->setText(QApplication::translate("MainWindow", "Y / Height", 0, QApplication::UnicodeUTF8));
         label_CollisionID->setText(QApplication::translate("MainWindow", "Collision ID", 0, QApplication::UnicodeUTF8));
         label_Shape->setText(QApplication::translate("MainWindow", "Shape", 0, QApplication::UnicodeUTF8));
-        label_CollisionObject->setText(QApplication::translate("MainWindow", "Collision Object (m)", 0, QApplication::UnicodeUTF8));
+        label_CollisionObject->setText(QApplication::translate("MainWindow", "Collision Object (mm)", 0, QApplication::UnicodeUTF8));
         pushButton_Do->setText(QApplication::translate("MainWindow", "Do", 0, QApplication::UnicodeUTF8));
         tabWidget_Robot->setTabText(tabWidget_Robot->indexOf(tab_Environment), QApplication::translate("MainWindow", "Environment", 0, QApplication::UnicodeUTF8));
         label_PrefixMessage->setText(QApplication::translate("MainWindow", "Prefix Message", 0, QApplication::UnicodeUTF8));

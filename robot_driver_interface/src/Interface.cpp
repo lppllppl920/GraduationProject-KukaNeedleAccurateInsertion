@@ -19,6 +19,7 @@ Interface::Interface(QMainWindow *parent) :
 
 	setupUi(this);
 	setAlignment();
+//-2.531013 mm, 194.328284 mm, 29.655583 mm
 
 	// GUI related
 	// KUKA related
@@ -122,7 +123,7 @@ Interface::Interface(QMainWindow *parent) :
 	connect(checkBox_HandleEnable, SIGNAL(clicked(bool)), this,
 			SLOT(portEnabled()));
 	connect(checkBox_UseTCPMarkerTransform, SIGNAL(clicked(bool)), this,
-			SLOT(useMarkerNeedleTransformChanged()));
+			SLOT(useTCPMarkerTransformChanged()));
 	// Others related
 	connect(&dtController_, SIGNAL(newFeedback(Feedback* )), this,
 			SLOT(newFeedbackReceived(Feedback* )), Qt::QueuedConnection);
@@ -282,6 +283,8 @@ Interface::Interface(QMainWindow *parent) :
 	}
 
 	bTCPMarkerFlip_ = false;
+
+	dParallelMoveThreshold_ = MINIMUM_PARALLEL_MOVE_THRESHOLD;
 }
 
 Interface::~Interface() {
@@ -346,10 +349,11 @@ int Interface::PlanAndExecuteTargetMotion(geometry_msgs::Pose target_pose,
 		axis_plan.A6 = axis_plan.A6 / M_PI * 180.0;
 
 		// If any single axis's angle motion is larger than MAX_MOVE_ANGLE, we need to let the user know to check whether they want the motion plan or not
-		if (axis_plan.A1 > MAX_MOVE_ANGLE || axis_plan.A1 > MAX_MOVE_ANGLE
-				|| axis_plan.A1 > MAX_MOVE_ANGLE
-				|| axis_plan.A1 > MAX_MOVE_ANGLE
-				|| axis_plan.A1 > MAX_MOVE_ANGLE) {
+		if (axis_plan.A1 > MAX_MOVE_ANGLE || axis_plan.A2 > MAX_MOVE_ANGLE
+				|| axis_plan.A3 > MAX_MOVE_ANGLE
+				|| axis_plan.A4 > MAX_MOVE_ANGLE
+				|| axis_plan.A5 > MAX_MOVE_ANGLE
+				|| axis_plan.A6 > MAX_MOVE_ANGLE) {
 
 			dtSubWindowMotionPlanDecision_.exec();
 			if (dtSubWindowMotionPlanDecision_.nReturnValue_
@@ -375,12 +379,15 @@ int Interface::PlanAndExecuteTargetMotion(geometry_msgs::Pose target_pose,
 
 }
 void Interface::copyCurrentTCPState() {
-	lineEdit_NDI_X_2->setText(
-			QString::number(lineEdit_Tx->text().toDouble() / 1000.0));
-	lineEdit_NDI_Y_2->setText(
-			QString::number(lineEdit_Ty->text().toDouble() / 1000.0));
-	lineEdit_NDI_Z_2->setText(
-			QString::number(lineEdit_Tz->text().toDouble() / 1000.0));
+
+	if(!checkBox_UseTCPMarkerTransform->isChecked()) {
+		ROS_ERROR("Only support TCP Copy, please check the use tcp marker transform option");
+		return;
+	}
+
+	lineEdit_NDI_X_2->setText(QString::number(lineEdit_Tx->text().toDouble()));
+	lineEdit_NDI_Y_2->setText(QString::number(lineEdit_Ty->text().toDouble()));
+	lineEdit_NDI_Z_2->setText(QString::number(lineEdit_Tz->text().toDouble()));
 
 	Eigen::Vector3d EulerAngleVector = Quaternion2Euler(
 			lineEdit_Qx->text().toDouble(), lineEdit_Qy->text().toDouble(),
@@ -394,21 +401,16 @@ void Interface::copyCurrentTCPState() {
 			QString::number(EulerAngleVector.data()[2] / M_PI * 180.0));
 }
 void Interface::copyCurrentTCPXYZKUKAABC() {
-	lineEdit_NDI_X->setText(
-			QString::number(lineEdit_Tx->text().toDouble() / 1000.0));
-	lineEdit_NDI_Y->setText(
-			QString::number(lineEdit_Ty->text().toDouble() / 1000.0));
-	lineEdit_NDI_Z->setText(
-			QString::number(lineEdit_Tz->text().toDouble() / 1000.0));
+	lineEdit_NDI_X->setText(QString::number(lineEdit_Tx->text().toDouble()));
+	lineEdit_NDI_Y->setText(QString::number(lineEdit_Ty->text().toDouble()));
+	lineEdit_NDI_Z->setText(QString::number(lineEdit_Tz->text().toDouble()));
 
 	lineEdit_KUKA_A->setText(output_a->toPlainText());
 	lineEdit_KUKA_B->setText(output_b->toPlainText());
 	lineEdit_KUKA_C->setText(output_c->toPlainText());
 
 }
-//-------------------------------------------------------------------------------------
-//TODO: WO CAO NI MAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA KDL::Rotation is row-major
-//-------------------------------------------------------------------------------------------------------------------
+
 void Interface::ndiFeedbackMove() {
 
 	if (lineEdit_NDI_X_2->text().isEmpty() || lineEdit_NDI_Y_2->text().isEmpty()
@@ -439,8 +441,6 @@ void Interface::ndiFeedbackMove() {
 	}
 
 	if (!vecbCalibrationToDoList_[Interface::NDIKUKATransform]
-			|| !vecbCalibrationToDoList_[Interface::TCPFlangeRotation]
-			|| !vecbCalibrationToDoList_[Interface::TCPFlangeTranslation]
 			|| !vecbCalibrationToDoList_[Interface::TCPMarkerTransform]) {
 		ROS_ERROR(
 				"Calibration prerequisite is not complete for NDI Feedback Move");
@@ -456,7 +456,7 @@ void Interface::ndiFeedbackMove() {
 
 	//Eigen::Vector3d EulerAngleVector;
 	std::vector<double> Translation(3);
-	Eigen::Quaterniond Quaternion;
+	Eigen::Vector4d Quaternion;
 	Eigen::Affine3d RotationPart;
 	Eigen::Affine3d TranslationPart;
 	Eigen::Matrix3d Rotation;
@@ -500,16 +500,6 @@ void Interface::ndiFeedbackMove() {
 					Eigen::Vector3d(Translation[0], Translation[1],
 							Translation[2])));
 	TargetTCPNDITransform = (TranslationPart * RotationPart).matrix();
-	ROS_INFO(
-			"Current TCP NDI Transform: %f, %f, %f, %f\n%f, %f, %f, %f\n%f, %f, %f, %f\n%f, %f, %f, %f",
-			TargetTCPNDITransform.data()[0], TargetTCPNDITransform.data()[4],
-			TargetTCPNDITransform.data()[8], TargetTCPNDITransform.data()[12],
-			TargetTCPNDITransform.data()[1], TargetTCPNDITransform.data()[5],
-			TargetTCPNDITransform.data()[9], TargetTCPNDITransform.data()[13],
-			TargetTCPNDITransform.data()[2], TargetTCPNDITransform.data()[6],
-			TargetTCPNDITransform.data()[10], TargetTCPNDITransform.data()[14],
-			TargetTCPNDITransform.data()[3], TargetTCPNDITransform.data()[7],
-			TargetTCPNDITransform.data()[11], TargetTCPNDITransform.data()[15]);
 
 	// From ABC 2-point method and pivoting method
 	RotationPart = dtTCPMarkerRotationMatrix_;
@@ -523,12 +513,6 @@ void Interface::ndiFeedbackMove() {
 			Eigen::Translation3d(dtNDIKUKATranslationVector_));
 	NDIKUKATransform = (TranslationPart * RotationPart).matrix();
 
-	//
-	RotationPart = dtTCPFlangeRotationMatrix_;
-	TranslationPart = Eigen::Affine3d(
-			Eigen::Translation3d(dtTCPFlangeTranslationVector_));
-	TCPFlangeTransform = (TranslationPart * RotationPart).matrix();
-
 	// Here we need to obtain the marker position instead of the tip position
 	checkBox_UseTCPMarkerTransform->setChecked(false);
 	bUseTCPMarkerTransform_ = false;
@@ -536,7 +520,7 @@ void Interface::ndiFeedbackMove() {
 	do {
 
 		if (!getNDIFramesAverage(nMarker, -1, dtMarker, dtDummy, true,
-				NDI_FRAME_COUNT)) {
+		NDI_FRAME_COUNT)) {
 			ROS_ERROR("Cannot get marker position data");
 			pushButton_NDIFeedbackMove->setEnabled(true);
 			dtGetDataTimer_->start(NDI_TIME_INTERVAL);
@@ -544,24 +528,16 @@ void Interface::ndiFeedbackMove() {
 		}
 
 		// Marker to NDI Transform
-		EulerAngleVector =
-				Quaternion2Euler(
-						pdtCommandHandling_->pdtHandleInformation_[nMarker].dtXfrms.dtRotation.fQx,
-						pdtCommandHandling_->pdtHandleInformation_[nMarker].dtXfrms.dtRotation.fQy,
-						pdtCommandHandling_->pdtHandleInformation_[nMarker].dtXfrms.dtRotation.fQz,
-						pdtCommandHandling_->pdtHandleInformation_[nMarker].dtXfrms.dtRotation.fQ0);
+		EulerAngleVector = Quaternion2Euler(dtMarker.dtRotation.fQx,
+				dtMarker.dtRotation.fQy, dtMarker.dtRotation.fQz,
+				dtMarker.dtRotation.fQ0);
 		RotationPart = createRotationMatrix(EulerAngleVector.data()[2],
 				EulerAngleVector.data()[1], EulerAngleVector.data()[0]);
-		TranslationPart =
-				Eigen::Affine3d(
-						Eigen::Translation3d(
-								Eigen::Vector3d(
-										pdtCommandHandling_->pdtHandleInformation_[nMarker].dtXfrms.dtTranslation.fTx
-												/ 1000.0,
-										pdtCommandHandling_->pdtHandleInformation_[nMarker].dtXfrms.dtTranslation.fTy
-												/ 1000.0,
-										pdtCommandHandling_->pdtHandleInformation_[nMarker].dtXfrms.dtTranslation.fTz
-												/ 1000.0)));
+		TranslationPart = Eigen::Affine3d(
+				Eigen::Translation3d(
+						Eigen::Vector3d(dtMarker.dtTranslation.fTx,
+								dtMarker.dtTranslation.fTy,
+								dtMarker.dtTranslation.fTz)));
 		CurrentMarkerNDITransform = (TranslationPart * RotationPart).matrix();
 
 		CurrentTCPNDITransform = CurrentMarkerNDITransform * TCPMarkerTransform;
@@ -588,56 +564,63 @@ void Interface::ndiFeedbackMove() {
 								* EulerAngleVector.data()[1]
 						+ EulerAngleVector.data()[2]
 								* EulerAngleVector.data()[2]) / M_PI * 180.0;
-		ROS_INFO("Position Error: %f m, Angle Error: %f deg", dPositionError,
+		ROS_INFO("Position Error: %f mm, Angle Error: %f deg", dPositionError,
 				dAngleError);
-		if (dPositionError < 0.0003 && dAngleError < 0.3) {
+		if (dPositionError < 0.3 && dAngleError < 0.3) {
 			ROS_INFO("NDI Feedback Move succeed");
+			pushButton_NDIFeedbackMove->setEnabled(true);
+			dtGetDataTimer_->start(NDI_TIME_INTERVAL);
+			checkBox_UseTCPMarkerTransform->setChecked(true);
+			bUseTCPMarkerTransform_ = true;
 			break;
 		}
 
-		// Obtain current flange position of KUKA robot
+		// Obtain current TCP position of KUKA robot
 		AxisFeedback = dtController_.getFeedbackAxis();
 		dtLastAxis_.set(AxisFeedback);
-		pdtPlannar_->getModel().Axis2Frame_flange(AxisFeedback, FrameFeedback);
+		pdtPlannar_->getModel().Axis2Frame(AxisFeedback, FrameFeedback);
 		RotationPart = createRotationMatrix(FrameFeedback.C / 180.0 * M_PI,
 				FrameFeedback.B / 180.0 * M_PI, FrameFeedback.A / 180.0 * M_PI);
 		TranslationPart = Eigen::Affine3d(
 				Eigen::Translation3d(
-						Eigen::Vector3d(FrameFeedback.X / 1000.0,
-								FrameFeedback.Y / 1000.0,
-								FrameFeedback.Z / 1000.0)));
-		CurrentFlangeKUKATransform = (TranslationPart * RotationPart).matrix();
+						Eigen::Vector3d(FrameFeedback.X, FrameFeedback.Y,
+								FrameFeedback.Z)));
+		CurrentTCPKUKATransform = (TranslationPart * RotationPart).matrix();
 
 		TCPErrorKUKATransform = NDIKUKATransform * TCPErrorNDITransform
 				* NDIKUKATransform.inverse();
-		FlangeErrorKUKATransform = TCPErrorKUKATransform;
-		TargetFlangeKUKATransform = FlangeErrorKUKATransform
-				* CurrentFlangeKUKATransform;
+		TargetTCPKUKATransform = TCPErrorKUKATransform
+				* CurrentTCPKUKATransform;
 
-		Rotation = TargetFlangeKUKATransform.block(0, 0, 3, 3);
+		Rotation = TargetTCPKUKATransform.block(0, 0, 3, 3);
 		EulerAngleVector = Rotation.eulerAngles(2, 1, 0);
 		Quaternion = Euler2Quaternion(EulerAngleVector.data()[2],
 				EulerAngleVector.data()[1], EulerAngleVector.data()[0]);
-		TargetPose.orientation.x = Quaternion.x();
-		TargetPose.orientation.y = Quaternion.y();
-		TargetPose.orientation.z = Quaternion.z();
-		TargetPose.orientation.w = Quaternion.w();
-		TargetPose.position.x = TargetFlangeKUKATransform.coeff(0, 3);
-		TargetPose.position.y = TargetFlangeKUKATransform.coeff(1, 3);
-		TargetPose.position.z = TargetFlangeKUKATransform.coeff(2, 3);
+		TargetPose.orientation.x = Quaternion.data()[0];
+		TargetPose.orientation.y = Quaternion.data()[1];
+		TargetPose.orientation.z = Quaternion.data()[2];
+		TargetPose.orientation.w = Quaternion.data()[3];
+		TargetPose.position.x = TargetTCPKUKATransform.coeff(0, 3) / 1000.0;
+		TargetPose.position.y = TargetTCPKUKATransform.coeff(1, 3) / 1000.0;
+		TargetPose.position.z = TargetTCPKUKATransform.coeff(2, 3) / 1000.0;
 
-		motion_return_value = PlanAndExecuteTargetMotion(TargetPose, "flange");
+		motion_return_value = PlanAndExecuteTargetMotion(TargetPose, "tip");
+
 		if (motion_return_value == MOTION_PLAN_EXECUTE) {
 
 		} else {
 			pushButton_NDIFeedbackMove->setEnabled(true);
 			dtGetDataTimer_->start(NDI_TIME_INTERVAL);
+			checkBox_UseTCPMarkerTransform->setChecked(true);
+			bUseTCPMarkerTransform_ = true;
 			return;
 		}
 		dtSubWindowWaitForExecution_.exec();
 
 	} while (1);
 
+	checkBox_UseTCPMarkerTransform->setChecked(true);
+	bUseTCPMarkerTransform_ = true;
 }
 
 void Interface::XYZNPointMethod(std::vector<Frame> &KUKAFrames,
@@ -663,11 +646,11 @@ void Interface::XYZNPointMethod(std::vector<Frame> &KUKAFrames,
 
 			StackRotationMatrix.block(3 * Count, 0, 3, 3) = TempMatrix;
 			StackTranslationVector.data()[3 * Count] = (KUKAFrames[j].X
-					- KUKAFrames[i].X) / 1000.0;
+					- KUKAFrames[i].X);
 			StackTranslationVector.data()[3 * Count + 1] = (KUKAFrames[j].Y
-					- KUKAFrames[i].Y) / 1000.0;
+					- KUKAFrames[i].Y);
 			StackTranslationVector.data()[3 * Count + 2] = (KUKAFrames[j].Z
-					- KUKAFrames[i].Z) / 1000.0;
+					- KUKAFrames[i].Z);
 
 			Count++;
 		}
@@ -695,7 +678,7 @@ void Interface::XYZNPointMethod(std::vector<Frame> &KUKAFrames,
 //TODO: After using this function, we had better change the content of URDF file
 void Interface::ABC2PointCalibrate() {
 
-#ifndef USE_FIXED_TCP_MARKER_ROTATION
+#ifndef USE_FIXED_TCP_FLANGE_ROTATION
 	if (!vecbCalibrationToDoList_[Interface::NDIKUKARotation]
 			|| !vecbCalibrationToDoList_[Interface::TCPMarkerTransform]) {
 		ROS_ERROR(
@@ -728,23 +711,22 @@ void Interface::ABC2PointCalibrate() {
 	Eigen::Matrix3d RotationA = createRotationMatrix(
 			FrameFeedback.C / 180.0 * M_PI, FrameFeedback.B / 180.0 * M_PI,
 			FrameFeedback.A / 180.0 * M_PI).rotation();
-	Eigen::Vector3d TranslationA(FrameFeedback.X / 180.0 * M_PI,
-			FrameFeedback.Y / 180.0 * M_PI, FrameFeedback.Z / 180.0 * M_PI);
+	Eigen::Vector3d TranslationA(FrameFeedback.X,
+			FrameFeedback.Y, FrameFeedback.Z);
 	bool bTracking = false;
-
 
 	//----------------------------------------------------------------------------------------------
 	//Move the needle point of KUKA to where the indicator pointed (positive part of tool's X axis)
 	// To check whether the NDI can track both the marker of KUKA and indicator or not
+	ROS_INFO("Please indicate a point on the x direction of the needle");
 	do {
 		bTracking = false;
 		do {
 			dtSubWindowWaitForIndicatorPlaced_.exec();
+			getSystemTransformData(false);
 			if (dtSubWindowWaitForIndicatorPlaced_.nReturnValue_ == INDICATOR_OK) {
-				if (pdtCommandHandling_->pdtHandleInformation_[nMarker].dtXfrms.ulFlags
-						!= TRANSFORM_VALID
-						|| pdtCommandHandling_->pdtHandleInformation_[nIndicator].dtXfrms.ulFlags
-								!= TRANSFORM_VALID) {
+				if (pdtCommandHandling_->pdtHandleInformation_[nIndicator].dtXfrms.ulFlags
+						!= TRANSFORM_VALID) {
 					ROS_ERROR("NDI failed to track Marker or Point Indicator");
 					bTracking = false;
 				} else {
@@ -756,11 +738,11 @@ void Interface::ABC2PointCalibrate() {
 				pushButton_CalculateTCPFlangeRotation->setEnabled(true);
 				return;
 			}
-		} while (!bTracking);
+		}while (!bTracking);
 
 		// Derive the average NDI position of the needle point indicator
 		if (!getNDIFramesAverage(-1, nIndicator, dtDummy, dtIndicator, false,
-				NDI_FRAME_COUNT)) {
+						NDI_FRAME_COUNT)) {
 			ROS_ERROR("Cannot get tool position data");
 			dtGetDataTimer_->start(NDI_TIME_INTERVAL);
 			pushButton_CalculateTCPFlangeRotation->setEnabled(true);
@@ -768,11 +750,11 @@ void Interface::ABC2PointCalibrate() {
 		}
 
 		lineEdit_NDI_X->setText(
-				QString::number(dtIndicator.dtTranslation.fTx / 1000.0));
+				QString::number(dtIndicator.dtTranslation.fTx));
 		lineEdit_NDI_Y->setText(
-				QString::number(dtIndicator.dtTranslation.fTy / 1000.0));
+				QString::number(dtIndicator.dtTranslation.fTy));
 		lineEdit_NDI_Z->setText(
-				QString::number(dtIndicator.dtTranslation.fTz / 1000.0));
+				QString::number(dtIndicator.dtTranslation.fTz));
 
 		// Obtain current state of KUKA robot
 		AxisFeedback = dtController_.getFeedbackAxis();
@@ -785,27 +767,29 @@ void Interface::ABC2PointCalibrate() {
 		lineEdit_KUKA_C->setText(QString::number(FrameFeedback.C));
 		// Let KUKA move to the position that the needle point indicator pointed
 
-	} while (!ndiFeedbackParallelMove());
+	}while (!ndiFeedbackParallelMove());
 
 	//----------------------------------------------------------------------------------------------
 	// Derive Tb
 	AxisFeedback = dtController_.getFeedbackAxis();
 	dtLastAxis_.set(AxisFeedback);
 	pdtPlannar_->getModel().Axis2Frame_flange(AxisFeedback, FrameFeedback);
-	Eigen::Vector3d TranslationB(FrameFeedback.X / 1000.0,
-			FrameFeedback.Y / 1000.0, FrameFeedback.Z / 1000.0);
+	Eigen::Vector3d TranslationB(FrameFeedback.X,
+			FrameFeedback.Y, FrameFeedback.Z);
 
 	//----------------------------------------------------------------------------------------------
 	//Move the needle point of KUKA to where the indicator pointed (positive part of tool's XY plane)
+	ROS_INFO("Please indicate a point on the xy plane of the needle");
 	do {
 		bTracking = false;
 		do {
 			dtSubWindowWaitForIndicatorPlaced_.exec();
+			getSystemTransformData(false);
 			if (dtSubWindowWaitForIndicatorPlaced_.nReturnValue_ == INDICATOR_OK) {
 				if (pdtCommandHandling_->pdtHandleInformation_[nMarker].dtXfrms.ulFlags
 						!= TRANSFORM_VALID
 						|| pdtCommandHandling_->pdtHandleInformation_[nIndicator].dtXfrms.ulFlags
-								!= TRANSFORM_VALID) {
+						!= TRANSFORM_VALID) {
 					ROS_ERROR("NDI failed to track Marker or Point Indicator");
 					bTracking = false;
 				} else {
@@ -817,22 +801,22 @@ void Interface::ABC2PointCalibrate() {
 				pushButton_CalculateTCPFlangeRotation->setEnabled(true);
 				return;
 			}
-		} while (!bTracking);
+		}while (!bTracking);
 
 		// Derive the NDI position of the needle point indicator
 		if (!getNDIFramesAverage(nMarker, nIndicator, dtMarker, dtIndicator,
-				false, NDI_FRAME_COUNT)) {
+						false, NDI_FRAME_COUNT)) {
 			ROS_ERROR("Cannot get tool position data");
 			dtGetDataTimer_->start(NDI_TIME_INTERVAL);
 			pushButton_CalculateTCPFlangeRotation->setEnabled(true);
 			return;
 		}
 		lineEdit_NDI_X->setText(
-				QString::number(dtIndicator.dtTranslation.fTx / 1000.0));
+				QString::number(dtIndicator.dtTranslation.fTx));
 		lineEdit_NDI_Y->setText(
-				QString::number(dtIndicator.dtTranslation.fTy / 1000.0));
+				QString::number(dtIndicator.dtTranslation.fTy));
 		lineEdit_NDI_Z->setText(
-				QString::number(dtIndicator.dtTranslation.fTz / 1000.0));
+				QString::number(dtIndicator.dtTranslation.fTz));
 
 		// Obtain current state of KUKA robot
 		AxisFeedback = dtController_.getFeedbackAxis();
@@ -844,15 +828,15 @@ void Interface::ABC2PointCalibrate() {
 		lineEdit_KUKA_B->setText(QString::number(FrameFeedback.B));
 		lineEdit_KUKA_C->setText(QString::number(FrameFeedback.C));
 		// Let KUKA move to the position that the needle point indicator pointed
-	} while (!ndiFeedbackParallelMove());
+	}while (!ndiFeedbackParallelMove());
 
 	//----------------------------------------------------------------------------------------------
 	// Derive Tc
 	AxisFeedback = dtController_.getFeedbackAxis();
 	dtLastAxis_.set(AxisFeedback);
 	pdtPlannar_->getModel().Axis2Frame_flange(AxisFeedback, FrameFeedback);
-	Eigen::Vector3d TranslationC(FrameFeedback.X / 1000.0,
-			FrameFeedback.Y / 1000.0, FrameFeedback.Z / 1000.0);
+	Eigen::Vector3d TranslationC(FrameFeedback.X,
+			FrameFeedback.Y, FrameFeedback.Z);
 
 	// Rotation matrix of Flange to TCP
 	Eigen::Vector3d TransBA(TranslationB - TranslationA);
@@ -904,8 +888,15 @@ void Interface::ABC2PointCalibrate() {
 			EulerAngleVector.data()[2]);
 
 #else
-	//TODO: these codes are just for debugging
-	dtTCPFlangeRotationMatrix_ = createRotationMatrix(-0.774395, 1.562434, 0).rotation();
+	dtTCPFlangeRotationMatrix_.data()[0] = -0.019601;
+	dtTCPFlangeRotationMatrix_.data()[1] = -0.012737;
+	dtTCPFlangeRotationMatrix_.data()[2] = -0.999727;
+	dtTCPFlangeRotationMatrix_.data()[3] = -0.165045;
+	dtTCPFlangeRotationMatrix_.data()[4] = -0.986159;
+	dtTCPFlangeRotationMatrix_.data()[5] = 0.015800;
+	dtTCPFlangeRotationMatrix_.data()[6] = -0.986091;
+	dtTCPFlangeRotationMatrix_.data()[7] = 0.165310;
+	dtTCPFlangeRotationMatrix_.data()[8] = 0.017227;
 #endif
 
 	dtGetDataTimer_->start(NDI_TIME_INTERVAL);
@@ -922,10 +913,9 @@ void Interface::showSelectedKUKAPosition() {
 	}
 	Frame FrameFeedback = vecdtKUKAFrames_[index];
 	ROS_INFO(
-			"KUKA Position %d: X %f m, Y %f m, Z %f m, A %f deg, B %f deg, C %f deg",
-			index + 1, FrameFeedback.X / 1000.0, FrameFeedback.Y / 1000.0,
-			FrameFeedback.Z / 1000.0, FrameFeedback.A, FrameFeedback.B,
-			FrameFeedback.C);
+			"KUKA Position %d: X %f mm, Y %f mm, Z %f mm, A %f deg, B %f deg, C %f deg",
+			index + 1, FrameFeedback.X, FrameFeedback.Y, FrameFeedback.Z,
+			FrameFeedback.A, FrameFeedback.B, FrameFeedback.C);
 
 }
 void Interface::XYZ4PointCalibrate() {
@@ -950,11 +940,14 @@ void Interface::XYZ4PointCalibrate() {
 #else
 		//TODO: This is measured by Xingtong Liu
 		//If you need to change that, just uncomment the previous codes and comment codes below
-		dtMarkerFlangeTranslationVector_.data()[0] = -0.007661;
-		dtMarkerFlangeTranslationVector_.data()[1] = 0.147306;
-		dtMarkerFlangeTranslationVector_.data()[2] = -0.259861;
+		dtMarkerFlangeTranslationVector_.data()[0] = -7.759;
+		dtMarkerFlangeTranslationVector_.data()[1] = 148.458;
+		dtMarkerFlangeTranslationVector_.data()[2] = -259.918;
+
+		/*-0.007759 m, 0.148458 m, -0.259918 m*/
+
 #endif
-		ROS_INFO("Marker to Flange translation vector:\n%f m, %f m, %f m\n",
+		ROS_INFO("Marker to Flange translation vector:\n%f mm, %f mm, %f mm\n",
 				dtMarkerFlangeTranslationVector_.data()[0],
 				dtMarkerFlangeTranslationVector_.data()[1],
 				dtMarkerFlangeTranslationVector_.data()[2]);
@@ -962,17 +955,18 @@ void Interface::XYZ4PointCalibrate() {
 		vecbCalibrationToDoList_[Interface::MarkerFlangeTranslation] = true;
 	} else {
 #ifndef USE_FIXED_TCP_FLANGE_TRANSLATION
-		//dtTCPFlangeTranslationVector_.data()[0] = TCPTranslation.data()[0];
-		//dtTCPFlangeTranslationVector_.data()[1] = TCPTranslation.data()[1];
-		//dtTCPFlangeTranslationVector_.data()[2] = TCPTranslation.data()[2];
+		dtTCPFlangeTranslationVector_.data()[0] = TCPTranslation.data()[0];
+		dtTCPFlangeTranslationVector_.data()[1] = TCPTranslation.data()[1];
+		dtTCPFlangeTranslationVector_.data()[2] = TCPTranslation.data()[2];
 #else
 		//TODO: This is measured by Xingtong Liu
 		//If you need to change that, just uncomment the previous codes and comment codes below
-		dtTCPFlangeTranslationVector_.data()[0] = 0.004377;
-		dtTCPFlangeTranslationVector_.data()[1] = 0.184704;
-		dtTCPFlangeTranslationVector_.data()[2] = 0.031893;
+		dtTCPFlangeTranslationVector_.data()[0] = 5.189830;
+		dtTCPFlangeTranslationVector_.data()[1] = 171.790068;
+		dtTCPFlangeTranslationVector_.data()[2] = 26.065161;
+		/*5.189830 mm, 171.790068 mm, 26.065161 mm*/
 #endif
-		ROS_INFO("TCP to Flange translation vector:\n%f m, %f m, %f m\n",
+		ROS_INFO("TCP to Flange translation vector:\n%f mm, %f mm, %f mm\n",
 				dtTCPFlangeTranslationVector_.data()[0],
 				dtTCPFlangeTranslationVector_.data()[1],
 				dtTCPFlangeTranslationVector_.data()[2]);
@@ -994,10 +988,9 @@ void Interface::AddorUpdatePosition() {
 	vecdtKUKAFrames_[index] = FrameFeedback;
 	vecbFramesUpdated_[index] = true;
 	ROS_INFO(
-			"Flange Position: X %f m, Y %f m, Z %f m, A %f deg, B %f deg, C %f deg",
-			FrameFeedback.X / 1000.0, FrameFeedback.Y / 1000.0,
-			FrameFeedback.Z / 1000.0, FrameFeedback.A, FrameFeedback.B,
-			FrameFeedback.C);
+			"Flange Position: X %f mm, Y %f mm, Z %f mm, A %f deg, B %f deg, C %f deg",
+			FrameFeedback.X, FrameFeedback.Y, FrameFeedback.Z, FrameFeedback.A,
+			FrameFeedback.B, FrameFeedback.C);
 
 	if (vecbFramesUpdated_[0] && vecbFramesUpdated_[1] && vecbFramesUpdated_[2]
 			&& vecbFramesUpdated_[3]) {
@@ -1021,7 +1014,7 @@ void Interface::recordKUKAFeedback() {
 
 	ROS_INFO("KUKA feedback recorded successfully");
 }
-//TODO: This function need to alternate the KDL::rotaion matrix with Eigen matrix
+
 // This function should be called only when the positions that NDI and KUKA return represent the same point in the world coordinate
 void Interface::calculateNDIKUKATransform() {
 
@@ -1080,7 +1073,7 @@ void Interface::calculateNDIKUKATransform() {
 	Eigen::Matrix4d CurrentFlangeKUKATransform;
 	Eigen::Matrix4d CurrentMarkerKUKATransform;
 	Eigen::Matrix4d MarkerFlangeTransform;
-	Eigen::Quaterniond q;
+	Eigen::Vector4d q;
 	QuatTransformation dtMarker, dtDummy;
 
 	RotationPart = Eigen::Affine3d::Identity();
@@ -1099,10 +1092,10 @@ void Interface::calculateNDIKUKATransform() {
 
 	q = Euler2Quaternion(EulerAngleVector.data()[2], EulerAngleVector.data()[1],
 			EulerAngleVector.data()[0]);
-	initial_pose.orientation.x = q.x();
-	initial_pose.orientation.y = q.y();
-	initial_pose.orientation.z = q.z();
-	initial_pose.orientation.w = q.w();
+	initial_pose.orientation.x = q.data()[0];
+	initial_pose.orientation.y = q.data()[1];
+	initial_pose.orientation.z = q.data()[2];
+	initial_pose.orientation.w = q.data()[3];
 
 	initial_pose.position.x = FrameFeedback.X / 1000.0;
 	initial_pose.position.y = FrameFeedback.Y / 1000.0;
@@ -1120,11 +1113,11 @@ void Interface::calculateNDIKUKATransform() {
 		for (int incrY = 0; incrY <= 1; incrY++) {
 			for (int incrZ = 0; incrZ <= 1; incrZ++) {
 				target_pose.position.x = initial_pose.position.x
-						+ incrX * incrDistance;
+						+ incrX * incrDistance / 1000.0;
 				target_pose.position.y = initial_pose.position.y
-						+ incrY * incrDistance;
+						+ incrY * incrDistance / 1000.0;
 				target_pose.position.z = initial_pose.position.z
-						+ incrZ * incrDistance;
+						+ incrZ * incrDistance / 1000.0;
 
 				int motion_return_value = PlanAndExecuteTargetMotion(
 						target_pose, "tip");
@@ -1149,9 +1142,9 @@ void Interface::calculateNDIKUKATransform() {
 				EulerAngleVector.data()[0] = FrameFeedback.A / 180.0 * M_PI;
 				EulerAngleVector.data()[1] = FrameFeedback.B / 180.0 * M_PI;
 				EulerAngleVector.data()[2] = FrameFeedback.C / 180.0 * M_PI;
-				Translation[0] = FrameFeedback.X / 1000.0;
-				Translation[1] = FrameFeedback.Y / 1000.0;
-				Translation[2] = FrameFeedback.Z / 1000.0;
+				Translation[0] = FrameFeedback.X;
+				Translation[1] = FrameFeedback.Y;
+				Translation[2] = FrameFeedback.Z;
 				RotationPart = createRotationMatrix(EulerAngleVector.data()[2],
 						EulerAngleVector.data()[1], EulerAngleVector.data()[0]);
 				TranslationPart = Eigen::Affine3d(
@@ -1172,24 +1165,21 @@ void Interface::calculateNDIKUKATransform() {
 						CurrentMarkerKUKATransform.coeff(2, 3);
 
 				if (!getNDIFramesAverage(nMarker, -1, dtMarker, dtDummy, false,
-						NDI_FRAME_COUNT)) {
+				NDI_FRAME_COUNT)) {
 					ROS_ERROR("Cannot get NDI Marker position data");
 					continue;
 				}
 
-				vecdtNDIPosition[posCount][0] = dtMarker.dtTranslation.fTx
-						/ 1000.0;
-				vecdtNDIPosition[posCount][1] = dtMarker.dtTranslation.fTy
-						/ 1000.0;
-				vecdtNDIPosition[posCount][2] = dtMarker.dtTranslation.fTz
-						/ 1000.0;
-
-				if (vecdtNDIPosition[posCount][0] > 5
-						|| vecdtNDIPosition[posCount][1] > 5
-						|| vecdtNDIPosition[posCount][2] > 5
-						|| vecdtNDIPosition[posCount][0] < -5
-						|| vecdtNDIPosition[posCount][1] < -5
-						|| vecdtNDIPosition[posCount][2] < -5) {
+				vecdtNDIPosition[posCount][0] = dtMarker.dtTranslation.fTx;
+				vecdtNDIPosition[posCount][1] = dtMarker.dtTranslation.fTy;
+				vecdtNDIPosition[posCount][2] = dtMarker.dtTranslation.fTz;
+				//TODO: This is for preventing the wrong NDI posiiton data
+				if (vecdtNDIPosition[posCount][0] > 5000
+						|| vecdtNDIPosition[posCount][1] > 5000
+						|| vecdtNDIPosition[posCount][2] > 5000
+						|| vecdtNDIPosition[posCount][0] < -5000
+						|| vecdtNDIPosition[posCount][1] < -5000
+						|| vecdtNDIPosition[posCount][2] < -5000) {
 					ROS_ERROR("NDI measured data error");
 					continue;
 				}
@@ -1256,7 +1246,7 @@ void Interface::calculateNDIKUKATransform() {
 	dtNDIKUKATranslationVector_ = dtTranslation;
 
 	ROS_INFO(
-			"NDI and KUKA frame rotation matrix: \n%f, %f, %f \n%f, %f, %f \n%f, %f, %f\n",
+			"NDI to KUKA frame rotation matrix: \n%f, %f, %f \n%f, %f, %f \n%f, %f, %f\n",
 			dtNDIKUKARotationMatrix_.data()[0],
 			dtNDIKUKARotationMatrix_.data()[3],
 			dtNDIKUKARotationMatrix_.data()[6],
@@ -1267,25 +1257,41 @@ void Interface::calculateNDIKUKATransform() {
 			dtNDIKUKARotationMatrix_.data()[5],
 			dtNDIKUKARotationMatrix_.data()[8]);
 
-	ROS_INFO("NDI and KUKA frame translation vector: \n%f m, %f m, %f m\n",
+	ROS_INFO("NDI to KUKA frame translation vector: \n%f mm, %f mm, %f mm\n",
 			dtNDIKUKATranslationVector_.data()[0],
 			dtNDIKUKATranslationVector_.data()[1],
 			dtNDIKUKATranslationVector_.data()[2]);
 
 #else
-	dtNDIKUKARotationMatrix_.data()[0] = 0.108354;
-	dtNDIKUKARotationMatrix_.data()[1] = 0.048921;
-	dtNDIKUKARotationMatrix_.data()[2] = -0.992908;
-	dtNDIKUKARotationMatrix_.data()[3] = -0.472820;
-	dtNDIKUKARotationMatrix_.data()[4] = 0.881121;
-	dtNDIKUKARotationMatrix_.data()[5] = -0.008185;
-	dtNDIKUKARotationMatrix_.data()[6] = 0.874472;
-	dtNDIKUKARotationMatrix_.data()[7] = 0.470354;
-	dtNDIKUKARotationMatrix_.data()[8] = 0.118603;
+	dtNDIKUKARotationMatrix_.data()[0] = 0.048885;
+	dtNDIKUKARotationMatrix_.data()[1] = 0.116951;
+	dtNDIKUKARotationMatrix_.data()[2] = -0.991934;
+	dtNDIKUKARotationMatrix_.data()[3] = -0.934143;
+	dtNDIKUKARotationMatrix_.data()[4] = 0.356877;
+	dtNDIKUKARotationMatrix_.data()[5] = -0.003961;
+	dtNDIKUKARotationMatrix_.data()[6] = 0.353535;
+	dtNDIKUKARotationMatrix_.data()[7] = 0.926802;
+	dtNDIKUKARotationMatrix_.data()[8] = 0.126695;
 
-	dtNDIKUKATranslationVector_.data()[0] = 1.352908;
-	dtNDIKUKATranslationVector_.data()[1] = 0.747626;
-	dtNDIKUKATranslationVector_.data()[2] = 0.731798;
+	/*0.048885, -0.934143, 0.353535
+0.116951, 0.356877, 0.926802
+-0.991934, -0.003961, 0.126695
+
+836.268213 mm, 1160.435967 mm, 740.464462 mm
+*/
+
+	dtNDIKUKATranslationVector_.data()[0] = 836.268213;
+	dtNDIKUKATranslationVector_.data()[1] = 1160.435967;
+	dtNDIKUKATranslationVector_.data()[2] = 740.464462;
+
+	/* [ INFO] [1464875668.418977364]: NDI and KUKA frame rotation matrix:
+	 0.067906, -0.862463, 0.501543
+	 0.105537, 0.506093, 0.855998
+	 -0.992094, -0.005196, 0.125388
+
+	 [ INFO] [1464875668.419024658]: NDI and KUKA frame translation vector:
+	 1.055570 m, 1.155677 m, 0.717713 m */
+
 #endif
 	pushButton_CalculateNDIKUKATransform->setEnabled(true);
 	pushButton_NDIFeedbackMove->setEnabled(true);
@@ -1297,7 +1303,7 @@ bool Interface::getNDIFramesAverage(int nMarker, int nIndicator,
 		QuatTransformation& dtMarker, QuatTransformation& dtIndicator,
 		bool bCalculateABC, int nMaxFramesCount) {
 
-	int nFrameCount = 0;
+	int nFrameCount = 0, nValidFrameCount = 0;
 	std::vector<QuatTransformation> vecdtIndicator(nMaxFramesCount),
 			vecdtMarker(nMaxFramesCount);
 	QuatTransformation dtMarkerInverse;
@@ -1306,7 +1312,7 @@ bool Interface::getNDIFramesAverage(int nMarker, int nIndicator,
 	Eigen::Vector3d IndicatorEulerAngleVector(Eigen::Vector3d::Zero()),
 			MarkerEulerAngleVector(Eigen::Vector3d::Zero()),
 			tempEulerAngleVector(Eigen::Vector3d::Zero());
-	Eigen::Quaterniond q;
+	Eigen::Vector4d q;
 
 	dtIndicator.dtTranslation.fTx = 0;
 	dtIndicator.dtTranslation.fTy = 0;
@@ -1317,6 +1323,8 @@ bool Interface::getNDIFramesAverage(int nMarker, int nIndicator,
 	dtMarker.dtTranslation.fTz = 0;
 
 	while (nFrameCount < nMaxFramesCount) {
+
+		ROS_INFO("Recording %d th frame", nFrameCount);
 
 		if (!getSystemTransformData(false)) {
 			ROS_ERROR("Cannot get tool position data");
@@ -1354,12 +1362,12 @@ bool Interface::getNDIFramesAverage(int nMarker, int nIndicator,
 					vecdtMarker[nFrameCount].dtRotation =
 							pdtCommandHandling_->pdtHandleInformation_[nMarker].dtXfrms.dtRotation;
 
-					IndicatorEulerAngleVector = Quaternion2Euler(
+					IndicatorEulerAngleVector += Quaternion2Euler(
 							vecdtIndicator[nFrameCount].dtRotation.fQx,
 							vecdtIndicator[nFrameCount].dtRotation.fQy,
 							vecdtIndicator[nFrameCount].dtRotation.fQz,
 							vecdtIndicator[nFrameCount].dtRotation.fQ0);
-					MarkerEulerAngleVector = Quaternion2Euler(
+					MarkerEulerAngleVector += Quaternion2Euler(
 							vecdtMarker[nFrameCount].dtRotation.fQx,
 							vecdtMarker[nFrameCount].dtRotation.fQy,
 							vecdtMarker[nFrameCount].dtRotation.fQz,
@@ -1367,8 +1375,10 @@ bool Interface::getNDIFramesAverage(int nMarker, int nIndicator,
 				}
 
 				nFrameCount++;
+				nValidFrameCount++;
 			} else {
 				ROS_ERROR("Tracking failed");
+				nFrameCount++;
 			}
 		} else if (nIndicator == -1 && nMarker != -1) {
 			if (pdtCommandHandling_->pdtHandleInformation_[nMarker].dtXfrms.ulFlags
@@ -1387,7 +1397,7 @@ bool Interface::getNDIFramesAverage(int nMarker, int nIndicator,
 				if (bCalculateABC) {
 					vecdtMarker[nFrameCount].dtRotation =
 							pdtCommandHandling_->pdtHandleInformation_[nMarker].dtXfrms.dtRotation;
-					MarkerEulerAngleVector = Quaternion2Euler(
+					MarkerEulerAngleVector += Quaternion2Euler(
 							vecdtMarker[nFrameCount].dtRotation.fQx,
 							vecdtMarker[nFrameCount].dtRotation.fQy,
 							vecdtMarker[nFrameCount].dtRotation.fQz,
@@ -1395,8 +1405,10 @@ bool Interface::getNDIFramesAverage(int nMarker, int nIndicator,
 				}
 
 				nFrameCount++;
+				nValidFrameCount++;
 			} else {
 				ROS_ERROR("Tracking failed");
+				nFrameCount++;
 			}
 		} else if (nIndicator != -1 && nMarker == -1) {
 			if (pdtCommandHandling_->pdtHandleInformation_[nIndicator].dtXfrms.ulFlags
@@ -1414,15 +1426,17 @@ bool Interface::getNDIFramesAverage(int nMarker, int nIndicator,
 				if (bCalculateABC) {
 					vecdtIndicator[nFrameCount].dtRotation =
 							pdtCommandHandling_->pdtHandleInformation_[nIndicator].dtXfrms.dtRotation;
-					IndicatorEulerAngleVector = Quaternion2Euler(
+					IndicatorEulerAngleVector += Quaternion2Euler(
 							vecdtIndicator[nFrameCount].dtRotation.fQx,
 							vecdtIndicator[nFrameCount].dtRotation.fQy,
 							vecdtIndicator[nFrameCount].dtRotation.fQz,
 							vecdtIndicator[nFrameCount].dtRotation.fQ0);
 				}
 				nFrameCount++;
+				nValidFrameCount++;
 			} else {
 				ROS_ERROR("Tracking failed");
+				nFrameCount++;
 			}
 		} else {
 			ROS_ERROR("nIndicator and nMarker cannot both be -1");
@@ -1431,45 +1445,45 @@ bool Interface::getNDIFramesAverage(int nMarker, int nIndicator,
 
 	}
 
-	if (nFrameCount != 0) {
+	if (nValidFrameCount != 0) {
 
 		if (nIndicator != -1) {
-			dtIndicator.dtTranslation.fTx /= nFrameCount;
-			dtIndicator.dtTranslation.fTy /= nFrameCount;
-			dtIndicator.dtTranslation.fTz /= nFrameCount;
+			dtIndicator.dtTranslation.fTx /= nValidFrameCount;
+			dtIndicator.dtTranslation.fTy /= nValidFrameCount;
+			dtIndicator.dtTranslation.fTz /= nValidFrameCount;
 
-			IndicatorEulerAngleVector.data()[0] /= nFrameCount;
-			IndicatorEulerAngleVector.data()[1] /= nFrameCount;
-			IndicatorEulerAngleVector.data()[2] /= nFrameCount;
+			IndicatorEulerAngleVector.data()[0] /= nValidFrameCount;
+			IndicatorEulerAngleVector.data()[1] /= nValidFrameCount;
+			IndicatorEulerAngleVector.data()[2] /= nValidFrameCount;
 
 			if (bCalculateABC) {
 				q = Euler2Quaternion(IndicatorEulerAngleVector.data()[2],
 						IndicatorEulerAngleVector.data()[1],
 						IndicatorEulerAngleVector.data()[0]);
-				dtIndicator.dtRotation.fQ0 = q.w();
-				dtIndicator.dtRotation.fQx = q.x();
-				dtIndicator.dtRotation.fQy = q.y();
-				dtIndicator.dtRotation.fQz = q.z();
+				dtIndicator.dtRotation.fQ0 = q.data()[0];
+				dtIndicator.dtRotation.fQx = q.data()[1];
+				dtIndicator.dtRotation.fQy = q.data()[2];
+				dtIndicator.dtRotation.fQz = q.data()[3];
 			}
 		}
 
 		if (nMarker != -1) {
-			dtMarker.dtTranslation.fTx /= nFrameCount;
-			dtMarker.dtTranslation.fTy /= nFrameCount;
-			dtMarker.dtTranslation.fTz /= nFrameCount;
+			dtMarker.dtTranslation.fTx /= nValidFrameCount;
+			dtMarker.dtTranslation.fTy /= nValidFrameCount;
+			dtMarker.dtTranslation.fTz /= nValidFrameCount;
 
-			MarkerEulerAngleVector.data()[0] /= nFrameCount;
-			MarkerEulerAngleVector.data()[1] /= nFrameCount;
-			MarkerEulerAngleVector.data()[2] /= nFrameCount;
+			MarkerEulerAngleVector.data()[0] /= nValidFrameCount;
+			MarkerEulerAngleVector.data()[1] /= nValidFrameCount;
+			MarkerEulerAngleVector.data()[2] /= nValidFrameCount;
 
 			if (bCalculateABC) {
 				q = Euler2Quaternion(MarkerEulerAngleVector.data()[2],
 						MarkerEulerAngleVector.data()[1],
 						MarkerEulerAngleVector.data()[0]);
-				dtMarker.dtRotation.fQ0 = q.w();
-				dtMarker.dtRotation.fQx = q.x();
-				dtMarker.dtRotation.fQy = q.y();
-				dtMarker.dtRotation.fQz = q.z();
+				dtMarker.dtRotation.fQ0 = q.data()[3];
+				dtMarker.dtRotation.fQx = q.data()[0];
+				dtMarker.dtRotation.fQy = q.data()[1];
+				dtMarker.dtRotation.fQz = q.data()[2];
 			}
 		}
 
@@ -1498,18 +1512,19 @@ void Interface::calculateTCPMarkerTransform() {
 	Eigen::Matrix3d MarkerNDIRotation;
 	Eigen::Vector3d ToolUnitX, ToolUnitC, ToolUnitY, ToolUnitZ;
 
-	const int ndi_frame_count = 180;
+	const int ndi_frame_count = 60;
 // Translation part of TCP Marker Transform
 	//obtain the point of TCP
 	ROS_INFO("Please indicate the point of TCP");
 	bool bTracking = false;
 	do {
 		dtSubWindowWaitForIndicatorPlaced_.exec();
+		getSystemTransformData(false);
 		if (dtSubWindowWaitForIndicatorPlaced_.nReturnValue_ == INDICATOR_OK) {
 			if (pdtCommandHandling_->pdtHandleInformation_[nMarker].dtXfrms.ulFlags
 					!= TRANSFORM_VALID
 					|| pdtCommandHandling_->pdtHandleInformation_[nIndicator].dtXfrms.ulFlags
-							!= TRANSFORM_VALID) {
+					!= TRANSFORM_VALID) {
 				ROS_ERROR("NDI failed to track Marker or Point Indicator");
 				bTracking = false;
 			} else {
@@ -1521,10 +1536,10 @@ void Interface::calculateTCPMarkerTransform() {
 			pushButton_CalculateTCPMarkerTransform->setEnabled(true);
 			return;
 		}
-	} while (!bTracking);
+	}while (!bTracking);
 
 	if (!getNDIFramesAverage(nMarker, nIndicator, dtMarker, dtIndicator, true,
-			ndi_frame_count)) {
+					ndi_frame_count)) {
 		ROS_ERROR("Cannot get tool position data");
 		dtGetDataTimer_->start(NDI_TIME_INTERVAL);
 		pushButton_CalculateTCPMarkerTransform->setEnabled(true);
@@ -1535,19 +1550,19 @@ void Interface::calculateTCPMarkerTransform() {
 			dtMarker.dtRotation.fQ0);
 
 	dtIndicator.dtRotation =
-			pdtCommandHandling_->pdtHandleInformation_[nMarker].dtXfrms.dtRotation;
+	pdtCommandHandling_->pdtHandleInformation_[nMarker].dtXfrms.dtRotation;
 	dtMarker.dtRotation =
-			pdtCommandHandling_->pdtHandleInformation_[nMarker].dtXfrms.dtRotation;
+	pdtCommandHandling_->pdtHandleInformation_[nMarker].dtXfrms.dtRotation;
 
 	QuatInverseXfrm(&dtMarker, &dtMarkerInverse);
 	QuatCombineXfrms(&dtIndicator, &dtMarkerInverse, &dtTCPMarkerTransform_);
 
 	dtTCPMarkerTranslationVector_.data()[0] =
-			dtTCPMarkerTransform_.dtTranslation.fTx / 1000.0;
+	dtTCPMarkerTransform_.dtTranslation.fTx;
 	dtTCPMarkerTranslationVector_.data()[1] =
-			dtTCPMarkerTransform_.dtTranslation.fTy / 1000.0;
+	dtTCPMarkerTransform_.dtTranslation.fTy;
 	dtTCPMarkerTranslationVector_.data()[2] =
-			dtTCPMarkerTransform_.dtTranslation.fTz / 1000.0;
+	dtTCPMarkerTransform_.dtTranslation.fTz;
 
 	TCPNDITranslation[0].data()[0] = dtIndicator.dtTranslation.fTx;
 	TCPNDITranslation[0].data()[1] = dtIndicator.dtTranslation.fTy;
@@ -1559,6 +1574,7 @@ void Interface::calculateTCPMarkerTransform() {
 	bTracking = false;
 	do {
 		dtSubWindowWaitForIndicatorPlaced_.exec();
+		getSystemTransformData(false);
 		if (dtSubWindowWaitForIndicatorPlaced_.nReturnValue_ == INDICATOR_OK) {
 			if (pdtCommandHandling_->pdtHandleInformation_[nIndicator].dtXfrms.ulFlags
 					!= TRANSFORM_VALID) {
@@ -1573,10 +1589,10 @@ void Interface::calculateTCPMarkerTransform() {
 			pushButton_CalculateTCPMarkerTransform->setEnabled(true);
 			return;
 		}
-	} while (!bTracking);
+	}while (!bTracking);
 
 	if (!getNDIFramesAverage(-1, nIndicator, dtDummy, dtIndicator, false,
-			ndi_frame_count)) {
+					ndi_frame_count)) {
 		ROS_ERROR("Cannot get tool position data");
 		dtGetDataTimer_->start(NDI_TIME_INTERVAL);
 		pushButton_CalculateTCPMarkerTransform->setEnabled(true);
@@ -1589,7 +1605,7 @@ void Interface::calculateTCPMarkerTransform() {
 
 	double delta_x1 = (TCPNDITranslation[1] - TCPNDITranslation[0]).norm();
 	TCPNDIRotationColumn[0] = (TCPNDITranslation[1] - TCPNDITranslation[0])
-			/ delta_x1;
+	/ delta_x1;
 	TCPNDIRotationColumn[0].normalize();
 	ToolUnitX = TCPNDIRotationColumn[0];
 
@@ -1598,6 +1614,7 @@ void Interface::calculateTCPMarkerTransform() {
 	bTracking = false;
 	do {
 		dtSubWindowWaitForIndicatorPlaced_.exec();
+		getSystemTransformData(false);
 		if (dtSubWindowWaitForIndicatorPlaced_.nReturnValue_ == INDICATOR_OK) {
 			if (pdtCommandHandling_->pdtHandleInformation_[nIndicator].dtXfrms.ulFlags
 					!= TRANSFORM_VALID) {
@@ -1612,10 +1629,10 @@ void Interface::calculateTCPMarkerTransform() {
 			pushButton_CalculateTCPMarkerTransform->setEnabled(true);
 			return;
 		}
-	} while (!bTracking);
+	}while (!bTracking);
 
 	if (!getNDIFramesAverage(-1, nIndicator, dtDummy, dtIndicator, false,
-			10)) {
+					NDI_FRAME_COUNT)) {
 		ROS_ERROR("Cannot get tool position data");
 		dtGetDataTimer_->start(NDI_TIME_INTERVAL);
 		pushButton_CalculateTCPMarkerTransform->setEnabled(true);
@@ -1626,7 +1643,7 @@ void Interface::calculateTCPMarkerTransform() {
 	TCPNDITranslation[2].data()[2] = dtIndicator.dtTranslation.fTz;
 
 	ToolUnitC = (TCPNDITranslation[2] - TCPNDITranslation[0])
-			/ (TCPNDITranslation[2] - TCPNDITranslation[0]).norm();
+	/ (TCPNDITranslation[2] - TCPNDITranslation[0]).norm();
 	ToolUnitY = ToolUnitC - ToolUnitC.dot(ToolUnitX) * ToolUnitX;
 	ToolUnitY.normalize();
 
@@ -1635,10 +1652,10 @@ void Interface::calculateTCPMarkerTransform() {
 	double delta_x2 = sqrt(
 			((TCPNDITranslation[2] - TCPNDITranslation[0]).norm()
 					* (TCPNDITranslation[2] - TCPNDITranslation[0]).norm())
-					- delta_y2 * delta_y2);
+			- delta_y2 * delta_y2);
 
 	TCPNDIRotationColumn[1] = (((TCPNDITranslation[2] - TCPNDITranslation[0])
-			- delta_x2 * TCPNDIRotationColumn[0]) / delta_y2);
+					- delta_x2 * TCPNDIRotationColumn[0]) / delta_y2);
 	TCPNDIRotationColumn[1].normalize();
 	TCPNDIRotationColumn[2] = TCPNDIRotationColumn[0].cross(
 			TCPNDIRotationColumn[1]);
@@ -1648,67 +1665,104 @@ void Interface::calculateTCPMarkerTransform() {
 	TCPNDIRotation.col(2) = TCPNDIRotationColumn[2];
 	dtTCPMarkerRotationMatrix_ = MarkerNDIRotation.inverse() * TCPNDIRotation;
 
+	ROS_INFO(
+			"TCP to Marker rotation matrix: \n%f, %f, %f \n%f, %f, %f \n%f, %f, %f\n\n",
+			dtTCPMarkerRotationMatrix_.data()[0],
+			dtTCPMarkerRotationMatrix_.data()[3],
+			dtTCPMarkerRotationMatrix_.data()[6],
+			dtTCPMarkerRotationMatrix_.data()[1],
+			dtTCPMarkerRotationMatrix_.data()[4],
+			dtTCPMarkerRotationMatrix_.data()[7],
+			dtTCPMarkerRotationMatrix_.data()[2],
+			dtTCPMarkerRotationMatrix_.data()[5],
+			dtTCPMarkerRotationMatrix_.data()[8]);
+
 	Eigen::Vector3d EulerAngle_NDI = dtTCPMarkerRotationMatrix_.eulerAngles(2,
 			1, 0);
-	ROS_INFO("euler angle of TCP to Marker: A %f rad, B %f rad, C %f rad",
-			EulerAngle_NDI.data()[0], EulerAngle_NDI.data()[1],
-			EulerAngle_NDI.data()[2]);
-
-	Eigen::Quaterniond q = Euler2Quaternion(EulerAngle_NDI.data()[2],
+	Eigen::Vector4d q = Euler2Quaternion(EulerAngle_NDI.data()[2],
 			EulerAngle_NDI.data()[1], EulerAngle_NDI.data()[0]);
-	dtTCPMarkerTransform_.dtRotation.fQx = q.x();
-	dtTCPMarkerTransform_.dtRotation.fQy = q.y();
-	dtTCPMarkerTransform_.dtRotation.fQz = q.z();
-	dtTCPMarkerTransform_.dtRotation.fQ0 = q.w();
+	dtTCPMarkerTransform_.dtRotation.fQx = q.data()[0];
+	dtTCPMarkerTransform_.dtRotation.fQy = q.data()[1];
+	dtTCPMarkerTransform_.dtRotation.fQz = q.data()[2];
+	dtTCPMarkerTransform_.dtRotation.fQ0 = q.data()[3];
 
 	// Use the needle tip to Marker Translation
 	// instead of the exit point of needle holder to Marker Translation
-	dtTCPMarkerTranslationVector_.data()[0] = 0.01870;
-	dtTCPMarkerTranslationVector_.data()[1] = -0.16273;
-	dtTCPMarkerTranslationVector_.data()[2] = 0.24585;
+	dtTCPMarkerTranslationVector_.data()[0] = 18.70;
+	dtTCPMarkerTranslationVector_.data()[1] = -162.73;
+	dtTCPMarkerTranslationVector_.data()[2] = 245.85;
 	dtTCPMarkerTransform_.dtTranslation.fTx = 18.70;
 	dtTCPMarkerTransform_.dtTranslation.fTy = -162.73;
 	dtTCPMarkerTransform_.dtTranslation.fTz = 245.85;
+
+	ROS_INFO("TCP to Marker Translation: X %f mm, Y %f mm, Z %f mm",
+			dtTCPMarkerTransform_.dtTranslation.fTx,
+			dtTCPMarkerTransform_.dtTranslation.fTy,
+			dtTCPMarkerTransform_.dtTranslation.fTz);
 
 #else
 	// TODO: This field is measured using pivoting method of NDI
 	// This should be obtained using pivoting method for test only
 	// In future, this one should also be obtained by semi-automatic method
 //Translation part
-	dtTCPMarkerTranslationVector_.data()[0] = 0.01870;
-	dtTCPMarkerTranslationVector_.data()[1] = -0.16273;
-	dtTCPMarkerTranslationVector_.data()[2] = 0.24585;
+	dtTCPMarkerTranslationVector_.data()[0] = 18.70;
+	dtTCPMarkerTranslationVector_.data()[1] = -162.73;
+	dtTCPMarkerTranslationVector_.data()[2] = 245.85;
+
 	dtTCPMarkerTransform_.dtTranslation.fTx = 18.70;
 	dtTCPMarkerTransform_.dtTranslation.fTy = -162.73;
 	dtTCPMarkerTransform_.dtTranslation.fTz = 245.85;
 //Rotation part
-	dtTCPMarkerRotationMatrix_.data()[0] = -0.081698;
-	dtTCPMarkerRotationMatrix_.data()[1] = -0.626926;
-	dtTCPMarkerRotationMatrix_.data()[2] = 0.774784;
-	dtTCPMarkerRotationMatrix_.data()[3] = 0.476683;
-	dtTCPMarkerRotationMatrix_.data()[4] = 0.658123;
-	dtTCPMarkerRotationMatrix_.data()[5] = 0.582792;
-	dtTCPMarkerRotationMatrix_.data()[6] = -0.875271;
-	dtTCPMarkerRotationMatrix_.data()[7] = 0.416939;
-	dtTCPMarkerRotationMatrix_.data()[8] = 0.245078;
 
-	Eigen::Vector3d EulerAngle_NDI = dtTCPMarkerRotationMatrix_.eulerAngles(2, 1, 0);
-	ROS_INFO(
-			"euler angle of TCP to Marker: A %f rad, B %f rad, C %f rad",
-			EulerAngle_NDI.data()[0], EulerAngle_NDI.data()[1], EulerAngle_NDI.data()[2]);
+	dtTCPMarkerRotationMatrix_.data()[0] = 0.025170;
+	dtTCPMarkerRotationMatrix_.data()[1] = 0.416873;
+	dtTCPMarkerRotationMatrix_.data()[2] = -0.908616;
+	dtTCPMarkerRotationMatrix_.data()[3] = -0.714938;
+	dtTCPMarkerRotationMatrix_.data()[4] = 0.642790;
+	dtTCPMarkerRotationMatrix_.data()[5] = 0.275107;
+	dtTCPMarkerRotationMatrix_.data()[6] = 0.698734;
+	dtTCPMarkerRotationMatrix_.data()[7] = 0.642680;
+	dtTCPMarkerRotationMatrix_.data()[8] = 0.314218;
 
-	Eigen::Quaterniond q = Euler2Quaternion(EulerAngle_NDI.data()[2], EulerAngle_NDI.data()[1], EulerAngle_NDI.data()[0]);
-	dtTCPMarkerTransform_.dtRotation.fQx = q.x();
-	dtTCPMarkerTransform_.dtRotation.fQy = q.y();
-	dtTCPMarkerTransform_.dtRotation.fQz = q.z();
-	dtTCPMarkerTransform_.dtRotation.fQ0 = q.w();
+	Eigen::Vector3d EulerAngle_NDI = dtTCPMarkerRotationMatrix_.eulerAngles(2,
+			1, 0);
+	Eigen::Vector4d q = Euler2Quaternion(EulerAngle_NDI.data()[2],
+			EulerAngle_NDI.data()[1], EulerAngle_NDI.data()[0]);
+	dtTCPMarkerTransform_.dtRotation.fQx = q.data()[0];
+	dtTCPMarkerTransform_.dtRotation.fQy = q.data()[1];
+	dtTCPMarkerTransform_.dtRotation.fQz = q.data()[2];
+	dtTCPMarkerTransform_.dtRotation.fQ0 = q.data()[3];
+
+	/* -0.688046, -0.140105, -0.712013
+	 0.667092, -0.508313, -0.544615
+	 -0.285622, -0.849699, 0.443206
+
+	 dtTCPMarkerRotationMatrix_.data()[0] = -0.081698;
+	 dtTCPMarkerRotationMatrix_.data()[1] = -0.626926;
+	 dtTCPMarkerRotationMatrix_.data()[2] = 0.774784;
+	 dtTCPMarkerRotationMatrix_.data()[3] = 0.476683;
+	 dtTCPMarkerRotationMatrix_.data()[4] = 0.658123;
+	 dtTCPMarkerRotationMatrix_.data()[5] = 0.582792;
+	 dtTCPMarkerRotationMatrix_.data()[6] = -0.875271;
+	 dtTCPMarkerRotationMatrix_.data()[7] = 0.416939;
+	 dtTCPMarkerRotationMatrix_.data()[8] = 0.245078;
+
+	 0.025170, -0.714938, 0.698734
+	 0.416873, 0.642790, 0.642680
+	 -0.908616, 0.275107, 0.314218
+	 */
+
+	/*dtTCPMarkerRotationMatrix_.data()[0] = -0.688046;
+	 dtTCPMarkerRotationMatrix_.data()[1] = 0.667092;
+	 dtTCPMarkerRotationMatrix_.data()[2] = -0.285622;
+	 dtTCPMarkerRotationMatrix_.data()[3] = -0.140105;
+	 dtTCPMarkerRotationMatrix_.data()[4] = -0.508313;
+	 dtTCPMarkerRotationMatrix_.data()[5] = -0.849699;
+	 dtTCPMarkerRotationMatrix_.data()[6] = -0.712013;
+	 dtTCPMarkerRotationMatrix_.data()[7] = -0.544615;
+	 dtTCPMarkerRotationMatrix_.data()[8] = 0.443206; */
 
 #endif
-
-	ROS_INFO("TCP Marker Translation: X %f m, Y %f m, Z %f m",
-			dtTCPMarkerTransform_.dtTranslation.fTx / 1000.0,
-			dtTCPMarkerTransform_.dtTranslation.fTy / 1000.0,
-			dtTCPMarkerTransform_.dtTranslation.fTz / 1000.0);
 
 	dtGetDataTimer_->start(NDI_TIME_INTERVAL);
 	pushButton_CalculateTCPMarkerTransform->setEnabled(true);
@@ -1769,7 +1823,7 @@ bool Interface::ndiFeedbackParallelMove() {
 
 	geometry_msgs::Pose target_pose;
 	Eigen::Vector3d EulerAngleVector;
-	Eigen::Quaterniond q;
+	Eigen::Vector4d q;
 	QuatTransformation dtMarker, dtDummy;
 
 // Pos for reference point in NDI frame
@@ -1787,10 +1841,10 @@ bool Interface::ndiFeedbackParallelMove() {
 
 	q = Euler2Quaternion(EulerAngleVector.data()[2], EulerAngleVector.data()[1],
 			EulerAngleVector.data()[0]);
-	target_pose.orientation.x = q.x();
-	target_pose.orientation.y = q.y();
-	target_pose.orientation.z = q.z();
-	target_pose.orientation.w = q.w();
+	target_pose.orientation.x = q.data()[0];
+	target_pose.orientation.y = q.data()[1];
+	target_pose.orientation.z = q.data()[2];
+	target_pose.orientation.w = q.data()[3];
 
 	AxisFeedback = dtController_.getFeedbackAxis();
 	dtLastAxis_.set(AxisFeedback);
@@ -1819,13 +1873,13 @@ bool Interface::ndiFeedbackParallelMove() {
 
 	q = Euler2Quaternion(EulerAngleVector.data()[2], EulerAngleVector.data()[1],
 			EulerAngleVector.data()[0]);
-	target_pose.orientation.x = q.x();
-	target_pose.orientation.y = q.y();
-	target_pose.orientation.z = q.z();
-	target_pose.orientation.w = q.w();
+	target_pose.orientation.x = q.data()[0];
+	target_pose.orientation.y = q.data()[1];
+	target_pose.orientation.z = q.data()[2];
+	target_pose.orientation.w = q.data()[3];
 
 	if (!getNDIFramesAverage(nMarker, -1, dtMarker, dtDummy, false,
-			NDI_FRAME_COUNT)) {
+	NDI_FRAME_COUNT)) {
 		ROS_ERROR("Cannot get tool position data");
 		pushButton_NDIFeedbackParallelMove->setEnabled(true);
 		dtGetDataTimer_->start(NDI_TIME_INTERVAL);
@@ -1833,11 +1887,11 @@ bool Interface::ndiFeedbackParallelMove() {
 	}
 
 	NDI_delta_position.data()[0] = NDI_reference_point[0]
-			- dtMarker.dtTranslation.fTx / 1000.0;
+			- dtMarker.dtTranslation.fTx;
 	NDI_delta_position.data()[1] = NDI_reference_point[1]
-			- dtMarker.dtTranslation.fTy / 1000.0;
+			- dtMarker.dtTranslation.fTy;
 	NDI_delta_position.data()[2] = NDI_reference_point[2]
-			- dtMarker.dtTranslation.fTz / 1000.0;
+			- dtMarker.dtTranslation.fTz;
 
 	KUKA_delta_position = dtNDIKUKARotationMatrix_ * NDI_delta_position;
 	ROS_INFO("Delta NDI position: %f, %f, %f", NDI_delta_position.data()[0],
@@ -1845,29 +1899,26 @@ bool Interface::ndiFeedbackParallelMove() {
 	ROS_INFO("Delta KUKA position: %f, %f, %f", KUKA_delta_position.data()[0],
 			KUKA_delta_position.data()[1], KUKA_delta_position.data()[2]);
 
+	int nIterationCount = 0;
+	std::vector<double> distance_error(2, 0);
+
 	while (sqrt(
 			NDI_delta_position.data()[0] * NDI_delta_position.data()[0]
 					+ NDI_delta_position.data()[1]
 							* NDI_delta_position.data()[1]
 					+ NDI_delta_position.data()[2]
-							* NDI_delta_position.data()[2]) > 0.0001) {
+							* NDI_delta_position.data()[2])
+			> dParallelMoveThreshold_) {
 
 		AxisFeedback = dtController_.getFeedbackAxis();
 		dtLastAxis_.set(AxisFeedback);
 		pdtPlannar_->getModel().Axis2Frame(AxisFeedback, FrameFeedback);
-		target_pose.position.x = FrameFeedback.X / 1000.0
-				+ KUKA_delta_position.data()[0];
-		target_pose.position.y = FrameFeedback.Y / 1000.0
-				+ KUKA_delta_position.data()[1];
-		target_pose.position.z = FrameFeedback.Z / 1000.0
-				+ KUKA_delta_position.data()[2];
-
-		ROS_INFO("Current NDI position: %f, %f, %f",
-				dtMarker.dtTranslation.fTx / 1000.0,
-				dtMarker.dtTranslation.fTy / 1000.0,
-				dtMarker.dtTranslation.fTz / 1000.0);
-		ROS_INFO("Current KUKA position: %f, %f, %f", FrameFeedback.X / 1000.0,
-				FrameFeedback.Y / 1000.0, FrameFeedback.Z / 1000.0);
+		target_pose.position.x = (FrameFeedback.X
+				+ KUKA_delta_position.data()[0]) / 1000.0;
+		target_pose.position.y = (FrameFeedback.Y
+				+ KUKA_delta_position.data()[1]) / 1000.0;
+		target_pose.position.z = (FrameFeedback.Z
+				+ KUKA_delta_position.data()[2]) / 1000.0;
 
 		motion_return_value = PlanAndExecuteTargetMotion(target_pose, "tip");
 		if (motion_return_value == MOTION_PLAN_EXECUTE) {
@@ -1875,25 +1926,27 @@ bool Interface::ndiFeedbackParallelMove() {
 		} else {
 			pushButton_NDIFeedbackParallelMove->setEnabled(true);
 			dtGetDataTimer_->start(NDI_TIME_INTERVAL);
+			dParallelMoveThreshold_ = MINIMUM_PARALLEL_MOVE_THRESHOLD;
 			return false;
 		}
 
 		dtSubWindowWaitForExecution_.exec();
 
 		if (!getNDIFramesAverage(nMarker, -1, dtMarker, dtDummy, false,
-				NDI_FRAME_COUNT)) {
+		NDI_FRAME_COUNT)) {
 			ROS_ERROR("Cannot get tool position data");
 			pushButton_NDIFeedbackParallelMove->setEnabled(true);
 			dtGetDataTimer_->start(NDI_TIME_INTERVAL);
+			dParallelMoveThreshold_ = MINIMUM_PARALLEL_MOVE_THRESHOLD;
 			return false;
 		}
 
 		NDI_delta_position.data()[0] = NDI_reference_point[0]
-				- dtMarker.dtTranslation.fTx / 1000.0;
+				- dtMarker.dtTranslation.fTx;
 		NDI_delta_position.data()[1] = NDI_reference_point[1]
-				- dtMarker.dtTranslation.fTy / 1000.0;
+				- dtMarker.dtTranslation.fTy;
 		NDI_delta_position.data()[2] = NDI_reference_point[2]
-				- dtMarker.dtTranslation.fTz / 1000.0;
+				- dtMarker.dtTranslation.fTz;
 
 		KUKA_delta_position = dtNDIKUKARotationMatrix_ * NDI_delta_position;
 
@@ -1903,18 +1956,35 @@ bool Interface::ndiFeedbackParallelMove() {
 				KUKA_delta_position.data()[0], KUKA_delta_position.data()[1],
 				KUKA_delta_position.data()[2]);
 
-		ROS_INFO("NDI measured error: %f m",
-				sqrt(
-						NDI_delta_position.data()[0]
-								* NDI_delta_position.data()[0]
-								+ NDI_delta_position.data()[1]
-										* NDI_delta_position.data()[1]
-								+ NDI_delta_position.data()[2]
-										* NDI_delta_position.data()[2]));
+
+
+		// If the distance error is still going down, don't count the iteration.
+		// Count the iteration only when the distance error starts to diverge
+		distance_error[0] = distance_error[1];
+		distance_error[1] = sqrt(
+				NDI_delta_position.data()[0]
+						* NDI_delta_position.data()[0]
+						+ NDI_delta_position.data()[1]
+								* NDI_delta_position.data()[1]
+						+ NDI_delta_position.data()[2]
+								* NDI_delta_position.data()[2]);
+		ROS_INFO("NDI measured error: %f mm", distance_error[1]);
+		// To check whether the last distance error exists
+		if(distance_error[0] != 0 && distance_error[1] - distance_error[0] > 0) {
+			nIterationCount++;
+		}
+
+		if(nIterationCount >= 4) {
+			dParallelMoveThreshold_ += 0.05;
+			nIterationCount = 0;
+			ROS_INFO("Threshold changed to %f", dParallelMoveThreshold_);
+		}
+
 	}
 
 	dtGetDataTimer_->start(NDI_TIME_INTERVAL);
 	pushButton_NDIFeedbackParallelMove->setEnabled(true);
+	dParallelMoveThreshold_ = MINIMUM_PARALLEL_MOVE_THRESHOLD;
 	ROS_INFO("NDI Feedback Move succeed");
 	return true;
 }
@@ -1957,43 +2027,43 @@ void Interface::calculateRotationMatrix() {
 
 	geometry_msgs::Pose target_pose;
 	Eigen::Vector3d EulerAngleVector;
-	Eigen::Quaterniond q;
+	Eigen::Vector4d q;
 
 	AxisFeedback = dtController_.getFeedbackAxis();
 	dtLastAxis_.set(AxisFeedback);
 	pdtPlannar_->getModel().Axis2Frame(AxisFeedback, FrameFeedback);
-	Kuka_position_x[0] = FrameFeedback.X / 1000.0;
-	Kuka_position_y[0] = FrameFeedback.Y / 1000.0;
-	Kuka_position_z[0] = FrameFeedback.Z / 1000.0;
+	Kuka_position_x[0] = FrameFeedback.X;
+	Kuka_position_y[0] = FrameFeedback.Y;
+	Kuka_position_z[0] = FrameFeedback.Z;
 	EulerAngleVector.data()[0] = FrameFeedback.A / 180.0 * M_PI;
 	EulerAngleVector.data()[1] = FrameFeedback.B / 180.0 * M_PI;
 	EulerAngleVector.data()[2] = FrameFeedback.C / 180.0 * M_PI;
 	q = Euler2Quaternion(EulerAngleVector.data()[2], EulerAngleVector.data()[1],
 			EulerAngleVector.data()[0]);
-	target_pose.orientation.x = q.x();
-	target_pose.orientation.y = q.y();
-	target_pose.orientation.z = q.z();
-	target_pose.orientation.w = q.w();
+	target_pose.orientation.x = q.data()[0];
+	target_pose.orientation.y = q.data()[1];
+	target_pose.orientation.z = q.data()[2];
+	target_pose.orientation.w = q.data()[3];
 
 	QuatTransformation dtMarker, dtDummy;
 	if (!getNDIFramesAverage(nMarker, -1, dtMarker, dtDummy, false,
-			NDI_FRAME_COUNT)) {
+					NDI_FRAME_COUNT)) {
 		ROS_ERROR("Cannot get tool position data");
 		pushButton_CalculateNDIKUKARotation->setEnabled(true);
 		dtGetDataTimer_->start(NDI_TIME_INTERVAL);
 		return;
 	}
-	NDI_position_x[0] = dtMarker.dtTranslation.fTx / 1000.0;
-	NDI_position_y[0] = dtMarker.dtTranslation.fTy / 1000.0;
-	NDI_position_z[0] = dtMarker.dtTranslation.fTz / 1000.0;
+	NDI_position_x[0] = dtMarker.dtTranslation.fTx;
+	NDI_position_y[0] = dtMarker.dtTranslation.fTy;
+	NDI_position_z[0] = dtMarker.dtTranslation.fTz;
 
 	// --------------------------------------------------------
 	// Pose 1
 	// --------------------------------------------------------
-	target_pose.position.x = Kuka_position_x[0]
-			+ lineEdit_dX->text().toDouble();
-	target_pose.position.y = Kuka_position_y[0];
-	target_pose.position.z = Kuka_position_z[0];
+	target_pose.position.x = (Kuka_position_x[0]
+			+ lineEdit_dX->text().toDouble()) / 1000.0;
+	target_pose.position.y = Kuka_position_y[0] / 1000.0;
+	target_pose.position.z = Kuka_position_z[0] / 1000.0;
 
 	int motion_return_value = PlanAndExecuteTargetMotion(target_pose, "tip");
 	if (motion_return_value == MOTION_PLAN_EXECUTE) {
@@ -2007,30 +2077,30 @@ void Interface::calculateRotationMatrix() {
 	dtSubWindowWaitForExecution_.exec();
 	// Derive NDI position
 	if (!getNDIFramesAverage(nMarker, -1, dtMarker, dtDummy, false,
-			NDI_FRAME_COUNT)) {
+					NDI_FRAME_COUNT)) {
 		ROS_ERROR("Cannot get tool position data");
 		pushButton_CalculateNDIKUKARotation->setEnabled(true);
 		dtGetDataTimer_->start(NDI_TIME_INTERVAL);
 		return;
 	}
 	// Derive KUKA position
-	NDI_position_x[1] = dtMarker.dtTranslation.fTx / 1000.0;
-	NDI_position_y[1] = dtMarker.dtTranslation.fTy / 1000.0;
-	NDI_position_z[1] = dtMarker.dtTranslation.fTz / 1000.0;
+	NDI_position_x[1] = dtMarker.dtTranslation.fTx;
+	NDI_position_y[1] = dtMarker.dtTranslation.fTy;
+	NDI_position_z[1] = dtMarker.dtTranslation.fTz;
 
 	AxisFeedback = dtController_.getFeedbackAxis();
 	dtLastAxis_.set(AxisFeedback);
 	pdtPlannar_->getModel().Axis2Frame(AxisFeedback, FrameFeedback);
-	Kuka_position_x[1] = FrameFeedback.X / 1000.0;
-	Kuka_position_y[1] = FrameFeedback.Y / 1000.0;
-	Kuka_position_z[1] = FrameFeedback.Z / 1000.0;
+	Kuka_position_x[1] = FrameFeedback.X;
+	Kuka_position_y[1] = FrameFeedback.Y;
+	Kuka_position_z[1] = FrameFeedback.Z;
 	// --------------------------------------------------------
 	// Pose 2
 	// --------------------------------------------------------
-	target_pose.position.x = Kuka_position_x[0];
-	target_pose.position.y = Kuka_position_y[0]
-			+ lineEdit_dY->text().toDouble();
-	target_pose.position.z = Kuka_position_z[0];
+	target_pose.position.x = Kuka_position_x[0] / 1000.0;
+	target_pose.position.y = (Kuka_position_y[0]
+			+ lineEdit_dY->text().toDouble()) / 1000.0;
+	target_pose.position.z = Kuka_position_z[0] / 1000.0;
 
 	motion_return_value = PlanAndExecuteTargetMotion(target_pose, "tip");
 	if (motion_return_value == MOTION_PLAN_EXECUTE) {
@@ -2044,29 +2114,29 @@ void Interface::calculateRotationMatrix() {
 	dtSubWindowWaitForExecution_.exec();
 
 	if (!getNDIFramesAverage(nMarker, -1, dtMarker, dtDummy, false,
-			NDI_FRAME_COUNT)) {
+					NDI_FRAME_COUNT)) {
 		ROS_ERROR("Cannot get tool position data");
 		pushButton_CalculateNDIKUKARotation->setEnabled(true);
 		dtGetDataTimer_->start(NDI_TIME_INTERVAL);
 		return;
 	}
-	NDI_position_x[2] = dtMarker.dtTranslation.fTx / 1000.0;
-	NDI_position_y[2] = dtMarker.dtTranslation.fTy / 1000.0;
-	NDI_position_z[2] = dtMarker.dtTranslation.fTz / 1000.0;
+	NDI_position_x[2] = dtMarker.dtTranslation.fTx;
+	NDI_position_y[2] = dtMarker.dtTranslation.fTy;
+	NDI_position_z[2] = dtMarker.dtTranslation.fTz;
 
 	AxisFeedback = dtController_.getFeedbackAxis();
 	dtLastAxis_.set(AxisFeedback);
 	pdtPlannar_->getModel().Axis2Frame(AxisFeedback, FrameFeedback);
-	Kuka_position_x[2] = FrameFeedback.X / 1000.0;
-	Kuka_position_y[2] = FrameFeedback.Y / 1000.0;
-	Kuka_position_z[2] = FrameFeedback.Z / 1000.0;
+	Kuka_position_x[2] = FrameFeedback.X;
+	Kuka_position_y[2] = FrameFeedback.Y;
+	Kuka_position_z[2] = FrameFeedback.Z;
 	// --------------------------------------------------------
 	// Pose 3
 	// --------------------------------------------------------
-	target_pose.position.x = Kuka_position_x[0];
-	target_pose.position.y = Kuka_position_y[0];
-	target_pose.position.z = Kuka_position_z[0]
-			+ lineEdit_dZ->text().toDouble();
+	target_pose.position.x = Kuka_position_x[0] / 1000.0;
+	target_pose.position.y = Kuka_position_y[0] / 1000.0;
+	target_pose.position.z = (Kuka_position_z[0]
+			+ lineEdit_dZ->text().toDouble()) / 1000.0;
 
 	motion_return_value = PlanAndExecuteTargetMotion(target_pose, "tip");
 	if (motion_return_value == MOTION_PLAN_EXECUTE) {
@@ -2080,22 +2150,22 @@ void Interface::calculateRotationMatrix() {
 	dtSubWindowWaitForExecution_.exec();
 
 	if (!getNDIFramesAverage(nMarker, -1, dtMarker, dtDummy, false,
-			NDI_FRAME_COUNT)) {
+					NDI_FRAME_COUNT)) {
 		ROS_ERROR("Cannot get tool position data");
 		pushButton_CalculateNDIKUKARotation->setEnabled(true);
 		dtGetDataTimer_->start(NDI_TIME_INTERVAL);
 		return;
 	}
-	NDI_position_x[3] = dtMarker.dtTranslation.fTx / 1000.0;
-	NDI_position_y[3] = dtMarker.dtTranslation.fTy / 1000.0;
-	NDI_position_z[3] = dtMarker.dtTranslation.fTz / 1000.0;
+	NDI_position_x[3] = dtMarker.dtTranslation.fTx;
+	NDI_position_y[3] = dtMarker.dtTranslation.fTy;
+	NDI_position_z[3] = dtMarker.dtTranslation.fTz;
 
 	AxisFeedback = dtController_.getFeedbackAxis();
 	dtLastAxis_.set(AxisFeedback);
 	pdtPlannar_->getModel().Axis2Frame(AxisFeedback, FrameFeedback);
-	Kuka_position_x[3] = FrameFeedback.X / 1000.0;
-	Kuka_position_y[3] = FrameFeedback.Y / 1000.0;
-	Kuka_position_z[3] = FrameFeedback.Z / 1000.0;
+	Kuka_position_x[3] = FrameFeedback.X;
+	Kuka_position_y[3] = FrameFeedback.Y;
+	Kuka_position_z[3] = FrameFeedback.Z;
 
 	std::vector<Eigen::Vector3d> delta_NDI_position(6);
 	std::vector<Eigen::Vector3d> delta_KUKA_position(6);
@@ -2106,17 +2176,17 @@ void Interface::calculateRotationMatrix() {
 	for (int i = 0; i < 3; i++) {
 		for (int j = i + 1; j <= 3; j++) {
 			delta_NDI_position[nPairCount].data()[0] = NDI_position_x[j]
-					- NDI_position_x[i];
+			- NDI_position_x[i];
 			delta_NDI_position[nPairCount].data()[1] = NDI_position_y[j]
-					- NDI_position_y[i];
+			- NDI_position_y[i];
 			delta_NDI_position[nPairCount].data()[2] = NDI_position_z[j]
-					- NDI_position_z[i];
+			- NDI_position_z[i];
 			delta_KUKA_position[nPairCount].data()[0] = Kuka_position_x[j]
-					- Kuka_position_x[i];
+			- Kuka_position_x[i];
 			delta_KUKA_position[nPairCount].data()[1] = Kuka_position_y[j]
-					- Kuka_position_y[i];
+			- Kuka_position_y[i];
 			delta_KUKA_position[nPairCount].data()[2] = Kuka_position_z[j]
-					- Kuka_position_z[i];
+			- Kuka_position_z[i];
 			nPairCount++;
 		}
 	}
@@ -2147,15 +2217,25 @@ void Interface::calculateRotationMatrix() {
 
 	dtGetDataTimer_->start(NDI_TIME_INTERVAL);
 #else
-	dtNDIKUKARotationMatrix_.data()[0] = 0.108354;
-	dtNDIKUKARotationMatrix_.data()[1] = 0.048921;
-	dtNDIKUKARotationMatrix_.data()[2] = -0.992908;
-	dtNDIKUKARotationMatrix_.data()[3] = -0.472820;
-	dtNDIKUKARotationMatrix_.data()[4] = 0.881121;
-	dtNDIKUKARotationMatrix_.data()[5] = -0.008185;
-	dtNDIKUKARotationMatrix_.data()[6] = 0.874472;
-	dtNDIKUKARotationMatrix_.data()[7] = 0.470354;
-	dtNDIKUKARotationMatrix_.data()[8] = 0.118603;
+	dtNDIKUKARotationMatrix_.data()[0] = 0.050280;
+	dtNDIKUKARotationMatrix_.data()[1] = 0.134701;
+	dtNDIKUKARotationMatrix_.data()[2] = -0.992092;
+	dtNDIKUKARotationMatrix_.data()[3] = -0.937355;
+	dtNDIKUKARotationMatrix_.data()[4] = 0.391280;
+	dtNDIKUKARotationMatrix_.data()[5] = 0.002654;
+	dtNDIKUKARotationMatrix_.data()[6] = 0.353481;
+	dtNDIKUKARotationMatrix_.data()[7] = 0.877706;
+	dtNDIKUKARotationMatrix_.data()[8] = 0.115206;
+
+	/*0.050280, -0.937355, 0.353481
+	 0.134701, 0.391280, 0.877706
+	 -0.992092, 0.002654, 0.115206
+	 * */
+
+	/* 0.069839, -0.864405, 0.506806
+	 0.105046, 0.504057, 0.856554
+	 -0.993359, -0.006206, 0.121104
+	 * */
 #endif
 	pushButton_CalculateNDIKUKARotation->setEnabled(true);
 	pushButton_NDIFeedbackParallelMove->setEnabled(true);
@@ -2602,7 +2682,7 @@ long Interface::getSystemTransformData() {
 // This is only for Point Indicator
 //-----------------------------------------------------------
 	int nActiveTool = ASCIIToHex((char*) "02", 2);
-	Eigen::Quaterniond q;
+	Eigen::Vector4d q;
 	QuatTransformation Original, OriginaltoNew, New;
 	std::vector<double> Quartenion(4);
 
@@ -2612,10 +2692,10 @@ long Interface::getSystemTransformData() {
 	Original.dtTranslation =
 			pdtCommandHandling_->pdtHandleInformation_[nActiveTool].dtXfrms.dtTranslation;
 
-	OriginaltoNew.dtRotation.fQx = q.x();
-	OriginaltoNew.dtRotation.fQy = q.y();
-	OriginaltoNew.dtRotation.fQz = q.z();
-	OriginaltoNew.dtRotation.fQ0 = q.w();
+	OriginaltoNew.dtRotation.fQx = q.data()[0];
+	OriginaltoNew.dtRotation.fQy = q.data()[1];
+	OriginaltoNew.dtRotation.fQz = q.data()[2];
+	OriginaltoNew.dtRotation.fQ0 = q.data()[3];
 	//TODO: This tool tip offset is calculated using pivoting method
 	OriginaltoNew.dtTranslation.fTx = -6.70;
 	OriginaltoNew.dtTranslation.fTy = 1.05;
@@ -2778,6 +2858,37 @@ long Interface::getSystemTransformData() {
 				lineEdit_Status_2->setText(QString("---"));
 		}/* else */
 	}/* if */
+
+
+
+	//TODO: For debug
+
+/*	Axis AxisFeedback;
+	Frame FrameFeedback;
+	AxisFeedback = dtController_.getFeedbackAxis();
+	dtLastAxis_.set(AxisFeedback);
+	pdtPlannar_->getModel().Axis2Frame(AxisFeedback, FrameFeedback);
+
+	q = Euler2Quaternion(FrameFeedback.C / 180.0 * M_PI, FrameFeedback.B / 180.0 * M_PI,
+			FrameFeedback.A / 180.0 * M_PI);
+	ROS_INFO("x %f y %f z %f w %f", q.x(), q.y(), q.z(), q.w());
+
+	KDL::Rotation h = KDL::Rotation::RPY(FrameFeedback.C / 180.0 * M_PI, FrameFeedback.B / 180.0 * M_PI,
+			FrameFeedback.A / 180.0 * M_PI);
+	std::vector<double> qua(4), eul(3);
+	h.GetQuaternion(qua[0], qua[1], qua[2], qua[3]);
+	ROS_INFO("x %f y %f z %f w %f", qua[0], qua[1], qua[2], qua[3]);
+
+	Eigen::Vector3d EulerAngleVector = Quaternion2Euler(q.x(), q.y(), q.z(), q.w());
+
+	h = KDL::Rotation::Quaternion(q.x(), q.y(), q.z(), q.w());
+	h.GetRPY(eul[0], eul[1], eul[2]);
+	ROS_INFO("right A %f B %f C %f", eul[2], eul[1], eul[0]);
+
+	ROS_INFO("Recovered A %f B %f C %f", EulerAngleVector[0], EulerAngleVector[1], EulerAngleVector[2]);
+	ROS_INFO("Original A %f B %f C %f", FrameFeedback.A / 180.0 * M_PI, FrameFeedback.B / 180.0 * M_PI,
+			FrameFeedback.C / 180.0 * M_PI); */
+
 	return 1;
 } /* getSystemTransformData */
 
@@ -2841,7 +2952,7 @@ long Interface::getSystemTransformData(bool bUpdateGUI) {
 // This is only for Point Indicator
 //-----------------------------------------------------------
 	int nActiveTool = ASCIIToHex((char*) "02", 2);
-	Eigen::Quaterniond q;
+	Eigen::Vector4d q;
 	QuatTransformation Original, OriginaltoNew, New;
 	std::vector<double> Quartenion(4);
 
@@ -2851,10 +2962,10 @@ long Interface::getSystemTransformData(bool bUpdateGUI) {
 	Original.dtTranslation =
 			pdtCommandHandling_->pdtHandleInformation_[nActiveTool].dtXfrms.dtTranslation;
 
-	OriginaltoNew.dtRotation.fQx = q.x();
-	OriginaltoNew.dtRotation.fQy = q.y();
-	OriginaltoNew.dtRotation.fQz = q.z();
-	OriginaltoNew.dtRotation.fQ0 = q.w();
+	OriginaltoNew.dtRotation.fQx = q.data()[0];
+	OriginaltoNew.dtRotation.fQy = q.data()[1];
+	OriginaltoNew.dtRotation.fQz = q.data()[2];
+	OriginaltoNew.dtRotation.fQ0 = q.data()[3];
 	//TODO: This tool tip offset is calculated using pivoting method
 	OriginaltoNew.dtTranslation.fTx = -6.70;
 	OriginaltoNew.dtTranslation.fTy = 1.05;
@@ -3715,9 +3826,9 @@ void Interface::manipulateCollisionObject() {
 		}
 		}
 
-		collision_pose.position.x = lineEdit_TransX->text().toDouble();
-		collision_pose.position.y = lineEdit_TransY->text().toDouble();
-		collision_pose.position.z = lineEdit_TransZ->text().toDouble();
+		collision_pose.position.x = lineEdit_TransX->text().toDouble() / 1000.0;
+		collision_pose.position.y = lineEdit_TransY->text().toDouble() / 1000.0;
+		collision_pose.position.z = lineEdit_TransZ->text().toDouble() / 1000.0;
 
 		Eigen::Vector3d EulerAngleVector;
 		EulerAngleVector.data()[0] = lineEdit_RotateA->text().toDouble()
@@ -3726,13 +3837,13 @@ void Interface::manipulateCollisionObject() {
 				/ 180.0* M_PI;
 		EulerAngleVector.data()[2] = lineEdit_RotateC->text().toDouble()
 				/ 180.0* M_PI;
-		Eigen::Quaterniond q;
+		Eigen::Vector4d q;
 		q = Euler2Quaternion(EulerAngleVector.data()[2],
 				EulerAngleVector.data()[1], EulerAngleVector.data()[0]);
-		collision_pose.orientation.x = q.x();
-		collision_pose.orientation.y = q.y();
-		collision_pose.orientation.z = q.z();
-		collision_pose.orientation.w = q.w();
+		collision_pose.orientation.x = q.data()[0];
+		collision_pose.orientation.y = q.data()[1];
+		collision_pose.orientation.z = q.data()[2];
+		collision_pose.orientation.w = q.data()[3];
 
 		collision_object.operation = collision_object.ADD;
 		collision_object.primitive_poses.push_back(collision_pose);
@@ -3770,6 +3881,9 @@ void Interface::manipulateCollisionObject() {
 	}
 
 }
+//TODO: Do remember the Euler angle has singularity
+//RPY(roll,pitch,yaw) == RPY( roll +/- PI, PI-pitch, yaw +/- PI )
+//Avoid with +-90 and +-180 for ABC angle value !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 void Interface::visualizeJointPlan() {
 
 	if (lineEdit_Joint1->text().isEmpty() || lineEdit_Joint2->text().isEmpty()
@@ -3807,9 +3921,9 @@ void Interface::visualizePosePlan() {
 	}
 
 	geometry_msgs::Pose target_pose;
-	target_pose.position.x = lineEdit_TransX->text().toDouble();
-	target_pose.position.y = lineEdit_TransY->text().toDouble();
-	target_pose.position.z = lineEdit_TransZ->text().toDouble();
+	target_pose.position.x = lineEdit_TransX->text().toDouble() / 1000.0;
+	target_pose.position.y = lineEdit_TransY->text().toDouble() / 1000.0;
+	target_pose.position.z = lineEdit_TransZ->text().toDouble() / 1000.0;
 
 	Eigen::Vector3d EulerAngleVector;
 	EulerAngleVector.data()[0] = lineEdit_RotateA->text().toDouble()
@@ -3819,13 +3933,14 @@ void Interface::visualizePosePlan() {
 	EulerAngleVector.data()[2] = lineEdit_RotateC->text().toDouble()
 			/ 180.0* M_PI;
 
-	Eigen::Quaterniond q;
-	q = Euler2Quaternion(EulerAngleVector.data()[2], EulerAngleVector.data()[1],
+	Eigen::Vector4d Quaternion;
+	Quaternion = Euler2Quaternion(EulerAngleVector.data()[2], EulerAngleVector.data()[1],
 			EulerAngleVector.data()[0]);
-	target_pose.orientation.x = q.x();
-	target_pose.orientation.y = q.y();
-	target_pose.orientation.z = q.z();
-	target_pose.orientation.w = q.w();
+
+	target_pose.orientation.x = Quaternion.data()[0];
+	target_pose.orientation.y = Quaternion.data()[1];
+	target_pose.orientation.z = Quaternion.data()[2];
+	target_pose.orientation.w = Quaternion.data()[3];
 
 	if (!dtController_.planTargetMotion(target_pose, "tip")) {
 		ROS_ERROR("Motion plan failed");
@@ -3848,12 +3963,12 @@ void Interface::visualizeIncrPosePlan() {
 	}
 
 	geometry_msgs::Pose target_pose;
-	target_pose.position.x = output_x->toPlainText().toDouble() / 1000.0
-			+ lineEdit_incrTransX->text().toDouble();
-	target_pose.position.y = output_y->toPlainText().toDouble() / 1000.0
-			+ lineEdit_incrTransY->text().toDouble();
-	target_pose.position.z = output_z->toPlainText().toDouble() / 1000.0
-			+ lineEdit_incrTransZ->text().toDouble();
+	target_pose.position.x = (output_x->toPlainText().toDouble()
+			+ lineEdit_incrTransX->text().toDouble()) / 1000.0;
+	target_pose.position.y = (output_y->toPlainText().toDouble()
+			+ lineEdit_incrTransY->text().toDouble()) / 1000.0;
+	target_pose.position.z = (output_z->toPlainText().toDouble()
+			+ lineEdit_incrTransZ->text().toDouble()) / 1000.0;
 
 	Eigen::Vector3d EulerAngleVector;
 	EulerAngleVector.data()[0] = output_a->toPlainText().toDouble() / 180.0
@@ -3863,13 +3978,13 @@ void Interface::visualizeIncrPosePlan() {
 	EulerAngleVector.data()[2] = output_c->toPlainText().toDouble() / 180.0
 			* M_PI + lineEdit_incrRotateC->text().toDouble() / 180.0 * M_PI;
 
-	Eigen::Quaterniond q;
-	q = Euler2Quaternion(EulerAngleVector.data()[2], EulerAngleVector.data()[1],
+	Eigen::Vector4d Quarternion;
+	Quarternion = Euler2Quaternion(EulerAngleVector.data()[2], EulerAngleVector.data()[1],
 			EulerAngleVector.data()[0]);
-	target_pose.orientation.x = q.x();
-	target_pose.orientation.y = q.y();
-	target_pose.orientation.z = q.z();
-	target_pose.orientation.w = q.w();
+	target_pose.orientation.x = Quarternion.data()[0];
+	target_pose.orientation.y = Quarternion.data()[1];
+	target_pose.orientation.z = Quarternion.data()[2];
+	target_pose.orientation.w = Quarternion.data()[3];
 
 	if (!dtController_.planTargetMotion(target_pose, "tip")) {
 		ROS_ERROR("Motion plan failed");
@@ -3888,9 +4003,9 @@ void Interface::addWaypoints() {
 	}
 
 	geometry_msgs::Pose target_pose;
-	target_pose.position.x = lineEdit_TransX->text().toDouble();
-	target_pose.position.y = lineEdit_TransY->text().toDouble();
-	target_pose.position.z = lineEdit_TransZ->text().toDouble();
+	target_pose.position.x = lineEdit_TransX->text().toDouble() / 1000.0;
+	target_pose.position.y = lineEdit_TransY->text().toDouble() / 1000.0;
+	target_pose.position.z = lineEdit_TransZ->text().toDouble() / 1000.0;
 
 	Eigen::Vector3d EulerAngleVector;
 	EulerAngleVector.data()[0] = lineEdit_RotateA->text().toDouble()
@@ -3900,13 +4015,13 @@ void Interface::addWaypoints() {
 	EulerAngleVector.data()[2] = lineEdit_RotateC->text().toDouble()
 			/ 180.0* M_PI;
 
-	Eigen::Quaterniond q;
-	q = Euler2Quaternion(EulerAngleVector.data()[2], EulerAngleVector.data()[1],
+	Eigen::Vector4d Quarternion;
+	Quarternion = Euler2Quaternion(EulerAngleVector.data()[2], EulerAngleVector.data()[1],
 			EulerAngleVector.data()[0]);
-	target_pose.orientation.x = q.x();
-	target_pose.orientation.y = q.y();
-	target_pose.orientation.z = q.z();
-	target_pose.orientation.w = q.w();
+	target_pose.orientation.x = Quarternion.data()[0];
+	target_pose.orientation.y = Quarternion.data()[1];
+	target_pose.orientation.z = Quarternion.data()[2];
+	target_pose.orientation.w = Quarternion.data()[3];
 
 	dtController_.addWaypoints(target_pose);
 	pushButton_ExecuteWaypointsPlan->setEnabled(true);
@@ -3998,9 +4113,9 @@ void Interface::rotateAroundAxis() {
 			target_pose.orientation.y, target_pose.orientation.z,
 			target_pose.orientation.w);
 
-	target_pose.position.x = vector_rotate.data[0];
-	target_pose.position.y = vector_rotate.data[1];
-	target_pose.position.z = vector_rotate.data[2];
+	target_pose.position.x = vector_rotate.data[0] / 1000.0;
+	target_pose.position.y = vector_rotate.data[1] / 1000.0;
+	target_pose.position.z = vector_rotate.data[2] / 1000.0;
 
 	if (!dtController_.planTargetMotion(target_pose, "tip")) {
 		ROS_ERROR("motion plan failed");
@@ -4065,11 +4180,11 @@ void Interface::visualizeExecutePlanCb() {
 void Interface::endEffectorPosCb(
 		const InteractiveMarkerFeedbackConstPtr &feedback) {
 	lineEdit_TransX->setText(
-			QString("%1").arg(feedback->pose.position.x, 8, 'f', 4));
+			QString("%1").arg(feedback->pose.position.x * 1000.0, 8, 'f', 4));
 	lineEdit_TransY->setText(
-			QString("%1").arg(feedback->pose.position.y, 8, 'f', 4));
+			QString("%1").arg(feedback->pose.position.y * 1000.0, 8, 'f', 4));
 	lineEdit_TransZ->setText(
-			QString("%1").arg(feedback->pose.position.z, 8, 'f', 4));
+			QString("%1").arg(feedback->pose.position.z * 1000.0, 8, 'f', 4));
 
 	Eigen::Vector3d EulerAngleVector;
 	KDL::Rotation dtRotation = KDL::Rotation::Quaternion(
@@ -4392,9 +4507,9 @@ void Interface::convertPoseTargettoJointTarget() {
 		return;
 	}
 
-	Frame temp_frame(lineEdit_TransX->text().toDouble() * 1000.0,
-			lineEdit_TransY->text().toDouble() * 1000.0,
-			lineEdit_TransZ->text().toDouble() * 1000.0,
+	Frame temp_frame(lineEdit_TransX->text().toDouble(),
+			lineEdit_TransY->text().toDouble(),
+			lineEdit_TransZ->text().toDouble(),
 			lineEdit_RotateA->text().toDouble(),
 			lineEdit_RotateB->text().toDouble(),
 			lineEdit_RotateC->text().toDouble());
@@ -4454,14 +4569,11 @@ void Interface::on_copy_button_clicked() {
 // Path Planning tab
 	// this tab the x y z is presented in meter unit
 	lineEdit_TransX->setText(
-			QString("%1").arg(output_x->toPlainText().toDouble() / 1000.0, 8,
-					'f', 4));
+			QString("%1").arg(output_x->toPlainText().toDouble(), 8, 'f', 4));
 	lineEdit_TransY->setText(
-			QString("%1").arg(output_y->toPlainText().toDouble() / 1000.0, 8,
-					'f', 4));
+			QString("%1").arg(output_y->toPlainText().toDouble(), 8, 'f', 4));
 	lineEdit_TransZ->setText(
-			QString("%1").arg(output_z->toPlainText().toDouble() / 1000.0, 8,
-					'f', 4));
+			QString("%1").arg(output_z->toPlainText().toDouble(), 8, 'f', 4));
 	lineEdit_RotateA->setText(output_a->toPlainText());
 	lineEdit_RotateB->setText(output_b->toPlainText());
 	lineEdit_RotateC->setText(output_c->toPlainText());

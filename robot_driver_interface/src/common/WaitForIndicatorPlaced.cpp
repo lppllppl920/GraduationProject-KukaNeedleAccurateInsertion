@@ -19,6 +19,7 @@ WaitForIndicatorPlaced::~WaitForIndicatorPlaced() {
 
 void WaitForIndicatorPlaced::OK() {
 	nReturnValue_ = INDICATOR_OK;
+	sleep(5);
 	this->close();
 }
 

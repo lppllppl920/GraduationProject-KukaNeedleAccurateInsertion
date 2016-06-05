@@ -134,7 +134,7 @@ Visualization Manager:
         Interactive Marker Size: 0.2
         Joint Violation Color: 255; 0; 255
         Planning Group: flange
-        Query Goal State: true
+        Query Goal State: false
         Query Start State: false
         Show Workspace: false
         Start State Alpha: 0.5
@@ -217,6 +217,16 @@ Visualization Manager:
           Value: true
         flange:
           Value: true
+        link1:
+          Value: true
+        link2:
+          Value: true
+        link3:
+          Value: true
+        link4:
+          Value: true
+        link5:
+          Value: true
         link6:
           Value: true
         tip:
@@ -230,6 +240,15 @@ Visualization Manager:
       Show Names: true
       Tree:
         base_link:
+          link1:
+            link2:
+              link3:
+                link4:
+                  link5:
+                    link6:
+                      flange:
+                        tip:
+                          {}
           world:
             {}
       Update Interval: 0
@@ -249,7 +268,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/XYOrbit
-      Distance: 1.56559
+      Distance: 1.24165
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.06
         Stereo Focal Distance: 1
@@ -261,24 +280,24 @@ Visualization Manager:
         Z: 1.04309e-07
       Name: Current View
       Near Clip Distance: 0.01
-      Pitch: 0.374797
+      Pitch: 0.174796
       Target Frame: base_link
       Value: XYOrbit (rviz)
-      Yaw: 5.19495
+      Yaw: 0.811774
     Saved: ~
 Window Geometry:
   Displays:
     collapsed: true
-  Height: 1028
+  Height: 1010
   Help:
     collapsed: false
   Hide Left Dock: true
   Hide Right Dock: true
   Motion Planning:
     collapsed: true
-  QMainWindow State: 000000ff00000000fd0000000100000000000002b1000003dafc0200000005fb000000100044006900730070006c00610079007300000000280000021e000000dd00fffffffb0000000800480065006c00700000000342000000bb0000007600fffffffb0000000a0056006900650077007300000003b0000000b0000000b000fffffffb0000000c00430061006d00650072006100000002ff000001610000000000000000fb0000001e004d006f00740069006f006e00200050006c0061006e006e0069006e0067000000024c000001b6000001ab00ffffff0000039f000003be00000001000000020000000100000002fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
+  QMainWindow State: 000000ff00000000fd0000000100000000000002b1000003befc0200000005fb000000100044006900730070006c006100790073000000002800000158000000dd00fffffffb0000000800480065006c00700000000342000000bb0000007600fffffffb0000000a0056006900650077007300000003b0000000b0000000b000fffffffb0000000c00430061006d00650072006100000002ff000001610000000000000000fb0000001e004d006f00740069006f006e00200050006c0061006e006e0069006e0067000000018600000260000001ab00ffffff000002df000003ac00000001000000020000000100000002fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
   Views:
     collapsed: false
-  Width: 927
-  X: 912
-  Y: 14
+  Width: 735
+  X: 589
+  Y: 20
