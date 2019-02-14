@@ -1,7 +1,7 @@
 # GraduationProject-KukaNeedleAccurateInsertion
 Graphic User Interface (GUI), drivers, and registration algorithms for robot tracking (Kuka 6-joint industrial robot and Northern Digital Inc. (NDI) optical tracker)
 
-Please contact [**XingtongLiu**](http://www.cs.jhu.edu/~xingtongl/) (xliu89@jh.edu) if you have any questions.
+Please contact [**Xingtong Liu**](http://www.cs.jhu.edu/~xingtongl/) (xliu89@jh.edu) if you have any questions.
 
 Please cite [this paper](https://ieeexplore.ieee.org/document/8050420) if you use this code.
 
